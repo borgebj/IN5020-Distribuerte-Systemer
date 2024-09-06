@@ -1,4 +1,4 @@
-package com.ass1.Server;
+package com.ass1.server;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -21,7 +21,7 @@ public class Server implements ServerInterface {
             Server server = new Server();
             ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
             registry.bind("server", serverStub);
-        } 
+        }
         catch (RemoteException | AlreadyBoundException e) {
             e.printStackTrace();
         }

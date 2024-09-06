@@ -1,4 +1,4 @@
-import com.ass1.Server.Server;
+package com.ass1.server;
 
 import java.io.File;
 import java.util.HashMap;
