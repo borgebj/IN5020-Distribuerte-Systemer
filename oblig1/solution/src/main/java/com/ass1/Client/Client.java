@@ -1,3 +1,5 @@
+package com.ass1.Client;
+
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;

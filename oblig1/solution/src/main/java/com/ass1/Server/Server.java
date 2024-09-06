@@ -1,3 +1,5 @@
+package com.ass1.Server;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -19,5 +21,29 @@ public class Server implements ServerInterface {
         catch (RemoteException | AlreadyBoundException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public int getPopulationofCountry(String countryName) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPopulationofCountry'");
+    }
+
+    @Override
+    public int getNumberofCities(String countryName, int min) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getNumberofCities'");
+    }
+
+    @Override
+    public int getNumberofCountries(String citycount, int minpopulation) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getNumberofCountries'");
+    }
+
+    @Override
+    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getNumberofCountries'");
     }
 }
