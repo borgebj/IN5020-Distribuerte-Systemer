@@ -4,8 +4,8 @@
 
 Everything is done in the folder "ass1", so open terminal here.
 
-1) Build maven workspace, in terminal type:
--> 'mvn clean package'
+* Build maven workspace, in terminal type
+- `mvn clean package`
 
 ### From here, more terminals may be needed
 
