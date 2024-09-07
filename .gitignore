@@ -1,2 +1,29 @@
-.idea
-idea
+# Maven build output
+target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+.idea_modules/
+
+# Eclipse
+.project
+.classpath
+.settings/
+*.launch
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
