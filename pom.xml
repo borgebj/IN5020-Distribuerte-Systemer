@@ -4,19 +4,14 @@
   
   <modelVersion>4.0.0</modelVersion>
    
-  
   <groupId>com.in5020</groupId>
-     
   
   <artifactId>IN5020</artifactId>
    
-  
-  <packaging>pom</packaging>
-      
+  <packaging>pom</packaging>    
   
   <version>1.0</version>
      
-  
   <name>IN5020</name>
         
   

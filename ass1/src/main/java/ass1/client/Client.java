@@ -12,7 +12,7 @@ public class Client {
         try {
             Registry registry = LocateRegistry.getRegistry();
             ServerInterface server = (ServerInterface) registry.lookup("server");
-            System.out.println("Adding 10 + 20", server.Add(10, 20));
+            System.out.println("Adding 10 + 20 = " + server.Add(10, 20));
         }
         catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
