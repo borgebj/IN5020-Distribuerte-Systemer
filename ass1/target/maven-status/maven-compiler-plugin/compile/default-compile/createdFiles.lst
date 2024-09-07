@@ -1,1 +1,4 @@
-ass1/App.class
+ass1/server/ServerSimulator.class
+ass1/Client/Client.class
+ass1/server/Server.class
+ass1/server/ServerInterface.class

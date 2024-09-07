@@ -1,1 +1,4 @@
-/mnt/d/Dokumenter/GitHub/IN5020/IN5020/ass1/src/main/java/ass1/App.java
+/mnt/d/Dokumenter/GitHub/IN5020-Distribuerte-Systemer/ass1/src/main/java/ass1/client/Client.java
+/mnt/d/Dokumenter/GitHub/IN5020-Distribuerte-Systemer/ass1/src/main/java/ass1/server/ServerInterface.java
+/mnt/d/Dokumenter/GitHub/IN5020-Distribuerte-Systemer/ass1/src/main/java/ass1/server/Server.java
+/mnt/d/Dokumenter/GitHub/IN5020-Distribuerte-Systemer/ass1/src/main/java/ass1/server/ServerSimulator.java
