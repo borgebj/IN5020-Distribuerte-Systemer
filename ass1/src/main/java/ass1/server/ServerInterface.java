@@ -15,9 +15,9 @@ public interface ServerInterface extends Remote {
 
     // returns number of countries that contain at least "citycount" number of cities
     // each included city has a population of at least "minpopulation"
-    int getNumberofCountries(String citycount, int minpopulation) throws RemoteException;
+    int getNumberofCountries(int citycount, int minpopulation) throws RemoteException;
 
-    // returns number of coutnries containing at least "citycount" number of cities
+    // returns number of countries containing at least "citycount" number of cities
     // each included city has : population between min and max population
     int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException;
 }
