@@ -9,10 +9,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ServerSimulator {
 
@@ -77,24 +74,22 @@ public class ServerSimulator {
 
         // iterate over lines in file
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-
             String line;
             while ((line = br.readLine()) != null) {
-
                 String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
 
-                System.out.printf("%d\n", parts.length);
+                // parse method name and zone
+                String function = parts[0];
+                int zone = Integer.parseInt(parts[parts.length - 1]);
 
-                // create instruction-info
-//                InstructionInfo info = new InstructionInfo(
-//                        parts[0],                       // function name
-//                        Integer.parseInt(parts[1]),     // arg1
-//                        Integer.parseInt(parts[2]),     // arg2
-//                        Integer.parseInt(parts[3]),     // arg3
-//                        Integer.parseInt(parts[4])      // zone
-//                );
+                // parse arguments
+                List<Integer> args = new ArrayList<>();
+                for (int i = 1; i < parts.length - 1; i++) {
+                    args.add(Integer.parseInt(parts[i]));
+                }
 
-//                instructions.add(info);
+                InstructionInfo info = new InstructionInfo(function, args, zone);
+                instructions.add(info);
             }
         }
         catch (IOException e) {
