@@ -92,8 +92,12 @@ public class ServerSimulator {
          
          for (int i = 0; i < 1; i++) {
             servers[i] = new Server(dataset);
-            int norway = servers[i].getPopulationofCountry("Norway");
-            System.out.println(norway);
+            int norwayPop = servers[i].getPopulationofCountry("Sweden");
+            int nocities = servers[i].getNumberofCities("Norway", 100000);
+            int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
+            int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
+
+             System.out.printf("%d\n%d\n%d\n%d\n", norwayPop, nocities, nocitieCountPop, nocitiesBetween);
          }
     }
 }
