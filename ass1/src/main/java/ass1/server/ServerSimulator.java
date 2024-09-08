@@ -4,6 +4,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.rmi.NotBoundException;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +21,8 @@ public class ServerSimulator {
      *
      * @return map : filled hashmap with data
      */
-    private static HashMap parseData() {
+    private static HashMap<String, HashMap<String, CityInfo>> parseData()
+    {
         HashMap<String, HashMap<String, CityInfo>> countryMap = new HashMap<>();
 
         File file = new File("ass1/info/exercise_1_dataset.csv");
@@ -23,22 +30,25 @@ public class ServerSimulator {
             System.err.println("File not found: " + "ass1/info/exercise_1_dataset.csv");
         }
 
+        // iterate over lines in file
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String header = br.readLine(); // skip header
+            br.readLine(); // skip header
 
             String line;
             while ((line = br.readLine()) != null) {
 
-                CityInfo city = new CityInfo();
                 String[] parts = line.split(";");
 
-                city.geonameId = Integer.parseInt(parts[0]);
-                city.name = parts[1];
-                city.countryCode=  parts[2];
-                city.countryName = parts[3];
-                city.population = Integer.parseInt(parts[4]);
-                city.timezone = parts[5];
-                city.coordinates = parts[6];
+                // create city-info
+                CityInfo city = new CityInfo(
+                        Integer.parseInt(parts[0]),
+                        parts[1],
+                        parts[2],
+                        parts[3],
+                        Integer.parseInt(parts[4]),
+                        parts[5],
+                        parts[6]
+                );
 
                 HashMap<String, CityInfo> cityMap = countryMap.computeIfAbsent(city.countryName, k -> new HashMap<>());
                 cityMap.put(city.name, city);
@@ -47,7 +57,7 @@ public class ServerSimulator {
         catch (IOException e) {
             e.printStackTrace();
         }
-        // ...
+
         return countryMap;
     }
 
@@ -56,15 +66,46 @@ public class ServerSimulator {
      *
      * @return map : filled hashmap with instructions
      */
-    private static HashMap parseInstructions() {
-        HashMap map = new HashMap();
-        File file = new File("info/exercise_1_input.xt");
-        // ...
-        return map;
+    private static ArrayList<InstructionInfo> parseInstructions()
+    {
+        ArrayList<InstructionInfo> instructions = new ArrayList<>();
+
+        File file = new File("ass1/info/exercise_1_input.txt");
+        if (!file.exists()) {
+            System.err.println("File not found: " + "ass1/info/exercise_1_input.csv");
+        }
+
+        // iterate over lines in file
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+            String line;
+            while ((line = br.readLine()) != null) {
+
+                String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
+
+                System.out.printf("%d\n", parts.length);
+
+                // create instruction-info
+//                InstructionInfo info = new InstructionInfo(
+//                        parts[0],                       // function name
+//                        Integer.parseInt(parts[1]),     // arg1
+//                        Integer.parseInt(parts[2]),     // arg2
+//                        Integer.parseInt(parts[3]),     // arg3
+//                        Integer.parseInt(parts[4])      // zone
+//                );
+
+//                instructions.add(info);
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return instructions;
     }
 
-    public static void main(String[] args) {
-        
+    public static void main(String[] args)
+    {
         /*
          * Create 5 instances of server class in different address and ports
          */
@@ -73,7 +114,7 @@ public class ServerSimulator {
         HashMap<String, HashMap<String, CityInfo>> dataset = parseData();
 
         // parse instructions aka input.txt
-//        HashMap instructions = parseInstructions();
+        ArrayList<InstructionInfo> instructions = parseInstructions();
 
 //        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : dataset.entrySet()) {
 //            String country = countryEntry.getKey();
@@ -88,16 +129,30 @@ public class ServerSimulator {
 //        }
 
 
-         Server[] servers = new Server[5];
-         
-         for (int i = 0; i < 1; i++) {
-            servers[i] = new Server(dataset);
-            int norwayPop = servers[i].getPopulationofCountry("Sweden");
-            int nocities = servers[i].getNumberofCities("Norway", 100000);
-            int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
-            int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
+         ServerInterface[] servers = new Server[5];
 
-             System.out.printf("%d\n%d\n%d\n%d\n", norwayPop, nocities, nocitieCountPop, nocitiesBetween);
+         try {
+             for (int i = 0; i < 5; i++) {
+                 int port = 1099 + i;
+                 Registry registry = LocateRegistry.getRegistry(port);
+                 ServerInterface server = (ServerInterface) registry.lookup("server" + i);
+
+                 servers[i] = server;
+                 int norwayPop = servers[i].getPopulationofCountry("Sweden");
+                 int nocities = servers[i].getNumberofCities("Norway", 100000);
+                 int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
+                 int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
+
+                 System.out.printf(
+                         "getPopulationofCountry('Norway') = %d\n" +
+                         "getNumberofCities('Norway', 100000) = %d\n" +
+                         "getNumberofCountries(2, 5000000) = %d\n" +
+                         "getNumberofCountries(30, 100000, 800000) = %d\n",
+                         norwayPop, nocities, nocitieCountPop, nocitiesBetween);
+             }
+         }
+         catch (RemoteException | NotBoundException e) {
+             e.printStackTrace();
          }
     }
 }
