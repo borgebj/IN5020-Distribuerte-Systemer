@@ -4,11 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.rmi.NotBoundException;
-import java.rmi.Remote;
+import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
 public class ServerSimulator {
@@ -18,22 +18,20 @@ public class ServerSimulator {
      *
      * @return map : filled hashmap with data
      */
-    private static HashMap<String, HashMap<String, CityInfo>> parseData()
-    {
+    private static HashMap<String, HashMap<String, CityInfo>> parseData() {
         HashMap<String, HashMap<String, CityInfo>> countryMap = new HashMap<>();
 
         File file = new File("ass1/info/exercise_1_dataset.csv");
         if (!file.exists()) {
             System.err.println("File not found: " + "ass1/info/exercise_1_dataset.csv");
+            return countryMap; // Return empty map if file is not found
         }
 
-        // iterate over lines in file
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             br.readLine(); // skip header
 
             String line;
             while ((line = br.readLine()) != null) {
-
                 String[] parts = line.split(";");
 
                 // create city-info
@@ -50,8 +48,7 @@ public class ServerSimulator {
                 HashMap<String, CityInfo> cityMap = countryMap.computeIfAbsent(city.countryName, k -> new HashMap<>());
                 cityMap.put(city.name, city);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -63,16 +60,15 @@ public class ServerSimulator {
      *
      * @return map : filled hashmap with instructions
      */
-    private static ArrayList<InstructionInfo> parseInstructions()
-    {
+    private static ArrayList<InstructionInfo> parseInstructions() {
         ArrayList<InstructionInfo> instructions = new ArrayList<>();
 
         File file = new File("ass1/info/exercise_1_input.txt");
         if (!file.exists()) {
-            System.err.println("File not found: " + "ass1/info/exercise_1_input.csv");
+            System.err.println("File not found: " + "ass1/info/exercise_1_input.txt");
+            return instructions; // Return empty list if file is not found
         }
 
-        // iterate over lines in file
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -80,74 +76,69 @@ public class ServerSimulator {
 
                 // parse method name and zone
                 String function = parts[0];
-                int zone = Integer.parseInt(parts[parts.length - 1]);
+                String zonePart = parts[parts.length - 1];
+                int zone = Integer.parseInt(zonePart.split(":")[1]); // Extract the number after "Zone:"
 
                 // parse arguments
-                List<Integer> args = new ArrayList<>();
+                List<String> args = new ArrayList<>();
                 for (int i = 1; i < parts.length - 1; i++) {
-                    args.add(Integer.parseInt(parts[i]));
+                    args.add(parts[i]);
                 }
 
                 InstructionInfo info = new InstructionInfo(function, args, zone);
                 instructions.add(info);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         return instructions;
     }
 
-    public static void main(String[] args)
-    {
-        /*
-         * Create 5 instances of server class in different address and ports
-         */
-
-        // parse dataset.csv
+    public static void main(String[] args) {
+        // Parse dataset.csv
         HashMap<String, HashMap<String, CityInfo>> dataset = parseData();
 
-        // parse instructions aka input.txt
+        // Parse instructions aka input.txt
         ArrayList<InstructionInfo> instructions = parseInstructions();
 
-//        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : dataset.entrySet()) {
-//            String country = countryEntry.getKey();
-//            HashMap<String, CityInfo> cities = countryEntry.getValue();
-//
-//            System.out.println("========== [ Country: " + country + " ] ==========");
-//            for (Map.Entry<String, CityInfo> cityEntry : cities.entrySet()) {
-//                System.out.println("  City: " + cityEntry.getKey());
-//                System.out.println("  Info: " + cityEntry.getValue());
-//            }
-//            System.out.println("============================================");
-//        }
+        // Create an array to hold server instances
+        ServerInterface[] servers = new Server[5];
 
+        try {
+            for (int i = 0; i < 5; i++) {
+                int port = 1099 + i;
 
-         ServerInterface[] servers = new Server[5];
+                // Create a new registry on the unique port
+                Registry registry = LocateRegistry.createRegistry(port);
 
-         try {
-             for (int i = 0; i < 5; i++) {
-                 int port = 1099 + i;
-                 Registry registry = LocateRegistry.getRegistry(port);
-                 ServerInterface server = (ServerInterface) registry.lookup("server" + i);
+                // Create and export a new server instance
+                Server server = new Server(dataset);
+                ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
 
-                 servers[i] = server;
-                 int norwayPop = servers[i].getPopulationofCountry("Sweden");
-                 int nocities = servers[i].getNumberofCities("Norway", 100000);
-                 int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
-                 int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
+                // Bind the serverStub with a unique name in the registry
+                String serverName = "server" + i;
+                registry.bind(serverName, serverStub);
 
-                 System.out.printf(
-                         "getPopulationofCountry('Norway') = %d\n" +
-                         "getNumberofCities('Norway', 100000) = %d\n" +
-                         "getNumberofCountries(2, 5000000) = %d\n" +
-                         "getNumberofCountries(30, 100000, 800000) = %d\n",
-                         norwayPop, nocities, nocitieCountPop, nocitiesBetween);
-             }
-         }
-         catch (RemoteException | NotBoundException e) {
-             e.printStackTrace();
-         }
+                // Store reference to the server instance
+                servers[i] = server;
+
+                // Print information about each server (for demonstration purposes)
+                int norwayPop = servers[i].getPopulationofCountry("Sweden");
+                int nocities = servers[i].getNumberofCities("Norway", 100000);
+                int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
+                int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
+
+                System.out.printf(
+                        "Server %d:\n" +
+                                "  getPopulationofCountry('Sweden') = %d\n" +
+                                "  getNumberofCities('Norway', 100000) = %d\n" +
+                                "  getNumberofCountries(2, 5000000) = %d\n" +
+                                "  getNumberofCountries(30, 100000, 800000) = %d\n",
+                        i, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
+            }
+        } catch (RemoteException | AlreadyBoundException e) {
+            e.printStackTrace();
+        }
     }
 }
