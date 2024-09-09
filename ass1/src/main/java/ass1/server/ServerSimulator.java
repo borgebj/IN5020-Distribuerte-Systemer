@@ -1,5 +1,7 @@
 package ass1.server;
 
+import ass1.client.Client;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,6 +12,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
+
 
 public class ServerSimulator {
 
@@ -55,55 +58,16 @@ public class ServerSimulator {
         return countryMap;
     }
 
-    /**
-     * Goes through and parses instructions from a given file to a hashmap, later used by clients
-     *
-     * @return map : filled hashmap with instructions
-     */
-    private static ArrayList<InstructionInfo> parseInstructions() {
-        ArrayList<InstructionInfo> instructions = new ArrayList<>();
-
-        File file = new File("ass1/info/exercise_1_input.txt");
-        if (!file.exists()) {
-            System.err.println("File not found: " + "ass1/info/exercise_1_input.txt");
-            return instructions; // Return empty list if file is not found
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
-
-                // parse method name and zone
-                String function = parts[0];
-                String zonePart = parts[parts.length - 1];
-                int zone = Integer.parseInt(zonePart.split(":")[1]); // Extract the number after "Zone:"
-
-                // parse arguments
-                List<String> args = new ArrayList<>();
-                for (int i = 1; i < parts.length - 1; i++) {
-                    args.add(parts[i]);
-                }
-
-                InstructionInfo info = new InstructionInfo(function, args, zone);
-                instructions.add(info);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return instructions;
-    }
-
     public static void main(String[] args) {
         // Parse dataset.csv
         HashMap<String, HashMap<String, CityInfo>> dataset = parseData();
 
-        // Parse instructions aka input.txt
-        ArrayList<InstructionInfo> instructions = parseInstructions();
-
         // Create an array to hold server instances
         ServerInterface[] servers = new Server[5];
+
+        // test
+        Server s = new Server(dataset);
+        Client c = new Client();
 
         try {
             for (int i = 0; i < 5; i++) {
