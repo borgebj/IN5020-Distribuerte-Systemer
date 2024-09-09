@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -59,7 +60,39 @@ public class Client {
         return instructions;
     }
 
-    public static void main(String[] args)
+    private static void invokeRequest( ArrayList<InstructionInfo> instructions )
+    {
+
+
+        System.out.println("Printing all requests to be invoked: \n");
+        for (InstructionInfo instruc : instructions) {
+
+            System.out.println(instruc.function);
+
+            switch (instruc.function) {
+                case "getPopulationofCountry":
+                    
+                    
+                    break;
+                case "getNumberofCities":
+
+                    break;
+                case "getNumberofCountries":
+                    
+                    break;
+             
+            
+                default:
+                    break;
+            }
+
+            
+        }
+
+        
+    }
+
+    public static void main(String[] args) throws RemoteException
     {
         // Parse instructions aka input.txt
         ArrayList<InstructionInfo> instructions = parseInstructions();
@@ -72,6 +105,8 @@ public class Client {
             - <result> <input query> <(turnaround, execution, waiting - time processed by <server>)>
          */
 
+
+        invokeRequest(instructions);
         try {
             Registry registry = LocateRegistry.getRegistry();
             ServerInterface server = (ServerInterface) registry.lookup("server");
@@ -80,6 +115,16 @@ public class Client {
         }
         catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
+        }
+
+        try {
+            for (int i = 0; i < 5; i++) {
+
+                //Create 5 clients to run at once 
+                
+            }
+        } catch (Exception  e) {
+            // TODO: handle exception
         }
     }
 }
