@@ -66,7 +66,8 @@ public class ServerSimulator {
      *
      * @return map : filled hashmap with instructions
      */
-    private static ArrayList<InstructionInfo> parseInstructions() {
+    private static ArrayList<InstructionInfo> parseInstructions()
+    {
         ArrayList<InstructionInfo> instructions = new ArrayList<>();
 
         File file = new File("ass1/info/exercise_1_input.txt");
@@ -101,31 +102,16 @@ public class ServerSimulator {
         return instructions;
     }
 
-	private static void createServers(HashMap<String, HashMap<String, CityInfo>> dataset, int numServers, int port)
+	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
     {
         servers = new ServerInterface[numServers];
         try {
             // Create a new registry on the unique port
             Registry registry = LocateRegistry.createRegistry(port);
 
+            // Create and export a new server instances
             for (int i = 0; i < numServers; i++) {
-
-                // Create and export a new server instance
                 servers[i] = new Server(registry, i, port + i, dataset);
-
-                // Print information about each server
-                int norwayPop = servers[i].getPopulationofCountry("Sweden");
-                int nocities = servers[i].getNumberofCities("Norway", 100000);
-                int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
-                int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
-
-                System.out.printf(
-                        "Server %d:\n" +
-                                "  getPopulationofCountry('Sweden') = %d\n" +
-                                "  getNumberofCities('Norway', 100000) = %d\n" +
-                                "  getNumberofCountries(2, 5000000) = %d\n" +
-                                "  getNumberofCountries(30, 100000, 800000) = %d\n",
-                        i, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
             }
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -151,7 +137,8 @@ public class ServerSimulator {
         // main port used
         int port  = 1099;
 
-        createServers(dataset, numServers, port);
+        // start server and proxy
+        createServers(numServers, port, dataset);
         createProxy(numServers, port);
     }
 }

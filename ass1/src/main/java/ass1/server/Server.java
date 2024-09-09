@@ -28,6 +28,10 @@ public class Server implements ServerInterface {
         startServer();
     }
 
+    /**
+     * Method that starts this current server
+     * Exporting server with stub, binding to registry
+     */
     private void startServer()
     {
         try {
@@ -39,17 +43,33 @@ public class Server implements ServerInterface {
 
             // bind server to registry
             registry.bind(serverName, serverStub);
+
+            // TODO: TEST_QUERY - DELETE
+            int norwayPop = getPopulationofCountry("Sweden");
+            int nocities = getNumberofCities("Norway", 100000);
+            int nocitieCountPop = getNumberofCountries(2, 5000000);
+            int nocitiesBetween = getNumberofCountries(30, 100000, 800000);
+
+            System.out.printf(
+                    "Server %d:\n" +
+                            "  getPopulationofCountry('Sweden') = %d\n" +
+                            "  getNumberofCities('Norway', 100000) = %d\n" +
+                            "  getNumberofCountries(2, 5000000) = %d\n" +
+                            "  getNumberofCountries(30, 100000, 800000) = %d\n",
+                    zone, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
         }
         catch (Exception e) {
             System.err.println();
         }
+        System.out.printf("Server %d has started\n", zone);
     }
 
 
-    public int Add(int num1, int num2) {
-        return num1 + num2;
-    }
-
+    /**
+     * Sleeps 'ms' milliseconds
+     *
+     * @param ms : integer, miliseconds to sleep
+     */
     public void sleep(int ms)
     {
         try {
@@ -57,6 +77,12 @@ public class Server implements ServerInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /** RMI methods */
+    @Override
+    public int Add(int num1, int num2) {
+        return num1 + num2;
     }
 
     // given a country name as input, return population of country by summing population of cities in that country
@@ -159,4 +185,5 @@ public class Server implements ServerInterface {
         sleep(80); // network latency
         return validCountries;
     }
+
 }
