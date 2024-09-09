@@ -13,22 +13,63 @@ import ass1.server.CityInfo;
 public class Server implements ServerInterface {
 
     /** Global variables */
-    // FIFO processing
-    static int[] clientRequests;
 
     // Hashmap with city data
-    static HashMap<String, HashMap<String, CityInfo>> data;
+    private HashMap<String, HashMap<String, CityInfo>> data;
+    private Registry registry;
+    private int port;
+    private int zone;
 
-    public Server(HashMap<String, HashMap<String, CityInfo>> data) {
-        Server.data = data;
-        clientRequests = new int[45];
+    public Server(Registry registry, int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
+        this.registry = registry;
+        this.zone = zone;
+        this.port = port;
+        this.data = data;
+        startServer();
+    }
+
+    /**
+     * Method that starts this current server
+     * Exporting server with stub, binding to registry
+     */
+    private void startServer()
+    {
+        try {
+            // export server to registry
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
+
+            // define server name same wit hport
+            String serverName = "server" + zone;
+
+            // bind server to registry
+            registry.bind(serverName, serverStub);
+
+            // TODO: TEST_QUERY - DELETE
+            int norwayPop = getPopulationofCountry("Sweden");
+            int nocities = getNumberofCities("Norway", 100000);
+            int nocitieCountPop = getNumberofCountries(2, 5000000);
+            int nocitiesBetween = getNumberofCountries(30, 100000, 800000);
+
+            System.out.printf(
+                    "Server %d:\n" +
+                            "  getPopulationofCountry('Sweden') = %d\n" +
+                            "  getNumberofCities('Norway', 100000) = %d\n" +
+                            "  getNumberofCountries(2, 5000000) = %d\n" +
+                            "  getNumberofCountries(30, 100000, 800000) = %d\n",
+                    zone, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
+        }
+        catch (Exception e) {
+            System.err.println();
+        }
+        System.out.printf("Server %d has started\n", zone);
     }
 
 
-    public int Add(int num1, int num2) {
-        return num1 + num2;
-    }
-
+    /**
+     * Sleeps 'ms' milliseconds
+     *
+     * @param ms : integer, miliseconds to sleep
+     */
     public void sleep(int ms)
     {
         try {
@@ -36,6 +77,12 @@ public class Server implements ServerInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /** RMI methods */
+    @Override
+    public int Add(int num1, int num2) {
+        return num1 + num2;
     }
 
     // given a country name as input, return population of country by summing population of cities in that country
@@ -139,17 +186,4 @@ public class Server implements ServerInterface {
         return validCountries;
     }
 
-    //TODO: denne er ikke nødvendig, opprettelse skjer i simulator
-    public static void main(String[] args)
-    {
-        try {
-            Registry registry = LocateRegistry.getRegistry();
-            Server server = new Server(data);
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
-            registry.bind("server", serverStub);
-        }
-        catch (RemoteException | AlreadyBoundException e) {
-            e.printStackTrace();
-        }
-    }
 }
