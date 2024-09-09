@@ -32,7 +32,7 @@ public class Server implements ServerInterface {
     {
         try {
             // export server to registry
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, port);
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
 
             // define server name same wit hport
             String serverName = "server" + zone;
