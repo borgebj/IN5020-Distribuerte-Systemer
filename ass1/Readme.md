@@ -1,3 +1,4 @@
+
 # Assignment 1
 
 ## Data flow
@@ -30,3 +31,4 @@ Everything is done in the folder "ass1", so open terminal here.
 
 * run the **client**, in terminal type:
     - `java -cp ./target/solution.jar ass1.client.Client`
+

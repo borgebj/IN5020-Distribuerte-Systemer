@@ -29,14 +29,11 @@ public class Server implements ServerInterface {
         return num1 + num2;
     }
 
-    public static void main(String[] args) {
+    public void sleep(int ms)
+    {
         try {
-            Registry registry = LocateRegistry.getRegistry();
-            Server server = new Server(data);
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
-            registry.bind("server", serverStub);
-        }
-        catch (RemoteException | AlreadyBoundException e) {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -56,6 +53,7 @@ public class Server implements ServerInterface {
             totalPopulation += population;
         }
 
+        sleep(80); // network latency
         return totalPopulation;
     }
 
@@ -75,6 +73,8 @@ public class Server implements ServerInterface {
                 citiesAboveMin++;
             }
         }
+
+        sleep(80); // network latency
         return citiesAboveMin;
     }
 
@@ -104,6 +104,7 @@ public class Server implements ServerInterface {
             }
         }
 
+        sleep(80); // network latency+
         return validCountries;
     }
 
@@ -134,6 +135,21 @@ public class Server implements ServerInterface {
             }
         }
 
+        sleep(80); // network latency
         return validCountries;
+    }
+
+    //TODO: denne er ikke nødvendig, opprettelse skjer i simulator
+    public static void main(String[] args)
+    {
+        try {
+            Registry registry = LocateRegistry.getRegistry();
+            Server server = new Server(data);
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
+            registry.bind("server", serverStub);
+        }
+        catch (RemoteException | AlreadyBoundException e) {
+            e.printStackTrace();
+        }
     }
 }

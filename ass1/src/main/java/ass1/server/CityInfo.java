@@ -9,7 +9,22 @@ public class CityInfo {
 	String timezone;
 	String coordinates;
 
-	public CityInfo() {}
+	public CityInfo(int geonameId,
+					String name,
+					String countryCode,
+					String countryName,
+					int population,
+					String timezone,
+					String coordinates)
+	{
+		this.geonameId = geonameId;
+		this.name = name;
+		this.countryCode = countryCode;
+		this.countryName = countryName;
+		this.population = population;
+		this.timezone = timezone;
+		this.coordinates = coordinates;
+	}
 
 	@Override
 	public String toString() {
