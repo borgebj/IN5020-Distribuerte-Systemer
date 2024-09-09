@@ -13,15 +13,36 @@ import ass1.server.CityInfo;
 public class Server implements ServerInterface {
 
     /** Global variables */
-    // FIFO processing
-    static int[] clientRequests;
 
     // Hashmap with city data
-    static HashMap<String, HashMap<String, CityInfo>> data;
+    private HashMap<String, HashMap<String, CityInfo>> data;
+    private Registry registry;
+    private int port;
+    private int zone;
 
-    public Server(HashMap<String, HashMap<String, CityInfo>> data) {
-        Server.data = data;
-        clientRequests = new int[45];
+    public Server(Registry registry, int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
+        this.registry = registry;
+        this.zone = zone;
+        this.port = port;
+        this.data = data;
+        startServer();
+    }
+
+    private void startServer()
+    {
+        try {
+            // export server to registry
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, port);
+
+            // define server name same wit hport
+            String serverName = "server" + zone;
+
+            // bind server to registry
+            registry.bind(serverName, serverStub);
+        }
+        catch (Exception e) {
+            System.err.println();
+        }
     }
 
 
@@ -137,19 +158,5 @@ public class Server implements ServerInterface {
 
         sleep(80); // network latency
         return validCountries;
-    }
-
-    //TODO: denne er ikke nødvendig, opprettelse skjer i simulator
-    public static void main(String[] args)
-    {
-        try {
-            Registry registry = LocateRegistry.getRegistry();
-            Server server = new Server(data);
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
-            registry.bind("server", serverStub);
-        }
-        catch (RemoteException | AlreadyBoundException e) {
-            e.printStackTrace();
-        }
     }
 }
