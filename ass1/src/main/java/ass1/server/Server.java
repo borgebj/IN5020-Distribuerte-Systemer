@@ -1,5 +1,6 @@
 package ass1.server;
 
+import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
@@ -13,12 +14,10 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
-    private Registry registry;
-    private int port;
     private int zone;
+    private int port;
 
-    public Server(Registry registry, int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
-        this.registry = registry;
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
         this.zone = zone;
         this.port = port;
         this.data = data;
@@ -31,8 +30,10 @@ public class Server implements ServerInterface {
      */
     private void startServer()
     {
-        System.out.println("");
         try {
+            // Create a new registry on the unique port
+            Registry registry = LocateRegistry.createRegistry(port);
+
             // export server to registry
             ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
 
@@ -41,20 +42,6 @@ public class Server implements ServerInterface {
 
             // bind server to registry
             registry.bind(serverName, serverStub);
-
-            // TODO: TEST_QUERY - DELETE
-            int norwayPop = getPopulationofCountry("Sweden");
-            int nocities = getNumberofCities("Norway", 100000);
-            int nocitieCountPop = getNumberofCountries(2, 5000000);
-            int nocitiesBetween = getNumberofCountries(30, 100000, 800000);
-
-            System.out.printf(
-                    "Server %d:\n" +
-                            "  getPopulationofCountry('Sweden') = %d\n" +
-                            "  getNumberofCities('Norway', 100000) = %d\n" +
-                            "  getNumberofCountries(2, 5000000) = %d\n" +
-                            "  getNumberofCountries(30, 100000, 800000) = %d\n",
-                    zone, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
         }
         catch (Exception e) {
             System.err.println();

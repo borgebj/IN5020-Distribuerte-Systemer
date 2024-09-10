@@ -15,9 +15,9 @@ import java.util.*;
 public class ServerSimulator {
 
     private static ServerInterface[] servers;
+    private static Client[] clients;
 
     private static Proxy proxy;
-
 
     /**
      * Goes through and parses data from a given file to a hashmap, later used by server
@@ -61,7 +61,6 @@ public class ServerSimulator {
 
         return countryMap;
     }
-
 
     /**
      * Goes through and parses instructions from a given file to a hashmap, later used by clients
@@ -119,8 +118,6 @@ public class ServerSimulator {
 
                 InstructionInfo info = new InstructionInfo(function, args, zone);
                 instructions.add(info);
-
-                //System.out.println(info);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,21 +126,14 @@ public class ServerSimulator {
         return instructions;
     }
 
-
 	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
     {
         servers = new ServerInterface[numServers];
-        try {
-            // Create a new registry on the unique port
-            Registry registry = LocateRegistry.createRegistry(port);
 
-            // Create and export a new server instances
-            for (int i = 0; i < numServers; i++) {
-                servers[i] = new Server(registry, i, port + i, dataset);
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+        // Create servers
+        for (int i = 0; i < numServers; i++) {
+            servers[i] = new Server(i, port + i, dataset);
+       }
     }
 
     private static void createProxy(int numServers, int port)
@@ -153,8 +143,12 @@ public class ServerSimulator {
 
     private static void createClients(int numClients, int port, ArrayList<InstructionInfo> instructions)
     {
-        Client client = new Client(instructions);
-        client.run();
+        clients = new Client[numClients];
+
+        // Create clients
+        for (int i = 0; i < numClients; i++) {
+            clients[i] = new Client(i, port + (numClients + i), instructions);
+        }
     }
 
     public static void main(String[] args)
@@ -173,7 +167,7 @@ public class ServerSimulator {
 
         // start server and proxy
         createServers(numDevices, port, dataset);
-        createProxy(numDevices, port);
+        createProxy(numDevices, port); // TODO
         createClients(numDevices, port, instructions);
     }
 }

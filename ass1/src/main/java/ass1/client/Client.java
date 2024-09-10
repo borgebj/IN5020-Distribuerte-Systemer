@@ -1,43 +1,41 @@
 package ass1.client;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.rmi.AlreadyBoundException;
-import java.lang.reflect.Array;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 
-import ass1.server.CityInfo;
-import ass1.server.Server;
 import ass1.server.ServerInterface;
 import ass1.server.InstructionInfo;
 
 
 public class Client {
 
+    /** Global variables */
+
     // Hashmap with city data
     static ArrayList<InstructionInfo> instructions;
+    int zone;
+    int port;
 
-    public Client(ArrayList<InstructionInfo> instructions) {
+
+    public Client(int zone, int port, ArrayList<InstructionInfo> instructions) {
+        this.zone = zone;
+        this.port = port;
         Client.instructions = instructions;
+        startClient();
     }
 
-
-    private static void invokeRequest( ArrayList<InstructionInfo> instructions , ServerInterface server)
+    private void invokeRequest( ArrayList<InstructionInfo> instructions , ServerInterface server)
     {
         System.out.println("Printing all requests to be invoked: \n");
 
         try {
-           
             for (InstructionInfo instruc : instructions) {
+
+                long startTime = System.currentTimeMillis();
                 
                 //System.out.println(instruc.function);
                 
@@ -60,8 +58,11 @@ public class Client {
                     default:
                     break;
                 }
-                
-                
+
+                long endTime = System.currentTimeMillis();
+                long turnaroundTime = endTime - startTime;
+
+                logResultToFile(instruc, turnaroundTime);
             }
             
         } catch (RemoteException e) {
@@ -70,8 +71,13 @@ public class Client {
         }
     }
 
-    public void run()
+    private void logResultToFile(InstructionInfo instruc, long turnaroundTime) {
+        // TODO:
+    }
+
+    public void startClient()
     {
+        System.out.printf("Running Client %d\n", 1);
                 /* TODO:
             1) Create 5 clients
             2) zone-info
@@ -80,13 +86,10 @@ public class Client {
             - <result> <input query> <(turnaround, execution, waiting - time processed by <server>)>
          */
 
-
         try {
             Registry registry = LocateRegistry.getRegistry();
             ServerInterface server = (ServerInterface) registry.lookup("server0");
             invokeRequest(instructions, server);
-            //System.out.println("Adding 10 + 20 = " + server.Add(10, 20));
-            //System.out.println("Population Norway = " + server.getPopulationofCountry("Norway"));
         }
         catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
