@@ -1,4 +1,4 @@
-arget/
+target/
 
 # IntelliJ IDEA
 .idea/
@@ -30,3 +30,13 @@ Thumbs.db
 # Java
 *.class
 .class
+
+
+# Maven
+target/
+*.target/
+.target/
+/target
+**/target/
+ass2/
+ass2/target
