@@ -111,6 +111,6 @@ public class ServerSimulator {
         // start server and proxy
         createServers(numDevices, port, dataset);
         createProxy(numDevices, port);
-        createClients(numDevices, port, instructions);
+       // createClients(numDevices, port, instructions);
     }
 }
