@@ -37,16 +37,17 @@ public class Server implements ServerInterface {
             // export server to registry
             ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
 
-            // define server name same wit hport
+            // define server name same with port
             String serverName = "server" + zone;
 
             // bind server to registry
             registry.bind(serverName, serverStub);
-        }
-        catch (Exception e) {
+
+            System.out.printf("Server %s:%d has started\n", serverName, port);
+
+        } catch (Exception e) {
             System.err.println();
         }
-        System.out.printf("Server %d has started\n", zone);
     }
 
 

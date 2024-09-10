@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.util.*;
 
 
@@ -18,6 +16,8 @@ public class ServerSimulator {
     private static Client[] clients;
 
     private static Proxy proxy;
+
+    private static final int BASE_PORT = 1099;
 
     /**
      * Goes through and parses data from a given file to a hashmap, later used by server
@@ -126,21 +126,50 @@ public class ServerSimulator {
         return instructions;
     }
 
+
+    /**
+     * Creates the proxy to be used
+     *
+     * @param port : base-port used
+     */
+    private static void createProxy(int port)
+    {
+        proxy = new Proxy(port - 1);
+    }
+
+
+    /**
+     * Creates servers which is started within
+     *
+     * @param numServers : how many servers to start
+     * @param port : base-port used
+     * @param dataset : data-set that servers use
+     */
 	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
     {
         servers = new ServerInterface[numServers];
 
         // Create servers
         for (int i = 0; i < numServers; i++) {
-            servers[i] = new Server(i, port + i, dataset);
+            try {
+                Server server = new Server(i, port + i, dataset);
+                servers[i] = server;
+                proxy.registerServer(i, server);
+
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
        }
     }
 
-    private static void createProxy(int numServers, int port)
-    {
-        proxy = new Proxy(numServers, port + numServers + 1);
-    }
 
+    /**
+     * Creates clients which is started within
+     *
+     * @param numClients : how many clients to create
+     * @param port : base-port used
+     * @param instructions : instruction-set that clients use
+     */
     private static void createClients(int numClients, int port, ArrayList<InstructionInfo> instructions)
     {
         clients = new Client[numClients];
@@ -163,11 +192,11 @@ public class ServerSimulator {
         int numDevices = 5;
 
         // main port used
-        int port  = 1099;
+        int port  = BASE_PORT;
 
         // start server and proxy
+        createProxy(port);
         createServers(numDevices, port, dataset);
-        createProxy(numDevices, port); // TODO
         createClients(numDevices, port, instructions);
     }
 }

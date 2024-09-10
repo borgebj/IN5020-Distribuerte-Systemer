@@ -36,7 +36,6 @@ public class Client {
 
                 switch (instruc.function) {
                     case "getPopulationofCountry":
-                        // System.out.println(instruc.args);
                         if (instruc.args.size() > 0) {
                             String country = instruc.args.get(0);
 
@@ -102,23 +101,16 @@ public class Client {
     }
 
     public void startClient() {
-        /*
-         * TODO:
-         * 1) Create 5 clients
-         * 2) zone-info
-         * 3) RMI through proxy-server
-         * 4) Write result in output-file - Includes:
-         * - <result> <input query> <(turnaround, execution, waiting - time processed by
-         * <server>)>
-         */
-
         try {
+            // Create a new registry on the unique port
             Registry registry = LocateRegistry.getRegistry();
+
+            // export client to registry
             ServerInterface server = (ServerInterface) registry.lookup("server0");
+
+            // invoke requests from instruction-set
             invokeRequest(instructions, server);
-            // System.out.println("Adding 10 + 20 = " + server.Add(10, 20));
-            // System.out.println("Population Norway = " +
-            // server.getPopulationofCountry("Norway"));
+
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
         }
