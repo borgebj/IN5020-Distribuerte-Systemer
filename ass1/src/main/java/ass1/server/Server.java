@@ -75,6 +75,8 @@ public class Server implements ServerInterface {
     @Override
     public int getPopulationofCountry(String countryName)
     {
+        System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
+
         // get appropriate country
         HashMap<String, CityInfo> country = data.get(countryName);
 
@@ -94,6 +96,8 @@ public class Server implements ServerInterface {
     @Override
     public int getNumberofCities(String countryName, int min)
     {
+        System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
+
         // get appropriate country
         HashMap<String, CityInfo> country = data.get(countryName);
 
@@ -115,6 +119,8 @@ public class Server implements ServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation)
     {
+        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+
         int validCountries = 0;
 
         // iterate through all countries
@@ -146,6 +152,8 @@ public class Server implements ServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
     {
+        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+
         int validCountries = 0;
 
         // iterate through all countries
