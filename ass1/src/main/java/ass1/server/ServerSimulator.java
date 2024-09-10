@@ -70,7 +70,7 @@ public class ServerSimulator {
         Client c = new Client();
 
         try {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 1; i++) {
                 int port = 1099 + i;
 
                 // Create a new registry on the unique port
@@ -78,29 +78,36 @@ public class ServerSimulator {
 
                 // Create and export a new server instance
                 Server server = new Server(dataset);
-                ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, 0);
+                ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(server, port);
 
                 // Bind the serverStub with a unique name in the registry
-                String serverName = "server" + i;
+                String serverName = "server_" + i;
+
+            
                 registry.bind(serverName, serverStub);
 
                 // Store reference to the server instance
                 servers[i] = server;
 
+                System.out.println("Staring server: " + serverName + "\n");
+
                 // Print information about each server (for demonstration purposes)
+
+                /*
                 int norwayPop = servers[i].getPopulationofCountry("Sweden");
                 int nocities = servers[i].getNumberofCities("Norway", 100000);
                 int nocitieCountPop = servers[i].getNumberofCountries(2, 5000000);
                 int nocitiesBetween = servers[i].getNumberofCountries(30, 100000, 800000);
-
+                
                 System.out.printf(
-                        "Server %d:\n" +
-                                "  getPopulationofCountry('Sweden') = %d\n" +
-                                "  getNumberofCities('Norway', 100000) = %d\n" +
-                                "  getNumberofCountries(2, 5000000) = %d\n" +
-                                "  getNumberofCountries(30, 100000, 800000) = %d\n",
-                        i, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
-            }
+                    "Server %d:\n" +
+                    "  getPopulationofCountry('Sweden') = %d\n" +
+                    "  getNumberofCities('Norway', 100000) = %d\n" +
+                    "  getNumberofCountries(2, 5000000) = %d\n" +
+                    "  getNumberofCountries(30, 100000, 800000) = %d\n",
+                    i, norwayPop, nocities, nocitieCountPop, nocitiesBetween);
+                    */
+                }
         } catch (RemoteException | AlreadyBoundException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,4 @@
-# Maven build output
-target/
+arget/
 
 # IntelliJ IDEA
 .idea/
@@ -27,3 +26,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+# Java
+*.class

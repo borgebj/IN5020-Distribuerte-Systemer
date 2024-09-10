@@ -60,38 +60,50 @@ public class Client {
         return instructions;
     }
 
-    private static void invokeRequest( ArrayList<InstructionInfo> instructions )
+    private static void invokeRequest( ArrayList<InstructionInfo> instructions , ServerInterface server)
     {
-
-
         System.out.println("Printing all requests to be invoked: \n");
-        for (InstructionInfo instruc : instructions) {
 
-            System.out.println(instruc.function);
-
-            switch (instruc.function) {
-                case "getPopulationofCountry":
+        try {
+           
+            for (InstructionInfo instruc : instructions) {
+                
+                //System.out.println(instruc.function);
+                
+                switch (instruc.function) {
+                    case "getPopulationofCountry":
+                        //System.out.println(instruc.args.get(1));
+                        System.out.println("Population Norway = " + server.getPopulationofCountry("France"));
+                        String country = " ";
+                        for (String name  : instruc.args) {
+                            country +=  name+ " ";
+                            
+                        }
+                        System.out.println("proper country name :" + country);
+                        break;
+                    case "getNumberofCities":
+                    
+                    break;
+                    case "getNumberofCountries":
+                    
+                    break;
                     
                     
+                    default:
                     break;
-                case "getNumberofCities":
-
-                    break;
-                case "getNumberofCountries":
-                    
-                    break;
-             
-            
-                default:
-                    break;
+                }
+                
+                
             }
-
             
+        } catch (RemoteException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-
-        
+            
+            
     }
-
+        
     public static void main(String[] args) throws RemoteException
     {
         // Parse instructions aka input.txt
@@ -106,12 +118,13 @@ public class Client {
          */
 
 
-        invokeRequest(instructions);
+        
         try {
             Registry registry = LocateRegistry.getRegistry();
-            ServerInterface server = (ServerInterface) registry.lookup("server");
-            System.out.println("Adding 10 + 20 = " + server.Add(10, 20));
-            System.out.println("Population Norway = " + server.getPopulationofCountry("Norway"));
+            ServerInterface server = (ServerInterface) registry.lookup("server_0");
+            invokeRequest(instructions, server);
+            //System.out.println("Adding 10 + 20 = " + server.Add(10, 20));
+            //System.out.println("Population Norway = " + server.getPopulationofCountry("Norway"));
         }
         catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
