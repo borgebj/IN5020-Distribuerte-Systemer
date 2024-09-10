@@ -1,10 +1,7 @@
 package ass1.server;
 
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.rmi.AlreadyBoundException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +31,7 @@ public class Server implements ServerInterface {
      */
     private void startServer()
     {
+        System.out.println("");
         try {
             // export server to registry
             ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
