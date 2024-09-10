@@ -30,66 +30,6 @@ public class Client {
         Client.instructions = instructions;
     }
 
-    private static ArrayList<InstructionInfo> parseInstructions()
-    {
-        ArrayList<InstructionInfo> instructions = new ArrayList<>();
-
-        File file = new File("ass1/info/exercise_1_input.txt");
-        if (!file.exists()) {
-            System.err.println("File not found: " + "ass1/info/exercise_1_input.txt");
-            return instructions; // Return empty list if file is not found
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
-
-
-                // parse method name and zone
-                String function = parts[0];
-                String zonePart = parts[parts.length - 1];
-                int zone = Integer.parseInt(zonePart.split(":")[1]); // Extract the number after "Zone:"
-
-                List<String> args = new ArrayList<>();
-
-                // combine all elements between
-                StringBuilder currentArgs = new StringBuilder();
-                for (int i = 1; i < parts.length - 1; i++) {
-                    String part = parts[i];
-
-                    // if arg is a number
-                    if (part.matches("\\d+")) {
-                        if (currentArgs.length() > 0) {
-                            args.add(currentArgs.toString());
-                            currentArgs.setLength(0);
-                        }
-                        args.add(part);
-                    }
-                    // if arg is a string
-                    else {
-                        if (currentArgs.length() > 0) {
-                            currentArgs.append(" ");
-                        }
-                        currentArgs.append(part);
-                    }
-                }
-
-                if (currentArgs.length() > 0) {
-                    args.add(currentArgs.toString());
-                }
-                
-                InstructionInfo info = new InstructionInfo(function, args, zone);
-                instructions.add(info);
-
-                //System.out.println(info);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return instructions;
-    }
 
     private static void invokeRequest( ArrayList<InstructionInfo> instructions , ServerInterface server)
     {
@@ -128,13 +68,11 @@ public class Client {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-            
-            
     }
-        
-    public static void main(String[] args) throws RemoteException
+
+    public void run()
     {
-        /* TODO:
+                /* TODO:
             1) Create 5 clients
             2) zone-info
             3) RMI through proxy-server
@@ -143,7 +81,6 @@ public class Client {
          */
 
 
-        instructions = parseInstructions();
         try {
             Registry registry = LocateRegistry.getRegistry();
             ServerInterface server = (ServerInterface) registry.lookup("server0");
@@ -158,8 +95,8 @@ public class Client {
         try {
             for (int i = 0; i < 5; i++) {
 
-                //Create 5 clients to run at once 
-                
+                //Create 5 clients to run at once
+
             }
         } catch (Exception  e) {
             // TODO: handle exception
