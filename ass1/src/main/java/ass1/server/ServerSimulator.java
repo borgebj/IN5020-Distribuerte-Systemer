@@ -81,19 +81,44 @@ public class ServerSimulator {
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
 
+
                 // parse method name and zone
                 String function = parts[0];
                 String zonePart = parts[parts.length - 1];
                 int zone = Integer.parseInt(zonePart.split(":")[1]); // Extract the number after "Zone:"
 
-                // parse arguments
                 List<String> args = new ArrayList<>();
+
+                // combine all elements between
+                StringBuilder currentArgs = new StringBuilder();
                 for (int i = 1; i < parts.length - 1; i++) {
-                    args.add(parts[i]);
+                    String part = parts[i];
+
+                    // if arg is a number
+                    if (part.matches("\\d+")) {
+                        if (currentArgs.length() > 0) {
+                            args.add(currentArgs.toString());
+                            currentArgs.setLength(0);
+                        }
+                        args.add(part);
+                    }
+                    // if arg is a string
+                    else {
+                        if (currentArgs.length() > 0) {
+                            currentArgs.append(" ");
+                        }
+                        currentArgs.append(part);
+                    }
+                }
+
+                if (currentArgs.length() > 0) {
+                    args.add(currentArgs.toString());
                 }
 
                 InstructionInfo info = new InstructionInfo(function, args, zone);
                 instructions.add(info);
+
+                System.out.println(info);
             }
         } catch (IOException e) {
             e.printStackTrace();
