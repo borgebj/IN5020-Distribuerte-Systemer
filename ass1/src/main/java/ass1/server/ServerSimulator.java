@@ -89,6 +89,11 @@ public class ServerSimulator {
         proxy = new Proxy(numServers, port + numServers + 1);
     }
 
+    private static void createClients(int numClients, int port, ArrayList<InstructionInfo> instructions)
+    {
+        Client client = new Client(instructions);
+    }
+
     public static void main(String[] args)
     {
         // Parse dataset.csv
@@ -98,13 +103,14 @@ public class ServerSimulator {
        // ArrayList<InstructionInfo> instructions = parseInstructions();
 
         // how many servers to run at once
-        int numServers = 5;
+        int numDevices = 5;
 
         // main port used
         int port  = 1099;
 
         // start server and proxy
-        createServers(numServers, port, dataset);
-        createProxy(numServers, port);
+        createServers(numDevices, port, dataset);
+        createProxy(numDevices, port);
+        createClients(numDevices, port, instructions);
     }
 }
