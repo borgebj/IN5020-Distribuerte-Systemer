@@ -8,8 +8,9 @@
 ## How to run (current)
 
 Run 'ServerSimulator' for everything to run at once
-- compile files in both /client and /server
-- run ServerSimulator
+1. compile files in both /client and /server
+2. run `ServerSimulator` to start all threads
+3. run `ClientSimulator` to start all clients
 
 ## How to run (planned)
 
