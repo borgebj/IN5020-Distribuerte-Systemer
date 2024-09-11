@@ -1,6 +1,7 @@
-package ass1.server;
+package ass1.client;
 
 import ass1.client.Client;
+import ass1.server.InstructionInfo;
 
 import java.io.BufferedReader;
 import java.io.File;
