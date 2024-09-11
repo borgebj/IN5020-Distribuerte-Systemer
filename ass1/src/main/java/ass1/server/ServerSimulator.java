@@ -1,9 +1,6 @@
 package ass1.server;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.util.*;
 
@@ -14,7 +11,7 @@ public class ServerSimulator {
 
     private static Proxy proxy;
     private static final int BASE_PORT = 1099;
-    private static final String filepath = "ass1/info/exercise_1_dataset.csv";
+    private static final String filepath = "info/exercise_1_dataset.csv";
 
 
     /**
@@ -26,13 +23,13 @@ public class ServerSimulator {
     {
         HashMap<String, HashMap<String, CityInfo>> countryMap = new HashMap<>();
 
-        File file = new File(filepath);
-        if (!file.exists()) {
-            System.err.printf("File not found: %s\n", filepath);
+        InputStream inputStream = ServerSimulator.class.getClassLoader().getResourceAsStream(filepath);
+        if (inputStream == null) {
+            System.err.printf("File '%s' not found!\n", filepath);
             return countryMap;
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             br.readLine(); // skip header
 
             String line;
