@@ -43,7 +43,7 @@ public class Server implements ServerInterface {
             // bind server to registry
             registry.bind(serverName, serverStub);
 
-            System.out.printf("Server %s:%d has started\n", serverName, port);
+            System.out.printf("%s:%d has started\n", serverName, port);
 
         } catch (Exception e) {
             System.err.println();
@@ -80,13 +80,17 @@ public class Server implements ServerInterface {
         // get appropriate country
         HashMap<String, CityInfo> country = data.get(countryName);
 
-        int totalPopulation = 0;
+        if (country == null) return 0;
 
-        // go through country-map, sum city population
-        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-            int population = cityEntry.getValue().population;
-            totalPopulation += population;
-        }
+        int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
+
+        //        int totalPopulation = 0;
+//
+//        // go through country-map, sum city population
+//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
+//            int population = cityEntry.getValue().population;
+//            totalPopulation += population;
+//        }
 
         sleep(80); // network latency
         return totalPopulation;
@@ -101,18 +105,22 @@ public class Server implements ServerInterface {
         // get appropriate country
         HashMap<String, CityInfo> country = data.get(countryName);
 
-        int citiesAboveMin = 0;
+        if (country == null) return 0;
 
-        // go through country-map, find cities with population >= min
-        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-            int population = cityEntry.getValue().population;
-            if ( population >= min ) {
-                citiesAboveMin++;
-            }
-        }
+        long count = country.values().stream().filter(city -> city.population >= min).count();
+
+        //        int citiesAboveMin = 0;
+//
+//        // go through country-map, find cities with population >= min
+//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
+//            int population = cityEntry.getValue().population;
+//            if ( population >= min ) {
+//                citiesAboveMin++;
+//            }
+//        }
 
         sleep(80); // network latency
-        return citiesAboveMin;
+        return (int) count;
     }
 
     // returns number of countries with min "citycount" cities, and population at least "minpopulation"
@@ -121,30 +129,34 @@ public class Server implements ServerInterface {
     {
         System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        int validCountries = 0;
+        long count = data.values().stream()
+                .filter(cities -> cities.values().stream().filter(city -> city.population >= minpopulation).count() >= citycount)
+                .count();
 
-        // iterate through all countries
-        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-            int validCities = 0;
+        //        int validCountries = 0;
+//
+//        // iterate through all countries
+//        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
+//            int validCities = 0;
+//
+//            // get map of each city in current country
+//            HashMap<String, CityInfo> cities = countryEntry.getValue();
+//
+//            // go through each city, check population
+//            for (CityInfo city : cities.values()) {
+//                if (city.population >= minpopulation) {
+//                    validCities++;
+//                }
+//            }
+//
+//            // check if no. cities meet requirement
+//            if (validCities >= citycount) {
+//                validCountries++;
+//            }
+//        }
 
-            // get map of each city in current country
-            HashMap<String, CityInfo> cities = countryEntry.getValue();
-
-            // go through each city, check population
-            for (CityInfo city : cities.values()) {
-                if (city.population >= minpopulation) {
-                    validCities++;
-                }
-            }
-
-            // check if no. cities meet requirement
-            if (validCities >= citycount) {
-                validCountries++;
-            }
-        }
-
-        sleep(80); // network latency+
-        return validCountries;
+        sleep(80); // network latency
+        return (int) count;
     }
 
     // returns number of countries containing at least "citycount" number of cities
@@ -154,30 +166,37 @@ public class Server implements ServerInterface {
     {
         System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        int validCountries = 0;
+        // one-liner
+        long count = data.values().stream()
+                .filter(cities -> cities.values().stream()
+                        .filter(city -> city.population >= minpopulation && city.population <= maxpopulation)
+                        .count() >= citycount)
+                .count();
 
-        // iterate through all countries
-        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-            int validCities = 0;
-
-            // get map of each city in current country
-            HashMap<String, CityInfo> cities = countryEntry.getValue();
-
-            // go through each city, check population
-            for (CityInfo city : cities.values()) {
-                if (minpopulation <= city.population && city.population <= maxpopulation) {
-                    validCities++;
-                }
-            }
-
-            // check if no. cities meet requirement
-            if (validCities >= citycount) {
-                validCountries++;
-            }
-        }
+        //        int validCountries = 0;
+        //
+        //        // iterate through all countries
+        //        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
+        //            int validCities = 0;
+        //
+        //            // get map of each city in current country
+        //            HashMap<String, CityInfo> cities = countryEntry.getValue();
+        //
+        //            // go through each city, check population
+        //            for (CityInfo city : cities.values()) {
+        //                if (minpopulation <= city.population && city.population <= maxpopulation) {
+        //                    validCities++;
+        //                }
+        //            }
+        //
+        //            // check if no. cities meet requirement
+        //            if (validCities >= citycount) {
+        //                validCountries++;
+        //            }
+        //        }
 
         sleep(80); // network latency
-        return validCountries;
+        return (int) count;
     }
 
 }

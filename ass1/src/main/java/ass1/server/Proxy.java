@@ -1,22 +1,21 @@
 package ass1.server;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class Proxy implements ProxyInterface {
 	private int port;
-	private Map<Integer, ServerInterface> servers;
+	private ConcurrentMap<Integer, ServerInterface> servers;
 
 
 	public Proxy(int port) {
 		this.port = port;
-		this.servers = new HashMap<>();
+		this.servers = new ConcurrentHashMap<>();
 
 		startProxy();
 	}
@@ -35,7 +34,7 @@ public class Proxy implements ProxyInterface {
 
 			registry.bind(proxyName, proxyStub);
 
-			System.out.printf("Proxy %s:%d has started\n", proxyName, port);
+			System.out.printf("%s:%d has started\n", proxyName, port);
 
 		} catch (Exception e) {
 			e.printStackTrace();
