@@ -3,18 +3,15 @@ package ass1.client;
 import ass1.client.Client;
 import ass1.server.InstructionInfo;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientSimulator {
 	private static Thread[] clientThreads;
 
-	private static int BASE_PORT = 1099;
-	private static String filepath = "ass1/info/exercise_1_input.txt";
+	private static final int BASE_PORT = 1099;
+	private static final String filepath = "info/exercise_1_input.txt";
 
 
 
@@ -27,13 +24,13 @@ public class ClientSimulator {
 	{
 		ArrayList<InstructionInfo> instructions = new ArrayList<>();
 
-		File file = new File(filepath);
-		if (!file.exists()) {
-			System.err.println("File not found: " + "ass1/info/exercise_1_input.txt");
+		InputStream inputStream = ClientSimulator.class.getClassLoader().getResourceAsStream(filepath);
+		if (inputStream == null) {
+			System.err.printf("File '%s' not found!\n", filepath);
 			return instructions; // Return empty list if file is not found
 		}
 
-		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
 			String line;
 			while ((line = br.readLine()) != null) {
 				String[] parts = line.split(" "); // <- | function | arg1 | arg2 | arg3 | zone+
