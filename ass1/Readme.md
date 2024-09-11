@@ -17,7 +17,7 @@ Run 'ServerSimulator' for everything to run at once
 Everything is done in the folder "ass1", so open terminal here.
 
 * Build maven workspace, in terminal type
-- `mvn clean package`
+    - `mvn clean package`
 
 ### From here, 2 terminals needed
 
