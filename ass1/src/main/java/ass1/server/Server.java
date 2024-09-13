@@ -1,12 +1,16 @@
 package ass1.server;
 
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import ass1.server.CityInfo;
+
 
 public class Server implements ServerInterface {
 
@@ -14,6 +18,7 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
+    private Queue<Integer> queue;
     private int zone;
     private int port;
 
@@ -21,7 +26,10 @@ public class Server implements ServerInterface {
         this.zone = zone;
         this.port = port;
         this.data = data;
-        startServer();
+        this.queue = new LinkedList<>();
+
+
+        startServer();  
     }
 
     /**
@@ -197,6 +205,12 @@ public class Server implements ServerInterface {
 
         sleep(80); // network latency
         return (int) count;
+    }
+
+    @Override
+    public LinkedList<Integer> getQueue() throws RemoteException {
+        // TODO Auto-generated method stub
+        return (LinkedList<Integer>) queue;
     }
 
 }

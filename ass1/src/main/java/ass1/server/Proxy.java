@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.ning.http.client.providers.netty.chmv8.ConcurrentHashMapV8;
+
 public class Proxy implements ProxyInterface {
 	private int port;
 	private ConcurrentMap<Integer, ServerInterface> servers;
@@ -48,6 +50,7 @@ public class Proxy implements ProxyInterface {
 
 	@Override
 	public int handleRequest(String function, List<String> args, int zone) throws RemoteException {
+		int requestId; 
 		ServerInterface server = servers.get(zone - 1);
 		if (server == null) {
 			throw new RemoteException("Server not found for zone " + zone);
@@ -57,7 +60,7 @@ public class Proxy implements ProxyInterface {
 
 		// process requested function
 		if (args.size() > 0) {
-			String country;
+			String  country;
 
 			// try-catch for handling wrong entries in instruction-file
 			try {
@@ -94,5 +97,41 @@ public class Proxy implements ProxyInterface {
 				}
 			} catch (Exception ignore) {}
 		} return 0;
+	}
+
+	
+	@Override
+	public int handleQue(ConcurrentHashMap<Integer, ServerInterface> servers, int zone) throws RemoteException {
+		// TODO Auto-generated method stub
+
+		
+		ServerInterface server = servers.get(zone-1	);
+
+		if(server.getQueue().size() >18){
+			int adjacentServer1 = servers.get(zone).getQueue().size();
+			int adjacentServer2= servers.get(zone+1).getQueue().size();
+			if(adjacentServer2 <8 && adjacentServer1 <8){
+
+				if( adjacentServer1<adjacentServer2) {
+					
+				}
+
+			} else if(adjacentServer1 <8){
+
+			 
+			} else if(adjacentServer2 <8){
+
+
+			}
+				
+
+			
+
+			
+
+		}
+
+
+		return 0;
 	}
 }

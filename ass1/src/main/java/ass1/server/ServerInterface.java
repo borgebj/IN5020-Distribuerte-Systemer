@@ -2,6 +2,7 @@ package ass1.server;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.LinkedList;
 
 public interface ServerInterface extends Remote {
     int Add(int num1, int num2) throws RemoteException;
@@ -20,4 +21,8 @@ public interface ServerInterface extends Remote {
     // returns number of countries containing at least "citycount" number of cities
     // each included city has : population between min and max population
     int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException;
+
+
+    LinkedList<Integer> getQueue ()throws RemoteException;
+
 }
