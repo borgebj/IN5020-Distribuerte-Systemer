@@ -27,7 +27,8 @@ public class Server implements ServerInterface {
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
 
-    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
+    {
         this.zone = zone;
         this.port = port;
         this.data = data;
@@ -47,23 +48,26 @@ public class Server implements ServerInterface {
     /**
      * @return hostname of the server
      */
-    public String getHost() {
+    public String getHost()
+    {
         return serverName;
     }
 
     /**
      * @return port of the server
      */
-    public int getPort() {
+    public int getPort()
+    {
         return port;
     }
 
     /**
      * Sleeps 'ms' milliseconds
      *
-     * @param ms : integer, miliseconds to sleep
+     * @param ms integer, miliseconds to sleep
      */
-    public void sleep(int ms) {
+    public void sleep(int ms)
+    {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -74,11 +78,12 @@ public class Server implements ServerInterface {
     /**
      * Checks local cache if request has been done before, either compute or get
      *
-     * @param cacheKey : key identifying request
-     * @param computation : supplier with
+     * @param cacheKey key identifying request
+     * @param computation supplier with computed value
      * @return result in cache or computation
      */
-    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation) {
+    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
+    {
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
             System.out.println("Cache hit for: " + cacheKey);
@@ -103,7 +108,8 @@ public class Server implements ServerInterface {
      * @return population of country
      */
     @Override
-    public int getPopulationofCountry(String countryName) {
+    public int getPopulationofCountry(String countryName)
+    {
         return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
             System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
@@ -119,12 +125,13 @@ public class Server implements ServerInterface {
 
     /** Returns total cities in a given country with minimum population given
      *
-     * @param countryName : country to look at
-     * @param min : minimum population boundary
+     * @param countryName country to look at
+     * @param min minimum population boundary
      * @return total number of cities within boundary
      */
     @Override
-    public int getNumberofCities(String countryName, int min) {
+    public int getNumberofCities(String countryName, int min)
+    {
         return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
@@ -141,12 +148,13 @@ public class Server implements ServerInterface {
     /**
      * Returns number of countries with minimum citycount and minimum population
      *
-     * @param citycount : minimum city boundary
-     * @param minpopulation : minimum population boundary
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
      * @return number of countries
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation) {
+    public int getNumberofCountries(int citycount, int minpopulation)
+    {
         return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
@@ -163,13 +171,14 @@ public class Server implements ServerInterface {
     /**
      * Returns  number of countries containing at least citycount cities where each city has a population between min and max
      *
-     * @param citycount : minimum city boundary
-     * @param minpopulation : minimum population boundary
-     * @param maxpopulation : maximum populalation boundary
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
+     * @param maxpopulation maximum populalation boundary
      * @return number of countries
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) {
+    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    {
         return getFromCacheOrCompute(
                 "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
                     System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
@@ -186,6 +195,11 @@ public class Server implements ServerInterface {
                 });
     }
 
+    @Override
+    public String toString()
+    {
+        return (getHost() + ":" + getPort());
+    }
 
     /**
      * Method that starts this current server Exporting server with stub, binding to

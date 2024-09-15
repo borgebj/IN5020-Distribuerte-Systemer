@@ -20,6 +20,23 @@ public class ProxyServer implements ProxyClientInterface {
 		startProxy();
 	}
 
+	// used to register servers to this proxy - when creating servers
+	public void registerServer(int zone, Server server) {
+		servers.put(zone, server);
+	}
+
+	@Override
+	public String requestServer(int zone) throws RemoteException {
+		Server server = servers.get(zone);
+
+		System.out.println("Found server " + server);
+
+		// TODO
+		// finn passende server
+
+		return (server.getHost()) + ":" + (server.getPort());
+	}
+
 	private void startProxy()
 	{
 		try {
@@ -39,22 +56,5 @@ public class ProxyServer implements ProxyClientInterface {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	// used to register servers to this proxy - when creating servers
-	public void registerServer(int zone, Server server) {
-		servers.put(zone, server);
-	}
-
-	@Override
-	public String requestServer(int zone) throws RemoteException {
-		Server server = servers.get(zone);
-
-		System.out.println("Found server " + server);
-
-		// TODO
-		// finn passende server
-
-		return (server.getHost()) + ":" + (server.getPort());
 	}
 }

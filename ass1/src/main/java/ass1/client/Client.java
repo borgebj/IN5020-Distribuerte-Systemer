@@ -108,16 +108,19 @@ public class Client {
             try {
                 String serverInfo = proxy.requestServer(zone);
 
+                System.out.println("Server info: " + serverInfo);
+
                 // 2. connect to the server - info on the form "server#:#port#:#"
                 String[] addressParts = serverInfo.split(":");
                 String host = addressParts[0];
                 int serverPort = Integer.parseInt(addressParts[1]);
 
                 //NOTE: realistically we use 'host' and 'port' to find the server on the network
-                // in our case, we test locally and therefore use "localhost"
+                // in our case, we test locally and therefore use "localhost" or "127.0.0.1"
+                host = "127.0.0.1";
 
                 // lookup given address and port
-                Registry serverRegistry = LocateRegistry.getRegistry("localhost", serverPort);
+                Registry serverRegistry = LocateRegistry.getRegistry(host, serverPort);
                 ServerInterface server = (ServerInterface) serverRegistry.lookup("server" + zone);
 
                 // Process request and cache result
