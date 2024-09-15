@@ -1,15 +1,20 @@
 package ass1.server;
 
 import java.rmi.RemoteException;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.Supplier;
 
 import ass1.server.CityInfo;
 
@@ -24,6 +29,10 @@ public class Server implements ServerInterface {
     private int zone;
     private int port;
 
+    // Cache with capacity of 150 entries
+    private LinkedHashMap<String, Integer> cache;
+    private static final int CACHE_SIZE = 150;
+
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
         this.zone = zone;
         this.port = port;
@@ -32,14 +41,23 @@ public class Server implements ServerInterface {
 
 
         startServer();  
+
+        // Initialize the cache with LRU eviction policy
+        this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
+                return size() > CACHE_SIZE;
+            }
+        };
+
+        startServer();
     }
 
     /**
-     * Method that starts this current server
-     * Exporting server with stub, binding to registry
+     * Method that starts this current server Exporting server with stub, binding to
+     * registry
      */
-    private void startServer()
-    {
+    private void startServer() {
         try {
             // Create a new registry on the unique port
             Registry registry = LocateRegistry.createRegistry(port);
@@ -60,19 +78,34 @@ public class Server implements ServerInterface {
         }
     }
 
-
     /**
      * Sleeps 'ms' milliseconds
      *
      * @param ms : integer, miliseconds to sleep
      */
-    public void sleep(int ms)
-    {
+    public void sleep(int ms) {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    // Utility method for cache lookup and storage
+    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation) {
+        // Check if the result is already cached
+        if (cache.containsKey(cacheKey)) {
+            System.out.println("Cache hit for: " + cacheKey);
+            return cache.get(cacheKey);
+        }
+
+        // If not cached, compute the result
+        Integer result = computation.get();
+
+        // Store the result in the cache
+        cache.put(cacheKey, result);
+
+        return result;
     }
 
     /** RMI methods */
@@ -81,132 +114,88 @@ public class Server implements ServerInterface {
         return num1 + num2;
     }
 
-    // given a country name as input, return population of country by summing population of cities in that country
+    // given a country name as input, return population of country by summing
+    // population of cities in that country
     @Override
-    public int getPopulationofCountry(String countryName)
-    {
-        System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
+    public int getPopulationofCountry(String countryName) {
+        return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
+            System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
-        // get appropriate country
-        HashMap<String, CityInfo> country = data.get(countryName);
+            HashMap<String, CityInfo> country = data.get(countryName);
+            if (country == null)
+                return 0;
 
-        if (country == null) return 0;
-
-        int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
-
-        //        int totalPopulation = 0;
-//
-//        // go through country-map, sum city population
-//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-//            int population = cityEntry.getValue().population;
-//            totalPopulation += population;
-//        }
-
-        sleep(80); // network latency
-        return totalPopulation;
+            int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
+            sleep(80); // network latency
+            return totalPopulation;
+        });
     }
 
-    // given a country name and min as input, return total number of cities in given country containing at least "min" population
+    // given a country name and min as input, return total number of cities in
+    // given country containing at least "min" population
     @Override
-    public int getNumberofCities(String countryName, int min)
-    {
-        System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
+    public int getNumberofCities(String countryName, int min) {
+        return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
+            System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
-        // get appropriate country
-        HashMap<String, CityInfo> country = data.get(countryName);
+            HashMap<String, CityInfo> country = data.get(countryName);
+            if (country == null)
+                return 0;
 
-        if (country == null) return 0;
-
-        long count = country.values().stream().filter(city -> city.population >= min).count();
-
-        //        int citiesAboveMin = 0;
-//
-//        // go through country-map, find cities with population >= min
-//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-//            int population = cityEntry.getValue().population;
-//            if ( population >= min ) {
-//                citiesAboveMin++;
-//            }
-//        }
-
-        sleep(80); // network latency
-        return (int) count;
+            long count = country.values().stream().filter(city -> city.population >= min).count();
+            sleep(80); // network latency
+            return (int) count;
+        });
     }
 
-    // returns number of countries with min "citycount" cities, and population at least "minpopulation"
+    // returns number of countries with min "citycount" cities, and population at
+    // least "minpopulation"
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation)
-    {
-        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+    public int getNumberofCountries(int citycount, int minpopulation) {
+        return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
+            System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        long count = data.values().stream()
-                .filter(cities -> cities.values().stream().filter(city -> city.population >= minpopulation).count() >= citycount)
-                .count();
+            long count = data.values().stream()
+                    .filter(cities -> cities.values().stream()
+                            .filter(city -> city.population >= minpopulation).count() >= citycount)
+                    .count();
 
-        //        int validCountries = 0;
-//
-//        // iterate through all countries
-//        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-//            int validCities = 0;
-//
-//            // get map of each city in current country
-//            HashMap<String, CityInfo> cities = countryEntry.getValue();
-//
-//            // go through each city, check population
-//            for (CityInfo city : cities.values()) {
-//                if (city.population >= minpopulation) {
-//                    validCities++;
-//                }
-//            }
-//
-//            // check if no. cities meet requirement
-//            if (validCities >= citycount) {
-//                validCountries++;
-//            }
-//        }
-
-        sleep(80); // network latency
-        return (int) count;
+            sleep(80); // network latency
+            return (int) count;
+        });
     }
 
     // returns number of countries containing at least "citycount" number of cities
     // each included city has a population between min and max population
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
-    {
-        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) {
+        return getFromCacheOrCompute(
+                "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
+                    System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        // one-liner
-        long count = data.values().stream()
-                .filter(cities -> cities.values().stream()
-                        .filter(city -> city.population >= minpopulation && city.population <= maxpopulation)
-                        .count() >= citycount)
-                .count();
+                    long count = data.values().stream()
+                            .filter(cities -> cities.values().stream()
+                                    .filter(city -> city.population >= minpopulation
+                                            && city.population <= maxpopulation)
+                                    .count() >= citycount)
+                            .count();
 
-        //        int validCountries = 0;
-        //
-        //        // iterate through all countries
-        //        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-        //            int validCities = 0;
-        //
-        //            // get map of each city in current country
-        //            HashMap<String, CityInfo> cities = countryEntry.getValue();
-        //
-        //            // go through each city, check population
-        //            for (CityInfo city : cities.values()) {
-        //                if (minpopulation <= city.population && city.population <= maxpopulation) {
-        //                    validCities++;
-        //                }
-        //            }
-        //
-        //            // check if no. cities meet requirement
-        //            if (validCities >= citycount) {
-        //                validCountries++;
-        //            }
-        //        }
+                    sleep(80); // network latency
+                    return (int) count;
+                });
+    }
 
-        sleep(80); // network latency
-        return (int) count;
+    // Method to save cache to a file
+    public void saveCacheToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("server_cache.txt"))) {
+            for (Map.Entry<String, Integer> entry : cache.entrySet()) {
+                writer.write(entry.getKey() + ":" + entry.getValue());
+                writer.newLine();
+            }
+            System.out.println("Cache saved to server_cache.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
