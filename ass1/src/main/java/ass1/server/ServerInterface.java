@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public interface ServerInterface extends Remote {
-    int Add(int num1, int num2) throws RemoteException;
 
     // given a country name as input, return population of country by summing population of cities in that country
     int getPopulationofCountry(String countryName) throws RemoteException;
