@@ -9,7 +9,7 @@ public class ServerSimulator {
 
     private static ServerInterface[] servers;
 
-    private static Proxy proxy;
+    private static ProxyServer proxy;
     private static final int BASE_PORT = 1099;
     private static final String filepath = "info/exercise_1_dataset.csv";
 
@@ -65,7 +65,7 @@ public class ServerSimulator {
      */
     private static void createProxy(int port)
     {
-        proxy = new Proxy(port - 1);
+        proxy = new ProxyServer(port - 1);
     }
 
 
@@ -81,16 +81,12 @@ public class ServerSimulator {
         servers = new ServerInterface[numServers];
 
         // Create servers
-        for (int i = 0; i < numServers; i++) {
-            try {
-                Server server = new Server(i, port + i, dataset);
-                servers[i] = server;
-                proxy.registerServer(i, server);
+        for (int i = 1; i <= numServers; i++) {
+            Server server = new Server(i, port + i, dataset);
+            servers[i-1] = server;
+            proxy.registerServer(i, server);
 
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-       }
+        }
     }
 
 
