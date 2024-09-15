@@ -81,44 +81,31 @@ public class ClientSimulator {
 
 
 	/**
-	 * Creates clients which is started within
+	 * Creates client which is started within the class
 	 *
-	 * @param numClients : how many clients to create
+	 * @param numServers : how many servers are created
 	 * @param port : base-port used
 	 * @param instructions : instruction-set that clients use
 	 */
-	private static void createClients(int numClients, int port, ArrayList<InstructionInfo> instructions)
+	private static void createClients(int numServers, int port, ArrayList<InstructionInfo> instructions)
 	{
-		clientThreads = new Thread[numClients];
-
 		// Create clients
-		for (int i = 0; i < numClients; i++) {
-			int clientZone = i;
-			int clientPort = port + numClients + i;
-			clientThreads[i] = new Thread(() -> new Client(clientZone, clientPort, instructions));
-			clientThreads[i].start();
-		}
-
-		// join all clients at the end
-		for (Thread t : clientThreads) {
-			try { t.join(); }
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		int clientPort = port + numServers;
+		Client client = new Client(clientPort, instructions);
 	}
+
 	public static void main(String[] args)
 	{
 		// Parse instructions
 		ArrayList<InstructionInfo> instructions = parseInstructions();
 
-		// How many clients to run at once
-		int numDevices = 5;
+		// how many servers are created
+		int numServers = 5;
 
 		// main port used
 		int port = BASE_PORT;
 
 		// start clients
-		createClients(numDevices, port, instructions);
+		createClients(numServers, port, instructions);
 	}
 }

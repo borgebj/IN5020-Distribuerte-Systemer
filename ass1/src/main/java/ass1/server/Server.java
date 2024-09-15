@@ -19,6 +19,7 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
+    private String serverName;
     private int zone;
     private int port;
 
@@ -30,6 +31,7 @@ public class Server implements ServerInterface {
         this.zone = zone;
         this.port = port;
         this.data = data;
+        this.serverName = "server"+zone;
 
         // Initialize the cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
@@ -43,28 +45,17 @@ public class Server implements ServerInterface {
     }
 
     /**
-     * Method that starts this current server Exporting server with stub, binding to
-     * registry
+     * @return hostname of the server
      */
-    private void startServer() {
-        try {
-            // Create a new registry on the unique port
-            Registry registry = LocateRegistry.createRegistry(port);
+    public String getHost() {
+        return serverName;
+    }
 
-            // export server to registry
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
-
-            // define server name same with port
-            String serverName = "server" + zone;
-
-            // bind server to registry
-            registry.bind(serverName, serverStub);
-
-            System.out.printf("%s:%d has started\n", serverName, port);
-
-        } catch (Exception e) {
-            System.err.println();
-        }
+    /**
+     * @return port of the server
+     */
+    public int getPort() {
+        return port;
     }
 
     /**
@@ -80,7 +71,13 @@ public class Server implements ServerInterface {
         }
     }
 
-    // Utility method for cache lookup and storage
+    /**
+     * Checks local cache if request has been done before, either compute or get
+     *
+     * @param cacheKey : key identifying request
+     * @param computation : supplier with
+     * @return result in cache or computation
+     */
     private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation) {
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
@@ -97,14 +94,14 @@ public class Server implements ServerInterface {
         return result;
     }
 
-    /** RMI methods */
-    @Override
-    public int Add(int num1, int num2) {
-        return num1 + num2;
-    }
+    /** RMI methods **/
 
-    // given a country name as input, return population of country by summing
-    // population of cities in that country
+    /**
+     * Returns population of country given
+     *
+     * @param countryName : country to look at
+     * @return population of country
+     */
     @Override
     public int getPopulationofCountry(String countryName) {
         return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
@@ -120,8 +117,12 @@ public class Server implements ServerInterface {
         });
     }
 
-    // given a country name and min as input, return total number of cities in
-    // given country containing at least "min" population
+    /** Returns total cities in a given country with minimum population given
+     *
+     * @param countryName : country to look at
+     * @param min : minimum population boundary
+     * @return total number of cities within boundary
+     */
     @Override
     public int getNumberofCities(String countryName, int min) {
         return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
@@ -137,8 +138,13 @@ public class Server implements ServerInterface {
         });
     }
 
-    // returns number of countries with min "citycount" cities, and population at
-    // least "minpopulation"
+    /**
+     * Returns number of countries with minimum citycount and minimum population
+     *
+     * @param citycount : minimum city boundary
+     * @param minpopulation : minimum population boundary
+     * @return number of countries
+     */
     @Override
     public int getNumberofCountries(int citycount, int minpopulation) {
         return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
@@ -154,8 +160,14 @@ public class Server implements ServerInterface {
         });
     }
 
-    // returns number of countries containing at least "citycount" number of cities
-    // each included city has a population between min and max population
+    /**
+     * Returns  number of countries containing at least citycount cities where each city has a population between min and max
+     *
+     * @param citycount : minimum city boundary
+     * @param minpopulation : minimum population boundary
+     * @param maxpopulation : maximum populalation boundary
+     * @return number of countries
+     */
     @Override
     public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) {
         return getFromCacheOrCompute(
@@ -174,17 +186,26 @@ public class Server implements ServerInterface {
                 });
     }
 
-    // Method to save cache to a file
-    public void saveCacheToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("server_cache.txt"))) {
-            for (Map.Entry<String, Integer> entry : cache.entrySet()) {
-                writer.write(entry.getKey() + ":" + entry.getValue());
-                writer.newLine();
-            }
-            System.out.println("Cache saved to server_cache.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
+
+    /**
+     * Method that starts this current server Exporting server with stub, binding to
+     * registry
+     */
+    private void startServer() {
+        try {
+            // Create a new registry on the unique port
+            Registry registry = LocateRegistry.createRegistry(port);
+
+            // export server to registry
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
+
+            // bind server to registry
+            registry.bind(serverName, serverStub);
+
+            System.out.printf("%s:%d has started\n", serverName, port);
+
+        } catch (Exception e) {
+            System.err.println();
         }
     }
-
 }
