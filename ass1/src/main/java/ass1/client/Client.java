@@ -40,8 +40,8 @@ public class Client {
         return function + args.toString() + zone;
     }
 
-    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException {
-
+    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
+    {
         // process requested function
         if (args.size() > 0) {
             String country;
@@ -83,63 +83,56 @@ public class Client {
         } return 0;
     }
 
+    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
+    {
+        // TODO
+        // overfør output til fil
+        long turnaround = timing[0];
+        long execution = timing[1];
+        long waiting = timing[2];
+
+        System.out.printf("%d %s " +
+                        "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
+                        "processed by server %d)\n",
+                result, instruc, turnaround, execution, waiting, zone);
+    }
+
     private void invokeRequests(ProxyClientInterface proxy) {
-        System.out.println("Printing all requests to be invoked: \n");
-
-        long startTime = System.nanoTime();
-
-        // go through requests one at a time
         for (InstructionInfo instruc : instructions) {
-
-            // extract function-info
             String function = instruc.function;
             List<String> args = instruc.args;
             int zone = instruc.zone;
 
             String cacheKey = generateCacheKey(function, args, zone);
+            long startTime = System.nanoTime();
 
-            // check if request has been done before
             if (cache.containsKey(cacheKey)) {
-                System.out.printf("[C%d] Cache hit for function %s(%s): %d\n", zone, function, args, cache.get(cacheKey));
-                continue;
-            }
+                int result = cache.get(cacheKey);
+                saveResult(instruc, result, zone, new long[]{0, 0, 0});
+            } else {
+                try {
+                    String serverInfo = proxy.requestServer(zone);
+                    String[] addressParts = serverInfo.split(":");
+                    String host = addressParts[0];
+                    int serverPort = Integer.parseInt(addressParts[1]);
+                    int resultZone = Character.getNumericValue(host.charAt(host.length() - 1));
 
-            // 1. ask for server
-            try {
-                String serverInfo = proxy.requestServer(zone);
+                    Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
+                    ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                System.out.println("Server info: " + serverInfo);
+                    int result = handleRequest(function, args, server);
+                    cache.put(cacheKey, result);
 
-                // 2. connect to the server - info on the form "server#:#port#:#"
-                String[] addressParts = serverInfo.split(":");
-                String host = addressParts[0];
-                int serverPort = Integer.parseInt(addressParts[1]);
+                    long endTime = System.nanoTime();
+                    long turnaround = (endTime - startTime) / 1000000;
 
-                //NOTE: realistically we use 'host' and 'port' to find the server on the network
-                // in our case, we test locally and therefore use "localhost" or "127.0.0.1"
-                host = "127.0.0.1";
+                    saveResult(instruc, result, resultZone, new long[]{turnaround, 0, 0});
 
-                // lookup given address and port
-                Registry serverRegistry = LocateRegistry.getRegistry(host, serverPort);
-                ServerInterface server = (ServerInterface) serverRegistry.lookup("server" + zone);
-
-                // Process request and cache result
-                int result = handleRequest(function, args, server);
-                cache.put(cacheKey, result);
-                System.out.printf("[C%d] Result for function %s(%s): %d\n", zone, function, args, result);
-
-            } catch (RemoteException | NotBoundException e) {
-                e.printStackTrace();
+                } catch (RemoteException | NotBoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-
-        // Convert the duration into minutes
-        double durationInMinutes = (double) duration / 1_000_000_000.0 / 60.0;
-
-        System.out.println("Finished invoking instructions, Time = " + String.format("%.3f", durationInMinutes) + " minutes ");
     }
 
     public void startClient() {

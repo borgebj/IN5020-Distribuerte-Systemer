@@ -9,6 +9,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import ass1.server.CityInfo;
@@ -26,6 +28,9 @@ public class Server implements ServerInterface {
     // Cache with capacity of 150 entries
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
+
+    // tracking waiting an execution time
+    private ConcurrentMap<String, Long> requestStartTimeMap = new ConcurrentHashMap<>();
 
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
     {
@@ -75,6 +80,23 @@ public class Server implements ServerInterface {
         }
     }
 
+    private <T> T timeMethod(String requestKey, Supplier<T> computation)
+    {
+        long requestStartTime = System.currentTimeMillis();
+
+        long startExecTime = System.currentTimeMillis();
+        long waitingTime = (startExecTime - requestStartTime);
+        System.out.printf("Waiting time for '%s': %d ms\n", requestKey, waitingTime);
+
+        long startComputationTime = System.currentTimeMillis();
+        T result = computation.get();
+        long endComputationTime = System.currentTimeMillis();
+        long executionTime = (endComputationTime - startComputationTime);
+
+        System.out.printf("Execution time for '%s' %d ms\n", requestKey, executionTime);
+        return result;
+    }
+
     /**
      * Checks local cache if request has been done before, either compute or get
      *
@@ -90,10 +112,8 @@ public class Server implements ServerInterface {
             return cache.get(cacheKey);
         }
 
-        // If not cached, compute the result
+        // If not cached, compute the result, store it
         Integer result = computation.get();
-
-        // Store the result in the cache
         cache.put(cacheKey, result);
 
         return result;

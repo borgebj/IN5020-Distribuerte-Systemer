@@ -4,18 +4,17 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.HashMap;
+
 
 public class ProxyServer implements ProxyClientInterface {
 	private int port;
-	private ConcurrentMap<Integer, Server> servers;
+	private HashMap<Integer, Server> servers;
 
 
 	public ProxyServer(int port) {
 		this.port = port;
-		this.servers = new ConcurrentHashMap<>();
+		this.servers = new HashMap<>();
 
 		startProxy();
 	}
@@ -26,10 +25,15 @@ public class ProxyServer implements ProxyClientInterface {
 	}
 
 	@Override
-	public String requestServer(int zone) throws RemoteException {
+	public String requestServer(int zone) throws RemoteException
+	{
+		int requestedZone = zone;
+
+		zone = (zone % 5) + 1;
+
 		Server server = servers.get(zone);
 
-		System.out.println("Found server " + server);
+		System.out.println("Requested server" + requestedZone + ", Found " + server);
 
 		// TODO
 		// finn passende server

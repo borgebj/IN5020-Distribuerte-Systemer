@@ -16,6 +16,7 @@ public class InstructionInfo {
 
 	@Override
 	public String toString() {
-		return String.format("%s(%s) - %d", function, args.toString(), zone);
+		String argsString = String.join(" ", args);
+		return String.format("%s %s Zone:%d", function, argsString, zone);
 	}
 }
