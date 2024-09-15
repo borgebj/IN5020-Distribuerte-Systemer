@@ -29,8 +29,6 @@ public class ProxyServer implements ProxyClientInterface {
 	{
 		int requestedZone = zone;
 
-		zone = (zone % 5) + 1;
-
 		Server server = servers.get(zone);
 
 		System.out.println("Requested server" + requestedZone + ", Found " + server);

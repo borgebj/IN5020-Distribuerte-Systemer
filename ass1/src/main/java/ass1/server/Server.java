@@ -1,19 +1,12 @@
 package ass1.server;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
-
-import ass1.server.CityInfo;
 
 public class Server implements ServerInterface {
 
@@ -28,9 +21,6 @@ public class Server implements ServerInterface {
     // Cache with capacity of 150 entries
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
-
-    // tracking waiting an execution time
-    private ConcurrentMap<String, Long> requestStartTimeMap = new ConcurrentHashMap<>();
 
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
     {
@@ -78,23 +68,6 @@ public class Server implements ServerInterface {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    private <T> T timeMethod(String requestKey, Supplier<T> computation)
-    {
-        long requestStartTime = System.currentTimeMillis();
-
-        long startExecTime = System.currentTimeMillis();
-        long waitingTime = (startExecTime - requestStartTime);
-        System.out.printf("Waiting time for '%s': %d ms\n", requestKey, waitingTime);
-
-        long startComputationTime = System.currentTimeMillis();
-        T result = computation.get();
-        long endComputationTime = System.currentTimeMillis();
-        long executionTime = (endComputationTime - startComputationTime);
-
-        System.out.printf("Execution time for '%s' %d ms\n", requestKey, executionTime);
-        return result;
     }
 
     /**

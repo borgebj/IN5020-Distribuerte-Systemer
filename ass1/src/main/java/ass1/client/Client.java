@@ -92,8 +92,8 @@ public class Client {
         long waiting = timing[2];
 
         System.out.printf("%d %s " +
-                        "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
-                        "processed by server %d)\n",
+                "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
+                "processed by server %d)\n",
                 result, instruc, turnaround, execution, waiting, zone);
     }
 
@@ -123,8 +123,7 @@ public class Client {
                     int result = handleRequest(function, args, server);
                     cache.put(cacheKey, result);
 
-                    long endTime = System.nanoTime();
-                    long turnaround = (endTime - startTime) / 1000000;
+                    long turnaround = (System.nanoTime() - startTime) / 1000000;
 
                     saveResult(instruc, result, resultZone, new long[]{turnaround, 0, 0});
 
