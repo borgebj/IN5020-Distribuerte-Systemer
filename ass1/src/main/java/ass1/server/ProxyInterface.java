@@ -17,6 +17,6 @@ public interface ProxyInterface extends Remote {
 	// Method for handling requested function
 	int handleRequest(String function, List<String> args, int zone) throws RemoteException;
 	
-	int handleQue(ConcurrentHashMap<Integer, ServerInterface> servers, int zone) throws RemoteException;
+	ServerInterface handleQue(ConcurrentMap<Integer, ServerInterface> servers, int zone) throws RemoteException;
 
 }

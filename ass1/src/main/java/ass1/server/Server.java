@@ -4,9 +4,11 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import ass1.server.CityInfo;
@@ -18,7 +20,7 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
-    private Queue<Integer> queue;
+    private Queue<ArrayList<String>> queue;
     private int zone;
     private int port;
 
@@ -208,9 +210,9 @@ public class Server implements ServerInterface {
     }
 
     @Override
-    public LinkedList<Integer> getQueue() throws RemoteException {
+    public Queue<ArrayList<String>> getQueue() throws RemoteException {
         // TODO Auto-generated method stub
-        return (LinkedList<Integer>) queue;
+        return  queue;
     }
 
 }

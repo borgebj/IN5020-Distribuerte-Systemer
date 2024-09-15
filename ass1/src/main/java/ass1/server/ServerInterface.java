@@ -2,7 +2,9 @@ package ass1.server;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Queue;
 
 public interface ServerInterface extends Remote {
     int Add(int num1, int num2) throws RemoteException;
@@ -23,6 +25,6 @@ public interface ServerInterface extends Remote {
     int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException;
 
 
-    LinkedList<Integer> getQueue ()throws RemoteException;
+    Queue<ArrayList<String>> getQueue ()throws RemoteException;
 
 }
