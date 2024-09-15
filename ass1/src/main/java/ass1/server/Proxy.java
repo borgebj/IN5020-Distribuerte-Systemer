@@ -18,7 +18,7 @@ public class Proxy implements ProxyInterface {
 	private ConcurrentMap<Integer, ServerInterface> servers;
 	int numberOfServers =5;
 	int requestId =0; 
-
+	int balanceThreshold = 18;
 	public Proxy(int port) {
 		this.port = port;
 		this.servers = new ConcurrentHashMap<>();
@@ -97,6 +97,8 @@ public class Proxy implements ProxyInterface {
 		if (server == null) {
 			throw new RemoteException("Server not found for zone " + zone);
 		}
+
+	
 	
 		//server.getQueue().add(args);
 		// TODO: Add queues and process queue sizes
@@ -157,7 +159,13 @@ public class Proxy implements ProxyInterface {
 		ServerInterface server = servers.get(zone-1);
 		
 		
+		int balanceThreshold;
 		if(server.getQueue().size() >18){
+
+
+			balanceThreshold  = server.getQueue().size();
+
+		
 	
 			ServerInterface adjacentServer1= servers.get(zone %numberOfServers);
 			ServerInterface adjacentServer2= servers.get((zone+1) %numberOfServers);
@@ -165,6 +173,9 @@ public class Proxy implements ProxyInterface {
 			Queue<ArrayList<String>> a1Que = adjacentServer1.getQueue();
 			Queue<ArrayList<String>> a2Que = adjacentServer2.getQueue();
 			
+			if(server.getQueue().size() % 18 ==0){
+				System.out.println("print load ");
+			}
 			
 			if(a1Que.size() <8 && a2Que.size() <8){
 
