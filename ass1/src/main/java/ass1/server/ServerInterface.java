@@ -26,4 +26,6 @@ public interface ServerInterface extends Remote {
 
     Queue<ArrayList<String>> getQueue ()throws RemoteException;
 
+    Queue<Integer> getReqQueue ()throws RemoteException;
+
 }

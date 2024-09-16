@@ -26,6 +26,7 @@ public class Server implements ServerInterface {
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
     private Queue<ArrayList<String>> queue;
+    private Queue<Integer> reqQueue;
     private String serverName;
     private int zone;
     private int port;
@@ -40,6 +41,7 @@ public class Server implements ServerInterface {
         this.data = data;
         this.serverName = "server"+zone;
         this.queue = new LinkedList<>();
+        this.reqQueue = new LinkedList<>();
         // Initialize the cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
             @Override
@@ -220,5 +222,11 @@ public class Server implements ServerInterface {
     public Queue<ArrayList<String>> getQueue() throws RemoteException {
         // TODO Auto-generated method stub
         return  queue;
+    }
+
+    @Override
+    public Queue<Integer> getReqQueue() throws RemoteException {
+        // TODO Auto-generated method stub
+        return reqQueue;
     }
 }

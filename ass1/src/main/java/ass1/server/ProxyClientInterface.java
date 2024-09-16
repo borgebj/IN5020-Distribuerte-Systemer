@@ -9,5 +9,5 @@ public interface ProxyClientInterface extends Remote {
 
 	String requestServer(int zone) throws RemoteException;
 		
-	ServerInterface handleQue(ConcurrentMap<Integer, ServerInterface> servers, int zone) throws RemoteException;
+	Server handleQue(ConcurrentMap<Integer, Server> servers, int zone) throws RemoteException;
 }

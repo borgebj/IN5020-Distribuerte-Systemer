@@ -52,9 +52,12 @@ public class ProxyServer implements ProxyClientInterface {
 
 	@Override
 	public String requestServer(int zone) throws RemoteException {
-		Server server = servers.get(zone);
-
+		Server server =  handleQue(servers, zone);
+		server.getReqQueue().add(requestId);
+		System.out.println( " zone oujt " + server.getHost() + " request id " + requestId);
 		System.out.println("Found server " + server);
+
+
 
 		// TODO
 		// finn passende server
@@ -64,27 +67,38 @@ public class ProxyServer implements ProxyClientInterface {
 
 	
 	@Override
-	public ServerInterface handleQue(ConcurrentMap<Integer, ServerInterface> servers, int zone) throws RemoteException {
+	public Server handleQue(ConcurrentMap<Integer, Server> servers, int zone) throws RemoteException {
 		// TODO Auto-generated method stub
 		
-		ServerInterface server = servers.get(zone-1);
+		Server server = servers.get(zone);
 		
+		System.out.println("Zone in "+  zone );
 		
-		int balanceThreshold;
-		if(server.getQueue().size() >18){
 
+		Server server1 = servers.get(0);
+		if(server.getReqQueue().size() >18){
 
-			balanceThreshold  = server.getQueue().size();
-
-		
 	
-			ServerInterface adjacentServer1= servers.get(zone %numberOfServers);
-			ServerInterface adjacentServer2= servers.get((zone+1) %numberOfServers);
+
+		
+			System.out.println("Zone right now "+ ((zone +1 ) %numberOfServers));
 	
-			Queue<ArrayList<String>> a1Que = adjacentServer1.getQueue();
-			Queue<ArrayList<String>> a2Que = adjacentServer2.getQueue();
+		
+			Server adjacentServer1= servers.get((zone +1 ) %numberOfServers);
+			Server adjacentServer2= servers.get((zone+2) %numberOfServers);
+		
+
+
+			if( adjacentServer2.getReqQueue() ==null){
+				System.out.println(" Que 2 is null");	
+		}	
+			if( adjacentServer1.getReqQueue() ==null){
+				System.out.println(" Que 1 is");	
+		}	
+			Queue<Integer> a1Que = adjacentServer1.getReqQueue();
+			Queue<Integer>  a2Que = adjacentServer2.getReqQueue();
 			
-			if(server.getQueue().size() % 18 ==0){
+			if(server.getReqQueue().size() % 18 ==0){
 				System.out.println("print load ");
 			}
 			
@@ -102,6 +116,8 @@ public class ProxyServer implements ProxyClientInterface {
 			}
 
 		}	
+		
+		requestId++;
 		
 		return server ;
 	}

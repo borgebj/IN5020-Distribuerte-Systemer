@@ -108,9 +108,14 @@ public class Client {
             try {
                 String serverInfo = proxy.requestServer(zone);
 
+                
+                
                 // 2. connect to the server - info on the form "server#:#port#:#"
                 String[] addressParts = serverInfo.split(":");
                 String host = addressParts[0];
+                System.out.println("Requesting zone: " + zone);
+                System.out.println("Request handled by "+ host);
+
                 int serverPort = Integer.parseInt(addressParts[1]);
 
                 //NOTE: realistically we use 'host' and 'port' to find the server on the network
