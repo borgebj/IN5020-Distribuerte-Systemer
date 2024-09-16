@@ -1,5 +1,6 @@
 package ass1.server;
 
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -8,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class Server implements ServerInterface {
+public class Server implements ServerInterface, ProxyServerInterface {
 
     /** Global variables */
 
@@ -98,12 +99,12 @@ public class Server implements ServerInterface {
      * Returns population of country given
      *
      * @param countryName : country to look at
-     * @return population of country
+     * @return population of country and timing
      */
     @Override
-    public int getPopulationofCountry(String countryName)
+    public Response getPopulationofCountry(String countryName)
     {
-        return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
+        int result = getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
             System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -114,18 +115,19 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return totalPopulation;
         });
+        return new Response(result, 0, 0);
     }
 
     /** Returns total cities in a given country with minimum population given
      *
      * @param countryName country to look at
      * @param min minimum population boundary
-     * @return total number of cities within boundary
+     * @return total number of cities within boundary and timing
      */
     @Override
-    public int getNumberofCities(String countryName, int min)
+    public Response getNumberofCities(String countryName, int min)
     {
-        return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
+        int result = getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -136,6 +138,7 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
+        return new Response(result, 0, 0);
     }
 
     /**
@@ -143,12 +146,12 @@ public class Server implements ServerInterface {
      *
      * @param citycount minimum city boundary
      * @param minpopulation minimum population boundary
-     * @return number of countries
+     * @return number of countries and timing
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation)
+    public Response getNumberofCountries(int citycount, int minpopulation)
     {
-        return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
+        int result = getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
             long count = data.values().stream()
@@ -159,6 +162,7 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
+        return new Response(result, 0, 0);
     }
 
     /**
@@ -167,12 +171,12 @@ public class Server implements ServerInterface {
      * @param citycount minimum city boundary
      * @param minpopulation minimum population boundary
      * @param maxpopulation maximum populalation boundary
-     * @return number of countries
+     * @return number of countries and timing
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    public Response getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
     {
-        return getFromCacheOrCompute(
+        int result = getFromCacheOrCompute(
                 "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
                     System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
@@ -186,6 +190,13 @@ public class Server implements ServerInterface {
                     sleep(80); // network latency
                     return (int) count;
                 });
+        return new Response(result, 0, 0);
+    }
+
+    @Override
+    public int fetchWorkload() throws RemoteException {
+        //TODO: return local queue size
+        return 0;
     }
 
     @Override
