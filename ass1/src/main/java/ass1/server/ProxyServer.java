@@ -93,6 +93,56 @@ public class ProxyServer implements ProxyClientInterface {
 	@Override
 	public Server handleQue(ConcurrentMap<Integer, Server> servers, int zone) throws RemoteException {
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException("Unimplemented method 'handleQue'");
+		
+		Server server = servers.get(zone);
+		
+		System.out.println("Zone in "+  zone );
+		
+
+		
+		if(server.getReqQueue().size() >18){
+
+	
+			
+			
+
+			int prev  = ((zone +1) %numberOfServers)+1;
+		
+			Server adjacentServer1= servers.get(prev) ;
+			Server adjacentServer2= servers.get((prev %numberOfServers )+1);
+		
+
+
+			if( adjacentServer2.getReqQueue() ==null){
+				System.out.println(" Que 2 is null");	
+		}	
+			if( adjacentServer1.getReqQueue() ==null){
+				System.out.println(" Que 1 is");	
+		}	
+			Queue<Integer> a1Que = adjacentServer1.getReqQueue();
+			Queue<Integer>  a2Que = adjacentServer2.getReqQueue();
+			
+			if(server.getReqQueue().size() % 18 ==0){
+				System.out.println("print load ");
+			}
+			
+			if(a1Que.size() <18 && a2Que.size() <18){
+
+				if( a1Que.size()<a2Que.size())return adjacentServer1;
+				else return adjacentServer2;	
+
+			} else if(a1Que.size() <18){
+				return adjacentServer1;
+
+			 
+			} else if(a2Que.size() <18){
+				return adjacentServer2;
+			}
+
+		}	
+		
+		requestId++;
+		
+		return server ;
 	}
 }

@@ -203,7 +203,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int fetchWorkload() throws RemoteException {
         //TODO: return local queue size
-        return 0;
+        return reqQueue.size();
     }
 
     @Override
@@ -234,5 +234,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
         }
     }
 
- 
+    
+    public Queue<Integer> getReqQueue() {
+        return reqQueue;
+    }
 }
