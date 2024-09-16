@@ -7,6 +7,7 @@ import java.rmi.registry.Registry;
 import java.util.*;
 
 import ass1.server.ProxyClientInterface;
+import ass1.server.Response;
 import ass1.server.ServerInterface;
 import ass1.server.InstructionInfo;
 
@@ -40,7 +41,7 @@ public class Client {
         return function + args.toString() + zone;
     }
 
-    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
+    public Response handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
     {
         // process requested function
         if (args.size() > 0) {
@@ -50,17 +51,19 @@ public class Client {
             try {
                 switch (function) {
                     case "getPopulationofCountry":
-                        country = args.get(0);
-                        return server.getPopulationofCountry(country);
+                        if (args.size() == 1) {
+                            country = args.get(0);
+                            return server.getPopulationofCountry(country);
+                        }
 
                     case "getNumberofCities":
-                        country = args.get(0);
-                        int min = Integer.parseInt(args.get(1));
-                        return server.getNumberofCities(country, min);
+                        if (args.size() == 2) {
+                            country = args.get(0);
+                            int min = Integer.parseInt(args.get(1));
+                            return server.getNumberofCities(country, min);
+                        }
 
                     case "getNumberofCountries":
-
-                        // min boundary
                         if (args.size() == 2) {
                             int cityCount = Integer.parseInt(args.get(0));
                             int minPopulation = Integer.parseInt(args.get(1));
@@ -79,8 +82,11 @@ public class Client {
                     default:
                         throw new RemoteException("Unknown function: " + function);
                 }
-            } catch (Exception ignore) {}
-        } return 0;
+            } catch (Exception ignored) {
+                // we ignore errors in requests due to a lot of errors in the input-text-file
+            }
+        }
+        return null;
     }
 
     private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
@@ -120,13 +126,20 @@ public class Client {
                     Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
                     ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                    int result = handleRequest(function, args, server);
-                    cache.put(cacheKey, result);
+                    // extract response
+                    Response response = handleRequest(function, args, server);
 
-                    long turnaround = (System.nanoTime() - startTime) / 1000000;
+                    if (response != null) {
+                        int result = response.result;
+                        int execTime = response.executionTime;
+                        int waitTime = response.waitingTime;
 
-                    saveResult(instruc, result, resultZone, new long[]{turnaround, 0, 0});
+                        cache.put(cacheKey, result);
 
+                        long turnaround = (System.nanoTime() - startTime) / 1000000;
+
+                        saveResult(instruc, result, resultZone, new long[]{turnaround, execTime, waitTime});
+                    }
                 } catch (RemoteException | NotBoundException e) {
                     e.printStackTrace();
                 }
