@@ -1,9 +1,6 @@
 package ass1.server;
 
 import java.rmi.RemoteException;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -16,10 +13,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.function.Supplier;
 
-import ass1.server.CityInfo;
-
-
-public class Server implements ServerInterface {
+public class Server implements ServerInterface, ProxyServerInterface {
 
     /** Global variables */
 
@@ -35,7 +29,8 @@ public class Server implements ServerInterface {
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
 
-    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
+    {
         this.zone = zone;
         this.port = port;
         this.data = data;
@@ -56,23 +51,26 @@ public class Server implements ServerInterface {
     /**
      * @return hostname of the server
      */
-    public String getHost() {
+    public String getHost()
+    {
         return serverName;
     }
 
     /**
      * @return port of the server
      */
-    public int getPort() {
+    public int getPort()
+    {
         return port;
     }
 
     /**
      * Sleeps 'ms' milliseconds
      *
-     * @param ms : integer, miliseconds to sleep
+     * @param ms integer, miliseconds to sleep
      */
-    public void sleep(int ms) {
+    public void sleep(int ms)
+    {
         try {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
@@ -83,21 +81,20 @@ public class Server implements ServerInterface {
     /**
      * Checks local cache if request has been done before, either compute or get
      *
-     * @param cacheKey : key identifying request
-     * @param computation : supplier with
+     * @param cacheKey key identifying request
+     * @param computation supplier with computed value
      * @return result in cache or computation
      */
-    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation) {
+    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
+    {
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
             System.out.println("Cache hit for: " + cacheKey);
             return cache.get(cacheKey);
         }
 
-        // If not cached, compute the result
+        // If not cached, compute the result, store it
         Integer result = computation.get();
-
-        // Store the result in the cache
         cache.put(cacheKey, result);
 
         return result;
@@ -109,11 +106,12 @@ public class Server implements ServerInterface {
      * Returns population of country given
      *
      * @param countryName : country to look at
-     * @return population of country
+     * @return population of country and timing
      */
     @Override
-    public int getPopulationofCountry(String countryName) {
-        return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
+    public Response getPopulationofCountry(String countryName)
+    {
+        int result = getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
             System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -124,17 +122,19 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return totalPopulation;
         });
+        return new Response(result, 0, 0);
     }
 
     /** Returns total cities in a given country with minimum population given
      *
-     * @param countryName : country to look at
-     * @param min : minimum population boundary
-     * @return total number of cities within boundary
+     * @param countryName country to look at
+     * @param min minimum population boundary
+     * @return total number of cities within boundary and timing
      */
     @Override
-    public int getNumberofCities(String countryName, int min) {
-        return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
+    public Response getNumberofCities(String countryName, int min)
+    {
+        int result = getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -145,18 +145,20 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
+        return new Response(result, 0, 0);
     }
 
     /**
      * Returns number of countries with minimum citycount and minimum population
      *
-     * @param citycount : minimum city boundary
-     * @param minpopulation : minimum population boundary
-     * @return number of countries
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
+     * @return number of countries and timing
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation) {
-        return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
+    public Response getNumberofCountries(int citycount, int minpopulation)
+    {
+        int result = getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
             long count = data.values().stream()
@@ -167,19 +169,21 @@ public class Server implements ServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
+        return new Response(result, 0, 0);
     }
 
     /**
      * Returns  number of countries containing at least citycount cities where each city has a population between min and max
      *
-     * @param citycount : minimum city boundary
-     * @param minpopulation : minimum population boundary
-     * @param maxpopulation : maximum populalation boundary
-     * @return number of countries
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
+     * @param maxpopulation maximum populalation boundary
+     * @return number of countries and timing
      */
     @Override
-    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) {
-        return getFromCacheOrCompute(
+    public Response getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    {
+        int result = getFromCacheOrCompute(
                 "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
                     System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
@@ -193,8 +197,20 @@ public class Server implements ServerInterface {
                     sleep(80); // network latency
                     return (int) count;
                 });
+        return new Response(result, 0, 0);
     }
 
+    @Override
+    public int fetchWorkload() throws RemoteException {
+        //TODO: return local queue size
+        return 0;
+    }
+
+    @Override
+    public String toString()
+    {
+        return (getHost() + ":" + getPort());
+    }
 
     /**
      * Method that starts this current server Exporting server with stub, binding to
@@ -218,14 +234,5 @@ public class Server implements ServerInterface {
         }
     }
 
-    @Override
-    public Queue<ArrayList<String>> getQueue() throws RemoteException {
-        // TODO Auto-generated method stub
-        return  queue;
-    }
-
-    @Override
-    public Queue<Integer> getReqQueue() throws RemoteException {
-        return reqQueue;
-    }
+ 
 }

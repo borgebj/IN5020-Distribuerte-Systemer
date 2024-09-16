@@ -17,7 +17,7 @@ public class ServerSimulator {
     /**
      * Goes through and parses data from a given file to a hashmap, later used by server
      *
-     * @return map : filled hashmap with data
+     * @return map filled hashmap with data
      */
     private static HashMap<String, HashMap<String, CityInfo>> parseData()
     {
@@ -61,7 +61,7 @@ public class ServerSimulator {
     /**
      * Creates the proxy to be used
      *
-     * @param port : base-port used
+     * @param port base-port used
      */
     private static void createProxy(int port)
     {
@@ -72,9 +72,9 @@ public class ServerSimulator {
     /**
      * Creates servers which is started within
      *
-     * @param numServers : how many servers to start
-     * @param port : base-port used
-     * @param dataset : data-set that servers use
+     * @param numServers how many servers to start
+     * @param port base-port used
+     * @param dataset data-set that servers use
      */
 	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
     {

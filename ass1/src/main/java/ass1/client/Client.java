@@ -7,6 +7,7 @@ import java.rmi.registry.Registry;
 import java.util.*;
 
 import ass1.server.ProxyClientInterface;
+import ass1.server.Response;
 import ass1.server.ServerInterface;
 import ass1.server.InstructionInfo;
 
@@ -40,8 +41,8 @@ public class Client {
         return function + args.toString() + zone;
     }
 
-    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException {
-
+    public Response handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
+    {
         // process requested function
         if (args.size() > 0) {
             String country;
@@ -50,17 +51,19 @@ public class Client {
             try {
                 switch (function) {
                     case "getPopulationofCountry":
-                        country = args.get(0);
-                        return server.getPopulationofCountry(country);
+                        if (args.size() == 1) {
+                            country = args.get(0);
+                            return server.getPopulationofCountry(country);
+                        }
 
                     case "getNumberofCities":
-                        country = args.get(0);
-                        int min = Integer.parseInt(args.get(1));
-                        return server.getNumberofCities(country, min);
+                        if (args.size() == 2) {
+                            country = args.get(0);
+                            int min = Integer.parseInt(args.get(1));
+                            return server.getNumberofCities(country, min);
+                        }
 
                     case "getNumberofCountries":
-
-                        // min boundary
                         if (args.size() == 2) {
                             int cityCount = Integer.parseInt(args.get(0));
                             int minPopulation = Integer.parseInt(args.get(1));
@@ -79,76 +82,69 @@ public class Client {
                     default:
                         throw new RemoteException("Unknown function: " + function);
                 }
-            } catch (Exception ignore) {}
-        } return 0;
+            } catch (Exception ignored) {
+                // we ignore errors in requests due to a lot of errors in the input-text-file
+            }
+        }
+        return null;
+    }
+
+    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
+    {
+        // TODO
+        // overfør output til fil
+        long turnaround = timing[0];
+        long execution = timing[1];
+        long waiting = timing[2];
+
+        System.out.printf("%d %s " +
+                "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
+                "processed by server %d)\n",
+                result, instruc, turnaround, execution, waiting, zone);
     }
 
     private void invokeRequests(ProxyClientInterface proxy) {
-        System.out.println("Printing all requests to be invoked: \n");
-
-        long startTime = System.nanoTime();
-
-        // go through requests one at a time
         for (InstructionInfo instruc : instructions) {
-
-            // extract function-info
             String function = instruc.function;
             List<String> args = instruc.args;
             int zone = instruc.zone;
 
             String cacheKey = generateCacheKey(function, args, zone);
+            long startTime = System.nanoTime();
 
-            // check if request has been done before
             if (cache.containsKey(cacheKey)) {
-                System.out.printf("[C%d] Cache hit for function %s(%s): %d\n", zone, function, args, cache.get(cacheKey));
-                continue;
-            }
+                int result = cache.get(cacheKey);
+                saveResult(instruc, result, zone, new long[]{0, 0, 0});
+            } else {
+                try {
+                    String serverInfo = proxy.requestServer(zone);
+                    String[] addressParts = serverInfo.split(":");
+                    String host = addressParts[0];
+                    int serverPort = Integer.parseInt(addressParts[1]);
+                    int resultZone = Character.getNumericValue(host.charAt(host.length() - 1));
 
-            // 1. ask for server
-            try {
-                String serverInfo = proxy.requestServer(zone);
+                    Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
+                    ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                
-                
-                // 2. connect to the server - info on the form "server#:#port#:#"
-                String[] addressParts = serverInfo.split(":");
-                String host = addressParts[0];
-                System.out.println("Requesting zone: " +("server"+ zone));
-                System.out.println("Request handled by "+ host);
+                    // extract response
+                    Response response = handleRequest(function, args, server);
 
-                int serverPort = Integer.parseInt(addressParts[1]);
+                    if (response != null) {
+                        int result = response.result;
+                        int execTime = response.executionTime;
+                        int waitTime = response.waitingTime;
 
+                        cache.put(cacheKey, result);
 
+                        long turnaround = (System.nanoTime() - startTime) / 1000000;
 
-                if(!host.equals("server"+zone)){
-                    String RESET = "\u001B[0m";
-                    String YELLOW = "\u001B[33m";
-                    System.out.println(YELLOW + "\nREQUEST HANDLED BY DIFFERENT ZONE THAN ONE REQUESTED \n" + RESET);
+                        saveResult(instruc, result, resultZone, new long[]{turnaround, execTime, waitTime});
+                    }
+                } catch (RemoteException | NotBoundException e) {
+                    e.printStackTrace();
                 }
-                //NOTE: realistically we use 'host' and 'port' to find the server on the network
-                // in our case, we test locally and therefore use "localhost"
-
-                // lookup given address and port
-                Registry serverRegistry = LocateRegistry.getRegistry("localhost", serverPort);
-                ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
-
-                // Process request and cache result
-                int result = handleRequest(function, args, server);
-                cache.put(cacheKey, result);
-                System.out.printf("[C%d] Result for function %s(%s): %d\n", zone, function, args, result);
-
-            } catch (RemoteException | NotBoundException e) {
-                e.printStackTrace();
             }
         }
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-
-        // Convert the duration into minutes
-        double durationInMinutes = (double) duration / 1_000_000_000.0 / 60.0;
-
-        System.out.println("Finished invoking instructions, Time = " + String.format("%.3f", durationInMinutes) + " minutes ");
     }
 
     public void startClient() {
