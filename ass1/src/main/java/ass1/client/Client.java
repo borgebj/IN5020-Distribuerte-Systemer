@@ -4,11 +4,9 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import ass1.server.ProxyInterface;
+import ass1.server.ProxyClientInterface;
 import ass1.server.ServerInterface;
 import ass1.server.InstructionInfo;
 
@@ -16,44 +14,124 @@ public class Client {
 
     // Hashmap with city data
     private static ArrayList<InstructionInfo> instructions;
-    private int zone;
     private int port;
 
-    public Client(int zone, int port, ArrayList<InstructionInfo> instructions) {
+    // Cache to store results, max size of 45
+    private static final int CACHE_SIZE = 45;
+    private LinkedHashMap<String, Integer> cache;
+
+    public Client(int port, ArrayList<InstructionInfo> instructions) {
         Client.instructions = instructions;
-        this.zone = zone;
         this.port = port;
+
+        // Initialize cache with LRU eviction policy
+        this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
+                return size() > CACHE_SIZE;
+            }
+        };
+
         startClient();
     }
 
-    private static void invokeRequests(ProxyInterface proxy) {
-        System.out.println("Printing all requests to be invoked: \n");
+    // generates a unique key for each request
+    private static String generateCacheKey(String function, List<String> args, int zone) {
+        return function + args.toString() + zone;
+    }
 
-        long startTime = System.nanoTime();
+    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
+    {
+        // process requested function
+        if (args.size() > 0) {
+            String country;
 
-        for (InstructionInfo instruc : instructions) {
+            // try-catch for handling wrong entries in instruction-file
             try {
-                String function = instruc.function;
-                List<String> args = instruc.args;
-                int zone = instruc.zone;
+                switch (function) {
+                    case "getPopulationofCountry":
+                        country = args.get(0);
+                        return server.getPopulationofCountry(country);
 
-                int result = proxy.handleRequest(function, args, zone);
-                if (result > 0) {
-                    System.out.printf("[C%d] Result for function %s(%s) = %d\n", zone, function, args, result);
+                    case "getNumberofCities":
+                        country = args.get(0);
+                        int min = Integer.parseInt(args.get(1));
+                        return server.getNumberofCities(country, min);
+
+                    case "getNumberofCountries":
+
+                        // min boundary
+                        if (args.size() == 2) {
+                            int cityCount = Integer.parseInt(args.get(0));
+                            int minPopulation = Integer.parseInt(args.get(1));
+                            return server.getNumberofCountries(cityCount, minPopulation);
+                        }
+
+                        // min and max boundaries
+                        else if (args.size() == 3) {
+                            int cityCOunt = Integer.parseInt(args.get(0));
+                            int minPopulation = Integer.parseInt(args.get(1));
+                            int maxPopulation = Integer.parseInt(args.get(2));
+                            return server.getNumberofCountries(cityCOunt, minPopulation, maxPopulation);
+                        } else {
+                            throw new RemoteException("Invalid number of arguments for 'getNumberofCountries'");
+                        }
+                    default:
+                        throw new RemoteException("Unknown function: " + function);
                 }
-            } catch (RemoteException e) {
-                System.err.printf("Failed to invoke function %s(%s) for zone %d: %s\n",
-                        instruc.function, instruc.args, instruc.zone, e.getMessage());
+            } catch (Exception ignore) {}
+        } return 0;
+    }
+
+    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
+    {
+        // TODO
+        // overfør output til fil
+        long turnaround = timing[0];
+        long execution = timing[1];
+        long waiting = timing[2];
+
+        System.out.printf("%d %s " +
+                "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
+                "processed by server %d)\n",
+                result, instruc, turnaround, execution, waiting, zone);
+    }
+
+    private void invokeRequests(ProxyClientInterface proxy) {
+        for (InstructionInfo instruc : instructions) {
+            String function = instruc.function;
+            List<String> args = instruc.args;
+            int zone = instruc.zone;
+
+            String cacheKey = generateCacheKey(function, args, zone);
+            long startTime = System.nanoTime();
+
+            if (cache.containsKey(cacheKey)) {
+                int result = cache.get(cacheKey);
+                saveResult(instruc, result, zone, new long[]{0, 0, 0});
+            } else {
+                try {
+                    String serverInfo = proxy.requestServer(zone);
+                    String[] addressParts = serverInfo.split(":");
+                    String host = addressParts[0];
+                    int serverPort = Integer.parseInt(addressParts[1]);
+                    int resultZone = Character.getNumericValue(host.charAt(host.length() - 1));
+
+                    Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
+                    ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
+
+                    int result = handleRequest(function, args, server);
+                    cache.put(cacheKey, result);
+
+                    long turnaround = (System.nanoTime() - startTime) / 1000000;
+
+                    saveResult(instruc, result, resultZone, new long[]{turnaround, 0, 0});
+
+                } catch (RemoteException | NotBoundException e) {
+                    e.printStackTrace();
+                }
             }
         }
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime;
-
-        // Convert the duration into minutes
-        double durationInMinutes = (double) duration / 1_000_000_000.0 / 60.0;
-
-        System.out.println("Finished invoking instructions, Time = " + String.format("%.3f", durationInMinutes) + " minutes ");
     }
 
     public void startClient() {
@@ -62,9 +140,9 @@ public class Client {
             Registry registry = LocateRegistry.getRegistry("localhost", 1098);  // <- 1098 is proxy-port
 
             // Lookup the proxy
-            ProxyInterface proxy = (ProxyInterface) registry.lookup("proxy");
+            ProxyClientInterface proxy = (ProxyClientInterface) registry.lookup("proxy");
 
-            System.out.printf("Client%d:%d has started\n", zone, port);
+            System.out.printf("Client:%d has started\n", port);
 
             // Invoke requests from instruction-set
             invokeRequests(proxy);

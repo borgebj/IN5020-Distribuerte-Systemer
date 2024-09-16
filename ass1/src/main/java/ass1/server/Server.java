@@ -4,9 +4,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import ass1.server.CityInfo;
+import java.util.function.Supplier;
 
 public class Server implements ServerInterface {
 
@@ -14,47 +14,52 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
+    private String serverName;
     private int zone;
     private int port;
 
-    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data) {
+    // Cache with capacity of 150 entries
+    private LinkedHashMap<String, Integer> cache;
+    private static final int CACHE_SIZE = 150;
+
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
+    {
         this.zone = zone;
         this.port = port;
         this.data = data;
+        this.serverName = "server"+zone;
+
+        // Initialize the cache with LRU eviction policy
+        this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
+                return size() > CACHE_SIZE;
+            }
+        };
+
         startServer();
     }
 
     /**
-     * Method that starts this current server
-     * Exporting server with stub, binding to registry
+     * @return hostname of the server
      */
-    private void startServer()
+    public String getHost()
     {
-        try {
-            // Create a new registry on the unique port
-            Registry registry = LocateRegistry.createRegistry(port);
-
-            // export server to registry
-            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
-
-            // define server name same with port
-            String serverName = "server" + zone;
-
-            // bind server to registry
-            registry.bind(serverName, serverStub);
-
-            System.out.printf("%s:%d has started\n", serverName, port);
-
-        } catch (Exception e) {
-            System.err.println();
-        }
+        return serverName;
     }
 
+    /**
+     * @return port of the server
+     */
+    public int getPort()
+    {
+        return port;
+    }
 
     /**
      * Sleeps 'ms' milliseconds
      *
-     * @param ms : integer, miliseconds to sleep
+     * @param ms integer, miliseconds to sleep
      */
     public void sleep(int ms)
     {
@@ -65,138 +70,149 @@ public class Server implements ServerInterface {
         }
     }
 
-    /** RMI methods */
-    @Override
-    public int Add(int num1, int num2) {
-        return num1 + num2;
+    /**
+     * Checks local cache if request has been done before, either compute or get
+     *
+     * @param cacheKey key identifying request
+     * @param computation supplier with computed value
+     * @return result in cache or computation
+     */
+    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
+    {
+        // Check if the result is already cached
+        if (cache.containsKey(cacheKey)) {
+            System.out.println("Cache hit for: " + cacheKey);
+            return cache.get(cacheKey);
+        }
+
+        // If not cached, compute the result, store it
+        Integer result = computation.get();
+        cache.put(cacheKey, result);
+
+        return result;
     }
 
-    // given a country name as input, return population of country by summing population of cities in that country
+    /** RMI methods **/
+
+    /**
+     * Returns population of country given
+     *
+     * @param countryName : country to look at
+     * @return population of country
+     */
     @Override
     public int getPopulationofCountry(String countryName)
     {
-        System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
+        return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
+            System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
-        // get appropriate country
-        HashMap<String, CityInfo> country = data.get(countryName);
+            HashMap<String, CityInfo> country = data.get(countryName);
+            if (country == null)
+                return 0;
 
-        if (country == null) return 0;
-
-        int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
-
-        //        int totalPopulation = 0;
-//
-//        // go through country-map, sum city population
-//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-//            int population = cityEntry.getValue().population;
-//            totalPopulation += population;
-//        }
-
-        sleep(80); // network latency
-        return totalPopulation;
+            int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
+            sleep(80); // network latency
+            return totalPopulation;
+        });
     }
 
-    // given a country name and min as input, return total number of cities in given country containing at least "min" population
+    /** Returns total cities in a given country with minimum population given
+     *
+     * @param countryName country to look at
+     * @param min minimum population boundary
+     * @return total number of cities within boundary
+     */
     @Override
     public int getNumberofCities(String countryName, int min)
     {
-        System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
+        return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
+            System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
-        // get appropriate country
-        HashMap<String, CityInfo> country = data.get(countryName);
+            HashMap<String, CityInfo> country = data.get(countryName);
+            if (country == null)
+                return 0;
 
-        if (country == null) return 0;
-
-        long count = country.values().stream().filter(city -> city.population >= min).count();
-
-        //        int citiesAboveMin = 0;
-//
-//        // go through country-map, find cities with population >= min
-//        for (Map.Entry<String, CityInfo> cityEntry : country.entrySet()) {
-//            int population = cityEntry.getValue().population;
-//            if ( population >= min ) {
-//                citiesAboveMin++;
-//            }
-//        }
-
-        sleep(80); // network latency
-        return (int) count;
+            long count = country.values().stream().filter(city -> city.population >= min).count();
+            sleep(80); // network latency
+            return (int) count;
+        });
     }
 
-    // returns number of countries with min "citycount" cities, and population at least "minpopulation"
+    /**
+     * Returns number of countries with minimum citycount and minimum population
+     *
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
+     * @return number of countries
+     */
     @Override
     public int getNumberofCountries(int citycount, int minpopulation)
     {
-        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+        return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
+            System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        long count = data.values().stream()
-                .filter(cities -> cities.values().stream().filter(city -> city.population >= minpopulation).count() >= citycount)
-                .count();
+            long count = data.values().stream()
+                    .filter(cities -> cities.values().stream()
+                            .filter(city -> city.population >= minpopulation).count() >= citycount)
+                    .count();
 
-        //        int validCountries = 0;
-//
-//        // iterate through all countries
-//        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-//            int validCities = 0;
-//
-//            // get map of each city in current country
-//            HashMap<String, CityInfo> cities = countryEntry.getValue();
-//
-//            // go through each city, check population
-//            for (CityInfo city : cities.values()) {
-//                if (city.population >= minpopulation) {
-//                    validCities++;
-//                }
-//            }
-//
-//            // check if no. cities meet requirement
-//            if (validCities >= citycount) {
-//                validCountries++;
-//            }
-//        }
-
-        sleep(80); // network latency
-        return (int) count;
+            sleep(80); // network latency
+            return (int) count;
+        });
     }
 
-    // returns number of countries containing at least "citycount" number of cities
-    // each included city has a population between min and max population
+    /**
+     * Returns  number of countries containing at least citycount cities where each city has a population between min and max
+     *
+     * @param citycount minimum city boundary
+     * @param minpopulation minimum population boundary
+     * @param maxpopulation maximum populalation boundary
+     * @return number of countries
+     */
     @Override
     public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
     {
-        System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+        return getFromCacheOrCompute(
+                "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
+                    System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
-        // one-liner
-        long count = data.values().stream()
-                .filter(cities -> cities.values().stream()
-                        .filter(city -> city.population >= minpopulation && city.population <= maxpopulation)
-                        .count() >= citycount)
-                .count();
+                    long count = data.values().stream()
+                            .filter(cities -> cities.values().stream()
+                                    .filter(city -> city.population >= minpopulation
+                                            && city.population <= maxpopulation)
+                                    .count() >= citycount)
+                            .count();
 
-        //        int validCountries = 0;
-        //
-        //        // iterate through all countries
-        //        for (Map.Entry<String, HashMap<String, CityInfo>> countryEntry : data.entrySet()) {
-        //            int validCities = 0;
-        //
-        //            // get map of each city in current country
-        //            HashMap<String, CityInfo> cities = countryEntry.getValue();
-        //
-        //            // go through each city, check population
-        //            for (CityInfo city : cities.values()) {
-        //                if (minpopulation <= city.population && city.population <= maxpopulation) {
-        //                    validCities++;
-        //                }
-        //            }
-        //
-        //            // check if no. cities meet requirement
-        //            if (validCities >= citycount) {
-        //                validCountries++;
-        //            }
-        //        }
-
-        sleep(80); // network latency
-        return (int) count;
+                    sleep(80); // network latency
+                    return (int) count;
+                });
     }
 
+    @Override
+    public String toString()
+    {
+        return (getHost() + ":" + getPort());
+    }
+
+    /**
+     * Method that starts this current server Exporting server with stub, binding to
+     * registry
+     */
+    private void startServer() {
+        try {
+            // Create a new registry on the unique port
+            Registry registry = LocateRegistry.createRegistry(port);
+
+            // export server to registry
+            ServerInterface serverStub = (ServerInterface) UnicastRemoteObject.exportObject(this, port);
+
+            // bind server to registry
+            registry.bind(serverName, serverStub);
+
+            System.out.printf("%s:%d has started\n", serverName, port);
+
+        } catch (Exception e) {
+            System.err.println();
+        }
+    }
 }

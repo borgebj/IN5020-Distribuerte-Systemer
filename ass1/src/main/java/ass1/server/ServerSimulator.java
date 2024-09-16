@@ -9,7 +9,7 @@ public class ServerSimulator {
 
     private static ServerInterface[] servers;
 
-    private static Proxy proxy;
+    private static ProxyServer proxy;
     private static final int BASE_PORT = 1099;
     private static final String filepath = "info/exercise_1_dataset.csv";
 
@@ -17,7 +17,7 @@ public class ServerSimulator {
     /**
      * Goes through and parses data from a given file to a hashmap, later used by server
      *
-     * @return map : filled hashmap with data
+     * @return map filled hashmap with data
      */
     private static HashMap<String, HashMap<String, CityInfo>> parseData()
     {
@@ -61,36 +61,32 @@ public class ServerSimulator {
     /**
      * Creates the proxy to be used
      *
-     * @param port : base-port used
+     * @param port base-port used
      */
     private static void createProxy(int port)
     {
-        proxy = new Proxy(port - 1);
+        proxy = new ProxyServer(port - 1);
     }
 
 
     /**
      * Creates servers which is started within
      *
-     * @param numServers : how many servers to start
-     * @param port : base-port used
-     * @param dataset : data-set that servers use
+     * @param numServers how many servers to start
+     * @param port base-port used
+     * @param dataset data-set that servers use
      */
 	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
     {
         servers = new ServerInterface[numServers];
 
         // Create servers
-        for (int i = 0; i < numServers; i++) {
-            try {
-                Server server = new Server(i, port + i, dataset);
-                servers[i] = server;
-                proxy.registerServer(i, server);
+        for (int i = 1; i <= numServers; i++) {
+            Server server = new Server(i, port + i, dataset);
+            servers[i-1] = server;
+            proxy.registerServer(i, server);
 
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-       }
+        }
     }
 
 
