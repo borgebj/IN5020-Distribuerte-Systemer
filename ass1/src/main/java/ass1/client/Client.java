@@ -113,17 +113,24 @@ public class Client {
                 // 2. connect to the server - info on the form "server#:#port#:#"
                 String[] addressParts = serverInfo.split(":");
                 String host = addressParts[0];
-                System.out.println("Requesting zone: " + zone);
+                System.out.println("Requesting zone: " +("server"+ zone));
                 System.out.println("Request handled by "+ host);
 
                 int serverPort = Integer.parseInt(addressParts[1]);
 
+
+
+                if(!host.equals("server"+zone)){
+                    String RESET = "\u001B[0m";
+                    String YELLOW = "\u001B[33m";
+                    System.out.println(YELLOW + "\nREQUEST HANDLED BY DIFFERENT ZONE THAN ONE REQUESTED \n" + RESET);
+                }
                 //NOTE: realistically we use 'host' and 'port' to find the server on the network
                 // in our case, we test locally and therefore use "localhost"
 
                 // lookup given address and port
                 Registry serverRegistry = LocateRegistry.getRegistry("localhost", serverPort);
-                ServerInterface server = (ServerInterface) serverRegistry.lookup("server" + zone);
+                ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
                 // Process request and cache result
                 int result = handleRequest(function, args, server);

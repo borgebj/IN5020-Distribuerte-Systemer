@@ -226,7 +226,6 @@ public class Server implements ServerInterface {
 
     @Override
     public Queue<Integer> getReqQueue() throws RemoteException {
-        // TODO Auto-generated method stub
         return reqQueue;
     }
 }

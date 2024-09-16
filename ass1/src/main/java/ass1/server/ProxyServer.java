@@ -54,7 +54,7 @@ public class ProxyServer implements ProxyClientInterface {
 	public String requestServer(int zone) throws RemoteException {
 		Server server =  handleQue(servers, zone);
 		server.getReqQueue().add(requestId);
-		System.out.println( " zone oujt " + server.getHost() + " request id " + requestId);
+		System.out.println( "Zone out " + server.getHost() + " request id " + requestId);
 		System.out.println("Found server " + server);
 
 
@@ -75,17 +75,17 @@ public class ProxyServer implements ProxyClientInterface {
 		System.out.println("Zone in "+  zone );
 		
 
-		Server server1 = servers.get(0);
+		
 		if(server.getReqQueue().size() >18){
 
 	
 
+			
+
+			int prev  = ((zone +1) %numberOfServers)+1;
 		
-			System.out.println("Zone right now "+ ((zone +1 ) %numberOfServers));
-	
-		
-			Server adjacentServer1= servers.get((zone +1 ) %numberOfServers);
-			Server adjacentServer2= servers.get((zone+2) %numberOfServers);
+			Server adjacentServer1= servers.get(prev) ;
+			Server adjacentServer2= servers.get((prev %numberOfServers )+1);
 		
 
 
@@ -102,16 +102,16 @@ public class ProxyServer implements ProxyClientInterface {
 				System.out.println("print load ");
 			}
 			
-			if(a1Que.size() <8 && a2Que.size() <8){
+			if(a1Que.size() <18 && a2Que.size() <18){
 
 				if( a1Que.size()<a2Que.size())return adjacentServer1;
-				else return adjacentServer1;	
+				else return adjacentServer2;	
 
-			} else if(a1Que.size() <8){
+			} else if(a1Que.size() <18){
 				return adjacentServer1;
 
 			 
-			} else if(a2Que.size() <8){
+			} else if(a2Que.size() <18){
 				return adjacentServer2;
 			}
 
