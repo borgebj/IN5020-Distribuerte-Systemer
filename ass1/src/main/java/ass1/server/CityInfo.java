@@ -1,13 +1,13 @@
 package ass1.server;
 
-public class CityInfo {
-	int geonameId;
-	String name;
-	String countryCode;
-	String countryName;
-	int population;
-	String timezone;
-	String coordinates;
+final class CityInfo {
+	public final int geonameId;
+	public final String name;
+	public final String countryCode;
+	public final String countryName;
+	public final int population;
+	public final String timezone;
+	public final String coordinates;
 
 	public CityInfo(int geonameId,
 					String name,
