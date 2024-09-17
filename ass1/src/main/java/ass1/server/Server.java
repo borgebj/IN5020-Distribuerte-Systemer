@@ -1,5 +1,6 @@
 package ass1.server;
 
+import ass1.data.CityInfo;
 import ass1.proxy.ProxyServerInterface;
 
 import java.rmi.RemoteException;
@@ -58,13 +59,19 @@ public class Server implements ServerInterface, ProxyServerInterface {
     {
         return serverName;
     }
-
     /**
      * @return port of the server
      */
     public int getPort()
     {
         return port;
+    }
+    /**
+     * @return zone of server
+     */
+    public int getZone()
+    {
+        return zone;
     }
 
     /**

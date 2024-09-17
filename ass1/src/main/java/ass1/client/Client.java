@@ -1,5 +1,6 @@
 package ass1.client;
 
+import java.io.*;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -8,7 +9,7 @@ import java.util.*;
 
 import ass1.proxy.ProxyClientInterface;
 import ass1.server.ServerInterface;
-import ass1.server.InstructionInfo;
+import ass1.data.InstructionInfo;
 
 public class Client {
 
@@ -90,19 +91,37 @@ public class Client {
 
     private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
     {
-        // TODO:    overfør output til fil
         long turnaround = timing[0];
         long execution = timing[1];
         long waiting = timing[2];
 
-        System.out.printf("%d %s " +
-                "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
-                "processed by server %d)\n",
-                result, instruc, turnaround, execution, waiting, zone);
+        String fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
+                            result, instruc, turnaround, execution, waiting, zone);
+
+        System.out.printf(fullQuery);
+
+        // path for the file written to
+        String filePath = "output/results/naive_server.txt";
+
+        // ensures directory exists
+        File resultsDir = new File("output/results");
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // print to file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
+             PrintWriter out = new PrintWriter(writer)) {
+            out.print(fullQuery);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void invokeRequests(ProxyClientInterface proxy) {
+        int i = 0;
         for (InstructionInfo instruc : instructions) {
+            if (i++ == instructions.size() / 6) break;
 
             // extract request info
             String function = instruc.function;
@@ -129,7 +148,7 @@ public class Client {
                     String[] addressParts = serverInfo.split(":");
                     String host = addressParts[0];
                     int serverPort = Integer.parseInt(addressParts[1]);
-                    int resultZone = Character.getNumericValue(host.charAt(host.length() - 1));
+                    int resultZone = Integer.parseInt(addressParts[2]);
 
                     // lookup server to use
                     Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
@@ -150,7 +169,7 @@ public class Client {
                     // saves result and timing to file
                     saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
 
-                } catch (RemoteException | NotBoundException e) {
+                } catch (RemoteException | NotBoundException | NumberFormatException e) {
                     e.printStackTrace();
                 }
             }
