@@ -292,7 +292,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int fetchWorkload() throws RemoteException
     {
-        System.out.printf("Proxy requested workload (%d)\n", requestQueue.size());
+        String PURPLE = "\u001B[35m";
+        String RESET = "\u001B[0m";
+        System.out.printf(PURPLE + "Proxy requested workload zone %d (%d)" + RESET + "\n", zone, requestQueue.size());
         return requestQueue.size();
     }
 
