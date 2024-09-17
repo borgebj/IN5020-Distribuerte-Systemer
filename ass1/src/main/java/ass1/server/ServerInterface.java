@@ -7,6 +7,7 @@ public interface ServerInterface extends Remote {
 
     // given a country name as input, return population of country by summing population of cities in that country
     int getPopulationofCountry(String countryName) throws RemoteException;
+
     // e.g. country name = "Norway" => "population = 3,162,856"
 
     // given a country name and min as input, return total number of cities in given country containing at least "min" population

@@ -97,7 +97,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
      */
     private int getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
     {
-        requestQueue.add(cacheKey);
+        requestQueue.add(cacheKey); //TODO remove - test
 
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
