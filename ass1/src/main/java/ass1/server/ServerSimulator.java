@@ -1,7 +1,8 @@
 package ass1.server;
 
+import ass1.proxy.ProxyServer;
+
 import java.io.*;
-import java.rmi.RemoteException;
 import java.util.*;
 
 

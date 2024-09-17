@@ -1,4 +1,4 @@
-package ass1.server;
+package ass1.proxy;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

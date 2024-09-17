@@ -1,4 +1,6 @@
-package ass1.server;
+package ass1.proxy;
+
+import ass1.server.Server;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;

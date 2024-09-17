@@ -6,8 +6,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.*;
 
-import ass1.server.ProxyClientInterface;
-import ass1.server.Response;
+import ass1.proxy.ProxyClientInterface;
 import ass1.server.ServerInterface;
 import ass1.server.InstructionInfo;
 
@@ -41,7 +40,7 @@ public class Client {
         return function + args.toString() + zone;
     }
 
-    public Response handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
+    public int handleRequest(String function, List<String> args, ServerInterface server) throws RemoteException
     {
         // process requested function
         if (args.size() > 0) {
@@ -86,13 +85,12 @@ public class Client {
                 // we ignore errors in requests due to a lot of errors in the input-text-file
             }
         }
-        return null;
+        return 0;
     }
 
     private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
     {
-        // TODO
-        // overfør output til fil
+        // TODO:    overfør output til fil
         long turnaround = timing[0];
         long execution = timing[1];
         long waiting = timing[2];
@@ -105,41 +103,53 @@ public class Client {
 
     private void invokeRequests(ProxyClientInterface proxy) {
         for (InstructionInfo instruc : instructions) {
+
+            // extract request info
             String function = instruc.function;
             List<String> args = instruc.args;
             int zone = instruc.zone;
 
+            // key for lookup in local cache
             String cacheKey = generateCacheKey(function, args, zone);
-            long startTime = System.nanoTime();
 
+            long startTurnaround = System.currentTimeMillis();
+
+            // if request is cached, retrieve it!
             if (cache.containsKey(cacheKey)) {
                 int result = cache.get(cacheKey);
-                saveResult(instruc, result, zone, new long[]{0, 0, 0});
-            } else {
+                saveResult(instruc, result, zone, new long[]{0, 0, 0});  // <-- result in cache? Time is "instant"
+            }
+            // if not, ask for server to compute it
+            else {
                 try {
+                    // asks proxy for server, proxy gives appropriate server
                     String serverInfo = proxy.requestServer(zone);
+
+                    // extracted data from
                     String[] addressParts = serverInfo.split(":");
                     String host = addressParts[0];
                     int serverPort = Integer.parseInt(addressParts[1]);
                     int resultZone = Character.getNumericValue(host.charAt(host.length() - 1));
 
+                    // lookup server to use
                     Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
                     ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                    // extract response
-                    Response response = handleRequest(function, args, server);
+                    // start execution timer,  extract response-result
+                    long startExecutionTime = System.currentTimeMillis();
+                    int result = handleRequest(function, args, server);
 
-                    if (response != null) {
-                        int result = response.result;
-                        int execTime = response.executionTime;
-                        int waitTime = response.waitingTime;
+                    // end and save timers
+                    long executionTime =  (System.currentTimeMillis() - startExecutionTime);
+                    long turnaroundTime = (System.currentTimeMillis() - startTurnaround);
+                    long waitingTime = (turnaroundTime - executionTime);
 
-                        cache.put(cacheKey, result);
+                    // cache request
+                    cache.put(cacheKey, result);
 
-                        long turnaround = (System.nanoTime() - startTime) / 1000000;
+                    // saves result and timing to file
+                    saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
 
-                        saveResult(instruc, result, resultZone, new long[]{turnaround, execTime, waitTime});
-                    }
                 } catch (RemoteException | NotBoundException e) {
                     e.printStackTrace();
                 }
