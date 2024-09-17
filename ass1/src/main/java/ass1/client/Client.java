@@ -252,6 +252,9 @@ public class Client {
                     // asks proxy for server, proxy gives appropriate server
                     String serverInfo = proxy.requestServer(zone);
 
+                    // error handling
+                    if (serverInfo == null) continue;
+
                     // extracted data from
                     String[] addressParts = serverInfo.split(":");
                     String host = addressParts[0];
