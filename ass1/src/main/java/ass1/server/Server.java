@@ -7,6 +7,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
 public class Server implements ServerInterface, ProxyServerInterface {
@@ -23,6 +25,10 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
 
+    // request queue with FIFO policy
+    private final Queue<String> requestQueue;
+
+
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
     {
         this.zone = zone;
@@ -37,6 +43,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 return size() > CACHE_SIZE;
             }
         };
+
+        this.requestQueue = new LinkedBlockingQueue<>();
 
         startServer();
     }
@@ -80,6 +88,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
      */
     private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
     {
+        requestQueue.add(cacheKey);
+
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
             System.out.println("Cache hit for: " + cacheKey);
@@ -195,8 +205,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
 
     @Override
     public int fetchWorkload() throws RemoteException {
-        //TODO: return local queue size
-        return 0;
+        System.out.printf("Proxy requested workload (%d)\n", requestQueue.size());
+        return requestQueue.size();
     }
 
     @Override
