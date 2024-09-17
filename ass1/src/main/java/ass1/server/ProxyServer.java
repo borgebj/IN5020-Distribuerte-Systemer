@@ -43,8 +43,9 @@ public class ProxyServer implements ProxyClientInterface {
 
 		zone = (zone % 5) + 1; // increment zone : TODO: REMOVE
 
-		Server server = servers.get(zone);
+		Server server = handleQue(servers, zone);
 
+	
 		System.out.println("Requested server" + requestedZone + ", Found " + server);
 
 		// TODO
@@ -91,7 +92,7 @@ public class ProxyServer implements ProxyClientInterface {
 	}
 
 	@Override
-	public Server handleQue(ConcurrentMap<Integer, Server> servers, int zone) throws RemoteException {
+	public Server handleQue(HashMap<Integer, Server> servers, int zone) throws RemoteException {
 		// TODO Auto-generated method stub
 		
 		Server server = servers.get(zone);
