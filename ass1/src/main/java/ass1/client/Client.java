@@ -1,5 +1,6 @@
 package ass1.client;
 
+import java.io.BufferedWriter;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -20,6 +21,9 @@ public class Client {
     // Cache to store results, max size of 45
     private static final int CACHE_SIZE = 45;
     private LinkedHashMap<String, Integer> cache;
+    BufferedWriter writer; 
+
+
 
     public Client(int port, ArrayList<InstructionInfo> instructions) {
         Client.instructions = instructions;
@@ -97,10 +101,15 @@ public class Client {
         long execution = timing[1];
         long waiting = timing[2];
 
-        System.out.printf("%d %s " +
-                "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
-                "processed by server %d)\n",
-                result, instruc, turnaround, execution, waiting, zone);
+        String formattedOutputString = String.format("%d %s " +
+            "(turnaround time: %d ms, execution time: %d ms, waiting time: %d, " +
+            "processed by server %d)\n",
+            result, instruc, turnaround, execution, waiting, zone);
+
+
+        
+
+    
     }
 
     private void invokeRequests(ProxyClientInterface proxy) {
@@ -127,6 +136,10 @@ public class Client {
                     ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
                     // extract response
+
+
+
+
                     Response response = handleRequest(function, args, server);
 
                     if (response != null) {

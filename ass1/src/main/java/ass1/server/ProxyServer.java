@@ -39,35 +39,73 @@ public class ProxyServer implements ProxyClientInterface {
 	@Override
 	public String requestServer(int zone) throws RemoteException
 	{
-		int requestedZone = zone;
-
-		zone = (zone % 5) + 1; // increment zone : TODO: REMOVE
-
-		Server server = handleQue(servers, zone);
-
-	
-		System.out.println("Requested server" + requestedZone + ", Found " + server);
-
-		// TODO
-		// finn passende server
-
-		// TODO: annen thred ==============
+		Server destination =  handleQueue(zone);
 
 		// 1. Save request-counter - increment requests
-//		zoneRequests.merge(zone, 1, Integer::sum);
-//
-//		// 2. check request counter
-//		// 2.1 Fetch every 18
-//		int requests = zoneRequests.get(zone);
-//		if (requests >= 18) {
-//
-//			int workload = server.fetchWorkload();
-//			// zoneRequests.put(zone, workload);
-//		}
+		zoneRequests.merge(zone, 1, Integer::sum);
+
+		// 2. check request counter
+		int requests = zoneRequests.get(zone);
+		if (requests % 18 == 0) {
+
+			int workload = destination.fetchWorkload();
+			zoneRequests.put(zone, workload);
+		}
 
 		// ==================================
 
-		return (server.getHost()) + ":" + (server.getPort());
+		return (destination.getHost()) + ":" + (destination.getPort());
+	}
+
+	
+
+	private Server handleQueue(int zone)
+	{
+		String YELLOW = "\u001B[33m";
+		String CYAN = "\u001B[36m";
+		String RESET = "\u001B[0m";
+
+		Server server = servers.get(zone);
+
+		System.out.printf("Requesting zone:%d\n", zone);
+
+		int requestedWorkload = zoneRequests.get(zone);
+		int numServers = zoneRequests.size();
+
+		if (requestedWorkload > 18){
+
+			// calculate adjacent zones
+			int adjacent1 = (zone % numServers) + 1;
+			int adjacent2 = (adjacent1 % numServers) + 1;
+
+			// servers for adjacent zones
+			Server adjacentServer1 = servers.get(adjacent1) ;
+			Server adjacentServer2 = servers.get(adjacent2);
+
+			// workload for adjacent zones
+			int adjacentWorkload1 = zoneRequests.get(adjacent1);
+			int adjacentWorkload2 = zoneRequests.get(adjacent2);
+
+			
+
+			// redirect to adjacent zone 1 if below threshold
+			if (adjacentWorkload1 < 18) {
+				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n\n" + RESET, adjacent1, adjacentWorkload1);
+				adjacentServer1.sleep(90);
+				return adjacentServer1;
+			}
+
+			// redirect to adjacent zone 2 if below threshold
+			if (adjacentWorkload2 < 18) {
+				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n\n" + RESET, adjacent2, adjacentWorkload2);
+				adjacentServer2.sleep(90);
+				return adjacentServer2;
+			}
+		}
+
+		System.out.printf(YELLOW + "Using requested zone: %d (Workload: %d)\n\n" + RESET, zone, requestedWorkload);
+
+		return server ;
 	}
 
 	private void startProxy()
@@ -91,59 +129,8 @@ public class ProxyServer implements ProxyClientInterface {
 		}
 	}
 
-	@Override
-	public Server handleQue(HashMap<Integer, Server> servers, int zone) throws RemoteException {
-		// TODO Auto-generated method stub
-		
-		Server server = servers.get(zone);
-		
-		System.out.println("Zone in "+  zone );
-		
-
-		
-		if(server.getReqQueue().size() >18){
-
-	
-			
-			
-
-			int prev  = ((zone +1) %numberOfServers)+1;
-		
-			Server adjacentServer1= servers.get(prev) ;
-			Server adjacentServer2= servers.get((prev %numberOfServers )+1);
-		
 
 
-			if( adjacentServer2.getReqQueue() ==null){
-				System.out.println(" Que 2 is null");	
-		}	
-			if( adjacentServer1.getReqQueue() ==null){
-				System.out.println(" Que 1 is");	
-		}	
-			Queue<Integer> a1Que = adjacentServer1.getReqQueue();
-			Queue<Integer>  a2Que = adjacentServer2.getReqQueue();
-			
-			if(server.getReqQueue().size() % 18 ==0){
-				System.out.println("print load ");
-			}
-			
-			if(a1Que.size() <18 && a2Que.size() <18){
 
-				if( a1Que.size()<a2Que.size())return adjacentServer1;
-				else return adjacentServer2;	
 
-			} else if(a1Que.size() <18){
-				return adjacentServer1;
-
-			 
-			} else if(a2Que.size() <18){
-				return adjacentServer2;
-			}
-
-		}	
-		
-		requestId++;
-		
-		return server ;
-	}
 }
