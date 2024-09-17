@@ -1,5 +1,8 @@
 package ass1.server;
 
+import ass1.data.CityInfo;
+import ass1.proxy.ProxyServerInterface;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -56,13 +59,19 @@ public class Server implements ServerInterface, ProxyServerInterface {
     {
         return serverName;
     }
-
     /**
      * @return port of the server
      */
     public int getPort()
     {
         return port;
+    }
+    /**
+     * @return zone of server
+     */
+    public int getZone()
+    {
+        return zone;
     }
 
     /**
@@ -86,9 +95,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @param computation supplier with computed value
      * @return result in cache or computation
      */
-    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
+    private int getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
     {
-        requestQueue.add(cacheKey);
+        requestQueue.add(cacheKey); //TODO remove - test
 
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
@@ -112,9 +121,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return population of country and timing
      */
     @Override
-    public Response getPopulationofCountry(String countryName)
+    public int getPopulationofCountry(String countryName)
     {
-        int result = getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
+        return getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
             System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -125,7 +134,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
             sleep(80); // network latency
             return totalPopulation;
         });
-        return new Response(result, 0, 0);
     }
 
     /** Returns total cities in a given country with minimum population given
@@ -135,9 +143,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return total number of cities within boundary and timing
      */
     @Override
-    public Response getNumberofCities(String countryName, int min)
+    public int getNumberofCities(String countryName, int min)
     {
-        int result = getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
+        return getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
 
             HashMap<String, CityInfo> country = data.get(countryName);
@@ -148,7 +156,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
-        return new Response(result, 0, 0);
     }
 
     /**
@@ -159,9 +166,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return number of countries and timing
      */
     @Override
-    public Response getNumberofCountries(int citycount, int minpopulation)
+    public int getNumberofCountries(int citycount, int minpopulation)
     {
-        int result = getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
+        return getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
             System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
             long count = data.values().stream()
@@ -172,7 +179,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
             sleep(80); // network latency
             return (int) count;
         });
-        return new Response(result, 0, 0);
     }
 
     /**
@@ -184,9 +190,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return number of countries and timing
      */
     @Override
-    public Response getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
     {
-        int result = getFromCacheOrCompute(
+        return getFromCacheOrCompute(
                 "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
                     System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
 
@@ -200,7 +206,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
                     sleep(80); // network latency
                     return (int) count;
                 });
-        return new Response(result, 0, 0);
     }
 
     @Override

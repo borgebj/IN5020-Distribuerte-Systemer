@@ -1,7 +1,9 @@
 package ass1.server;
 
+import ass1.data.CityInfo;
+import ass1.proxy.ProxyServer;
+
 import java.io.*;
-import java.rmi.RemoteException;
 import java.util.*;
 
 
