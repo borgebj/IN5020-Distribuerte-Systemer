@@ -16,7 +16,7 @@ public class ProxyServer implements ProxyClientInterface {
 	private HashMap<Integer, Server> servers;
 
 	// Hashmap keeping track of requests in each zone
-	private int WORKLOAD_THRESHOLD = 200;
+	private int WORKLOAD_THRESHOLD = 18;
 	private ConcurrentMap<Integer, Integer> zoneRequests;
 
 
@@ -80,7 +80,7 @@ public class ProxyServer implements ProxyClientInterface {
 
 		// 2. check request counter
 		int requests = zoneRequests.get(zone);
-		if (requests % 18 == 0)
+		if (requests % WORKLOAD_THRESHOLD == 0)
 		{
 			try {
 				// attempt to fetch server load
