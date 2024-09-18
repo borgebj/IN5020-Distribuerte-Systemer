@@ -1,14 +1,15 @@
 package ass1.server;
 
+import ass1.data.CityInfo;
+import ass1.data.Request;
+import ass1.proxy.ProxyServerInterface;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
@@ -29,7 +30,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private static final int CACHE_SIZE = 150;
 
     // request queue with FIFO policy
-    private final Queue<String> requestQueue;
+    private final Queue<Request> requestQueue;
+    private Thread executioner;
+
+    // latch awaiting first request
+    private final CountDownLatch start = new CountDownLatch(1);
 
 
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
@@ -50,37 +55,43 @@ public class Server implements ServerInterface, ProxyServerInterface {
         this.requestQueue = new LinkedBlockingQueue<>();
 
         startServer();
+        startExecutionMode();
     }
 
-    /**
-     * @return hostname of the server
-     */
-    public String getHost()
-    {
-        return serverName;
+    private void startExecutionMode() {
+        executioner = new Thread(() -> {
+            try {
+                // Wait for the first request to be added
+                start.await();
+                while (true) {
+                    try {
+                        // pulls out request at start
+                        Request request = requestQueue.poll();
+                        if (request != null) {
+                            System.out.printf("Executor [%d] processing : %s\n", zone, request);
+                            processRequest(request);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                e.printStackTrace();
+            }
+        });
+        executioner.setDaemon(true); // release the daemon
+        executioner.start();
     }
 
-    /**
-     * @return port of the server
-     */
-    public int getPort()
+    private void processRequest(Request request)
     {
-        return port;
+        String cacheKey = request.getCacheKey();
+        int result = getFromCacheOrCompute(cacheKey, request.getComputation());
+        request.complete(result);
+        System.out.printf("Finished %s = %d\n", request.getCacheKey(), result);
     }
 
-    /**
-     * Sleeps 'ms' milliseconds
-     *
-     * @param ms integer, miliseconds to sleep
-     */
-    public void sleep(int ms)
-    {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Checks local cache if request has been done before, either compute or get
@@ -89,10 +100,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @param computation supplier with computed value
      * @return result in cache or computation
      */
-    private Integer getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
+    private int getFromCacheOrCompute(String cacheKey, Supplier<Integer> computation)
     {
-        requestQueue.add(cacheKey);
-
         // Check if the result is already cached
         if (cache.containsKey(cacheKey)) {
             System.out.println("Cache hit for: " + cacheKey);
@@ -106,7 +115,56 @@ public class Server implements ServerInterface, ProxyServerInterface {
         return result;
     }
 
-    /** RMI methods **/
+    private static String generateCacheKey(String function, Object... args) {
+        return function + Arrays.toString(args);
+    }
+
+
+    private void enqueueRequest(Request request)
+    {
+        // puts in request at end
+        if (requestQueue.isEmpty()) {
+            start.countDown();
+        }
+        requestQueue.offer(request);
+    }
+
+
+    /** RMI methods - computed **/
+
+    private int _COMPUTE_getPopulationofCountry(String countryName)
+    {
+        HashMap<String, CityInfo> country = data.get(countryName);
+        if (country == null) return 0;
+        return country.values().stream().mapToInt(city -> city.population).sum();
+    }
+    private int _COMPUTE_getNumberofCities(String countryName, int min)
+    {
+        HashMap<String, CityInfo> country = data.get(countryName);
+        if (country == null) return 0;
+        long count = country.values().stream().filter(city -> city.population >= min).count();
+        return (int) count;
+    }
+    private int _COMPUTE_getNumberofCountries(int citycount, int minpopulation)
+    {
+        long count = data.values().stream()
+                .filter(cities -> cities.values().stream()
+                        .filter(city -> city.population >= minpopulation).count() >= citycount)
+                .count();
+        return (int) count;
+    }
+    private int _COMPUTE_getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    {
+        long count = data.values().stream()
+                .filter(cities -> cities.values().stream()
+                        .filter(city -> city.population >= minpopulation && city.population <= maxpopulation)
+                        .count() >= citycount)
+                .count();
+        return (int) count;
+    }
+
+
+    /** RMI methods - invoked **/
 
     /**
      * Returns population of country given
@@ -115,20 +173,27 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return population of country and timing
      */
     @Override
-    public Response getPopulationofCountry(String countryName)
+    public int getPopulationofCountry(String countryName) throws RemoteException
     {
-        int result = getFromCacheOrCompute("getPopulationofCountry:" + countryName, () -> {
-            System.out.printf("Server%d:%d calling 'getPopulationofCountry'\n", zone, port);
+        // simulate network latency
+        sleep(80);
 
-            HashMap<String, CityInfo> country = data.get(countryName);
-            if (country == null)
-                return 0;
+        // creates the request
+        Request request = new Request(
+                generateCacheKey("getPopulationofCountry", countryName),
+                () -> _COMPUTE_getPopulationofCountry(countryName)
+        );
+        // put it on queue
+        enqueueRequest(request);
 
-            int totalPopulation = country.values().stream().mapToInt(city -> city.population).sum();
-            sleep(80); // network latency
-            return totalPopulation;
-        });
-        return new Response(result, 0, 0);
+        // wait for result
+        try {
+            return request.getResult();
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RemoteException("Interrupted while waiting for result", e);
+        }
     }
 
     /** Returns total cities in a given country with minimum population given
@@ -138,20 +203,26 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return total number of cities within boundary and timing
      */
     @Override
-    public Response getNumberofCities(String countryName, int min)
+    public int getNumberofCities(String countryName, int min) throws RemoteException
     {
-        int result = getFromCacheOrCompute("getNumberofCities:" + countryName + ":" + min, () -> {
-            System.out.printf("Server%d:%d calling 'getNumberofCities'\n", zone, port);
+        // simulate network latency
+        sleep(80);
 
-            HashMap<String, CityInfo> country = data.get(countryName);
-            if (country == null)
-                return 0;
+        // creates the request
+        Request request = new Request(
+                generateCacheKey("getNumberofCities", countryName, min),
+                () -> _COMPUTE_getNumberofCities(countryName, min)
+        );
+        // put it on queue
+        enqueueRequest(request);
 
-            long count = country.values().stream().filter(city -> city.population >= min).count();
-            sleep(80); // network latency
-            return (int) count;
-        });
-        return new Response(result, 0, 0);
+        // wait for result
+        try {
+            return request.getResult();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RemoteException("Interrupted while waiting for result", e);
+        }
     }
 
     /**
@@ -162,20 +233,26 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return number of countries and timing
      */
     @Override
-    public Response getNumberofCountries(int citycount, int minpopulation)
+    public int getNumberofCountries(int citycount, int minpopulation) throws RemoteException
     {
-        int result = getFromCacheOrCompute("getNumberofCountries:" + citycount + ":" + minpopulation, () -> {
-            System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+        // simulate network latency
+        sleep(80);
 
-            long count = data.values().stream()
-                    .filter(cities -> cities.values().stream()
-                            .filter(city -> city.population >= minpopulation).count() >= citycount)
-                    .count();
+        // creates the request
+        Request request = new Request(
+                generateCacheKey("getNumberofCountries", citycount, minpopulation),
+                () -> _COMPUTE_getNumberofCountries(citycount, minpopulation)
+        );
+        // put it on queue
+        enqueueRequest(request);
 
-            sleep(80); // network latency
-            return (int) count;
-        });
-        return new Response(result, 0, 0);
+        // wait for result
+        try {
+            return request.getResult();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RemoteException("Interrupted while waiting for result", e);
+        }
     }
 
     /**
@@ -187,35 +264,87 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * @return number of countries and timing
      */
     @Override
-    public Response getNumberofCountries(int citycount, int minpopulation, int maxpopulation)
+    public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException
     {
-        int result = getFromCacheOrCompute(
-                "getNumberofCountries:" + citycount + ":" + minpopulation + ":" + maxpopulation, () -> {
-                    System.out.printf("Server%d:%d calling 'getNumberofCountries'\n", zone, port);
+        // simulate network latency
+        sleep(80);
 
-                    long count = data.values().stream()
-                            .filter(cities -> cities.values().stream()
-                                    .filter(city -> city.population >= minpopulation
-                                            && city.population <= maxpopulation)
-                                    .count() >= citycount)
-                            .count();
+        // creates the request
+        Request request = new Request(
+                generateCacheKey("getNumberofCountries", citycount, minpopulation, maxpopulation),
+                () -> _COMPUTE_getNumberofCountries(citycount, minpopulation, maxpopulation)
+        );
+        // put it on queue
+        enqueueRequest(request);
 
-                    sleep(80); // network latency
-                    return (int) count;
-                });
-        return new Response(result, 0, 0);
+        // wait for result
+        try {
+            return request.getResult();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RemoteException("Interrupted while waiting for result", e);
+        }
     }
 
+    /**
+     * Occationally called by proxy for info on this server's workload
+     * @return queue size
+     * @throws RemoteException for RMI errors
+     */
     @Override
-    public int fetchWorkload() throws RemoteException {
+    public int fetchWorkload() throws RemoteException
+    {
         System.out.printf("Proxy requested workload (%d)\n", requestQueue.size());
         return requestQueue.size();
     }
 
+    /**
+     * A simple toString
+     * @return Server in string format
+     */
     @Override
     public String toString()
     {
         return (getHost() + ":" + getPort());
+    }
+
+
+    // =========== Information getters ===========
+    /**
+     * @return hostname of the server
+     */
+    public String getHost()
+    {
+        return serverName;
+    }
+    /**
+     * @return port of the server
+     */
+    public int getPort()
+    {
+        return port;
+    }
+    /**
+     * @return zone of server
+     */
+    public int getZone()
+    {
+        return zone;
+    }
+    // ============= ============= =============
+
+    /**
+     * Sleeps 'ms' milliseconds
+     *
+     * @param ms integer, miliseconds to sleep
+     */
+    public void sleep(int ms)
+    {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

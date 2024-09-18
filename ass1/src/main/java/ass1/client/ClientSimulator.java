@@ -1,7 +1,6 @@
 package ass1.client;
 
-import ass1.client.Client;
-import ass1.server.InstructionInfo;
+import ass1.data.InstructionInfo;
 
 import java.io.*;
 import java.util.ArrayList;

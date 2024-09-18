@@ -1,5 +1,8 @@
-package ass1.server;
+package ass1.proxy;
 
+import ass1.server.Server;
+
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -17,6 +20,7 @@ public class ProxyServer implements ProxyClientInterface {
 	private HashMap<Integer, Server> servers;
 
 	// Hashmap keeping track of requests in each zone
+	private int WORKLOAD_THRESHOLD = 18;
 	private ConcurrentMap<Integer, Integer> zoneRequests;
 
 	static int numberOfServers =5;
@@ -30,49 +34,92 @@ public class ProxyServer implements ProxyClientInterface {
 		startProxy();
 	}
 
-	// used to register servers to this proxy - when creating servers
+	/**
+	 * Sleeps 'ms' milliseconds
+	 *
+	 * @param ms integer, miliseconds to sleep
+	 */
+	private void sleep(int ms)
+	{
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * used to register a given server in a given zone to the proxy
+	 *
+	 * @param zone zone of server
+	 * @param server server provided
+	 */
 	public void registerServer(int zone, Server server) {
 		servers.put(zone, server);
 		zoneRequests.put(zone, 0);
 	}
 
+	/**
+	 * client asks proxy for server in 'zone'
+	 * proxy find appropriate server based on workload in local area
+	 *
+	 * @param zone requested zone client wants
+	 * @return string containing address to server client will use
+	 * @throws RemoteException if any RMI error occurs
+	 */
 	@Override
 	public String requestServer(int zone) throws RemoteException
 	{
-		Server destination =  handleQueue(zone);
+		// error handling
+		if (!zoneRequests.containsKey(zone)) return null;
+
+		Server destination = handleQueue(zone);
+
+		// simulating additional delay based on zone distance
+		int zoneDistance = Math.abs(zone - destination.getZone());
+		int delay = (zoneDistance == 0) ? 80 : 170;
+
+		sleep(delay);
 
 		// 1. Save request-counter - increment requests
 		zoneRequests.merge(zone, 1, Integer::sum);
 
 		// 2. check request counter
 		int requests = zoneRequests.get(zone);
-		if (requests % 18 == 0) {
-
-			int workload = destination.fetchWorkload();
-			zoneRequests.put(zone, workload);
+		if (requests % WORKLOAD_THRESHOLD == 0)
+		{
+			try {
+				// attempt to fetch server load
+				int workload = destination.fetchWorkload();
+				zoneRequests.put(zone, workload);
+			}
+			catch (RemoteException e) {
+				e.printStackTrace();
+			}
 		}
 
-		// ==================================
-
-		return (destination.getHost()) + ":" + (destination.getPort());
+		// e.g. "server2:1099:2"
+		return (destination.getHost()) + ":" + (destination.getPort()) + ":" + (destination.getZone());
 	}
 
 	
 
 	private Server handleQueue(int zone)
 	{
+		// color-codes for output
 		String YELLOW = "\u001B[33m";
 		String CYAN = "\u001B[36m";
 		String RESET = "\u001B[0m";
 
 		Server server = servers.get(zone);
 
-		System.out.printf("Requesting zone:%d\n", zone);
+		System.out.printf("\nRequesting zone:%d\n", zone);
 
+		// load of requested zone + how many servers in total
 		int requestedWorkload = zoneRequests.get(zone);
 		int numServers = zoneRequests.size();
 
-		if (requestedWorkload > 18){
+		if (requestedWorkload > WORKLOAD_THRESHOLD){
 
 			// calculate adjacent zones
 			int adjacent1 = (zone % numServers) + 1;
@@ -89,21 +136,19 @@ public class ProxyServer implements ProxyClientInterface {
 			
 
 			// redirect to adjacent zone 1 if below threshold
-			if (adjacentWorkload1 < 18) {
-				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n\n" + RESET, adjacent1, adjacentWorkload1);
-				adjacentServer1.sleep(90);
+			if (adjacentWorkload1 < WORKLOAD_THRESHOLD) {
+				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n" + RESET, adjacent1, adjacentWorkload1);
 				return adjacentServer1;
 			}
 
 			// redirect to adjacent zone 2 if below threshold
-			if (adjacentWorkload2 < 18) {
-				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n\n" + RESET, adjacent2, adjacentWorkload2);
-				adjacentServer2.sleep(90);
+			if (adjacentWorkload2 < WORKLOAD_THRESHOLD) {
+				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n" + RESET, adjacent2, adjacentWorkload2);
 				return adjacentServer2;
 			}
 		}
 
-		System.out.printf(YELLOW + "Using requested zone: %d (Workload: %d)\n\n" + RESET, zone, requestedWorkload);
+		System.out.printf(YELLOW + "Using requested zone: %d (Workload: %d)\n" + RESET, zone, requestedWorkload);
 
 		return server ;
 	}
