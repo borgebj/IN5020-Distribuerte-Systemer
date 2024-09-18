@@ -40,3 +40,4 @@ target/
 **/target/
 ass2/
 ass2/target
+output/results/naive_server.txt
