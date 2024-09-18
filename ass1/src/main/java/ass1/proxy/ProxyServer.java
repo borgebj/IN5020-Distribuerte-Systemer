@@ -128,14 +128,12 @@ public class ProxyServer implements ProxyClientInterface {
 			// redirect to adjacent zone 1 if below threshold
 			if (adjacentWorkload1 < WORKLOAD_THRESHOLD) {
 				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n" + RESET, adjacent1, adjacentWorkload1);
-				System.exit(-1);
 				return adjacentServer1;
 			}
 
 			// redirect to adjacent zone 2 if below threshold
 			if (adjacentWorkload2 < WORKLOAD_THRESHOLD) {
 				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n" + RESET, adjacent2, adjacentWorkload2);
-				System.exit(-1);
 				return adjacentServer2;
 			}
 		}
