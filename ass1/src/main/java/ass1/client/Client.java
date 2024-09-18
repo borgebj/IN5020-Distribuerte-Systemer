@@ -189,21 +189,42 @@ public class Client {
      * @param zone zone processed from
      * @param timing [turnaround, execution, waiting]
      */
-    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
+   private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
     {
         long turnaround = timing[0];
         long execution = timing[1];
         long waiting = timing[2];
-
-        // updates local timing-counter
-        updateMethodStats(instruc.function, timing);
-
-        // query-string
-        String fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
-                            result, instruc, turnaround, execution, waiting, zone);
-
-        // print to terminal
-        System.out.printf(fullQuery);
+       
+        // updates local timing-counter 
+        String fullQuery =" ";
+        
+        if (instruc.function.equals("getNumberofCountries")){
+            
+            if (instruc.args.size()==2 ){   
+                instruc.function = "getNumberofCountriesMin";
+            } else if ( instruc.args.size() ==3){
+                instruc.function = "getNumberofCountriesMinMax";
+            }
+              
+            updateMethodStats(instruc.function, timing);  
+            // query-string
+            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
+            result, instruc, turnaround, execution, waiting, zone);
+            // print to terminal
+            System.out.printf(fullQuery);
+            
+            
+        } else {
+            updateMethodStats(instruc.function, timing);
+    
+            // query-string
+            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
+                                result, instruc, turnaround, execution, waiting, zone);
+    
+            // print to terminal
+            System.out.printf(fullQuery);
+        }
+        
 
         // ensures directory exists
         File resultsDir = new File("output/results");
