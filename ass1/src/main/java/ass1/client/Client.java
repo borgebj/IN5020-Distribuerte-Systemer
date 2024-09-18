@@ -189,6 +189,7 @@ public class Client {
      * @param zone zone processed from
      * @param timing [turnaround, execution, waiting]
      */
+
    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
     {
         long turnaround = timing[0];
@@ -225,7 +226,6 @@ public class Client {
             System.out.printf(fullQuery);
         }
         
-
         // ensures directory exists
         File resultsDir = new File("output/results");
         if (!resultsDir.exists()) {
