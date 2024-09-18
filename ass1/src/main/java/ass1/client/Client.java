@@ -206,25 +206,16 @@ public class Client {
             } else if ( instruc.args.size() ==3){
                 instruc.function = "getNumberofCountriesMinMax";
             }
-              
-            updateMethodStats(instruc.function, timing);  
-            // query-string
-            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
-            result, instruc, turnaround, execution, waiting, zone);
-            // print to terminal
-            System.out.printf(fullQuery);
-            
-            
-        } else {
-            updateMethodStats(instruc.function, timing);
-    
-            // query-string
-            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
-                                result, instruc, turnaround, execution, waiting, zone);
-    
-            // print to terminal
-            System.out.printf(fullQuery);
         }
+
+        updateMethodStats(instruc.function, timing);
+
+        // query-string
+        fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
+                result, instruc, turnaround, execution, waiting, zone);
+
+        // print to terminal
+        System.out.printf(fullQuery);
         
         // ensures directory exists
         File resultsDir = new File("output/results");
