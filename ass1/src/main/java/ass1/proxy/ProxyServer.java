@@ -107,7 +107,7 @@ public class ProxyServer implements ProxyClientInterface {
 
 		Server server = servers.get(zone);
 
-		System.out.printf("\nRequesting zone %d\n", zone);
+		System.out.printf("\nRequesting zone %d (Workload: %d)\n", zone, zoneRequests.get(zone));
 
 		// load of requested zone + how many servers in total
 		int requestedWorkload = zoneRequests.get(zone);

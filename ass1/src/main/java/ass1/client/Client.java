@@ -187,6 +187,7 @@ public class Client {
         methodCounts.put(methodName, count + 1);
     }
 
+
     /**
      * Writes a line to a file containing query information
      *
@@ -238,12 +239,33 @@ public class Client {
         }
     }
 
+    private void flushResultsFile() {
+        File file = new File(NAIVE_FILEPATH);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file.");
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Goes through all previously parsed instructions and invokes request from a given server
      *
      * @param proxy proxy that will find server to be used
      */
     private void invokeRequests(ProxyClientInterface proxy, int lineReadingDelay) {
+
+        // flush output file
+        flushResultsFile();
+
         for (InstructionInfo instruc : instructions) {
 
             // T = 50 or T = 20 input line reading delay
