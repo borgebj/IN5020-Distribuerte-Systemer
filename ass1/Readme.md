@@ -3,14 +3,26 @@
 
 ## Data flow
 
-...
+1. ServerSimulator parses dataset -> starts proxy -> starts servers
+2. ClientSimulator parses instructions -> starts client
+3. client iterates through instructions
+4. client asks proxy for server
+5. proxy checks workload, returns appropriate server
+6. client uses given server and queries its requrst
+7. server add requst to FIFO list
+8. servers executor polls and performs request, returns answer
+9. client receives response, logs it
 
 ## How to run #1
+either:
 
-Run 'ServerSimulator' for everything to run at once
-1. compile files in both /client and /server
-2. run `ServerSimulator` to start all threads
-3. run `ClientSimulator` to start all clients
+1. run `ServerSimulator` to start server and proxy
+2. run `ClientSimulator` to start client
+
+   or
+
+1. run `Starter` to run both on a single instance / terminal
+
 
 ## How to run #2
 
