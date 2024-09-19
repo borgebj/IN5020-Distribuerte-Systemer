@@ -78,13 +78,13 @@ public class ServerSimulator {
      * @param port base-port used
      * @param dataset data-set that servers use
      */
-	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset)
+	private static void createServers(int numServers, int port, HashMap<String, HashMap<String, CityInfo>> dataset, boolean usingCache)
     {
         servers = new ServerInterface[numServers];
 
         // Create servers
         for (int i = 1; i <= numServers; i++) {
-            Server server = new Server(i, port + i, dataset);
+            Server server = new Server(i, port + i, dataset, usingCache);
             servers[i-1] = server;
             proxy.registerServer(i, server);
 
@@ -103,8 +103,11 @@ public class ServerSimulator {
         // main port used
         int port = BASE_PORT;
 
+        // using intenral cache or not
+        boolean usingCache = true;
+
         // start server and proxy
         createProxy(port);
-        createServers(numDevices, port, dataset);
+        createServers(numDevices, port, dataset, usingCache);
     }
 }

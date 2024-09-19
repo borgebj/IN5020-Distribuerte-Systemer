@@ -86,11 +86,11 @@ public class ClientSimulator {
 	 * @param port : base-port used
 	 * @param instructions : instruction-set that clients use
 	 */
-	private static void createClients(int numServers, int port, ArrayList<InstructionInfo> instructions)
+	private static void createClients(int numServers, int port, ArrayList<InstructionInfo> instructions, boolean usingCache)
 	{
 		// Create clients
 		int clientPort = port + numServers;
-		Client client = new Client(clientPort, instructions);
+		Client client = new Client(clientPort, instructions, usingCache);
 	}
 
 	public static void main(String[] args)
@@ -104,7 +104,10 @@ public class ClientSimulator {
 		// main port used
 		int port = BASE_PORT;
 
+		// using intenral cache or not
+		boolean usingCache = true;
+
 		// start clients
-		createClients(numServers, port, instructions);
+		createClients(numServers, port, instructions, usingCache);
 	}
 }
