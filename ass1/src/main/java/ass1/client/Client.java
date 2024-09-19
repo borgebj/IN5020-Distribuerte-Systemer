@@ -19,6 +19,7 @@ public class Client {
 
 
     // Cache to store results, max size of 45
+    private boolean usingCache;
     private static final int CACHE_SIZE = 45;
     private LinkedHashMap<String, Integer> cache;
 
@@ -33,9 +34,10 @@ public class Client {
 
 
 
-    public Client(int port, ArrayList<InstructionInfo> instructions) {
+    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache) {
         Client.instructions = instructions;
         this.port = port;
+        this.usingCache = usingCache;
 
         // Initialize cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
@@ -254,7 +256,7 @@ public class Client {
             long startTurnaround = System.currentTimeMillis();
 
             // if request is cached, retrieve it!
-            if (cache.containsKey(cacheKey)) {
+            if (usingCache && cache.containsKey(cacheKey)) {
                 int result = cache.get(cacheKey);
                 saveResult(instruc, result, zone, new long[]{0, 0, 0});  // <-- result in cache? Time is "instant"
             }
@@ -287,7 +289,7 @@ public class Client {
                     long waitingTime = (turnaroundTime - executionTime);
 
                     // cache request
-                    cache.put(cacheKey, result);
+                    if (usingCache) cache.put(cacheKey, result);
 
                     // saves result and timing to file
                     saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});

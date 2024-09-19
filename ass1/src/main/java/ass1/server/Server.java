@@ -24,6 +24,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private int port;
 
     // Cache with capacity of 150 entries
+    private boolean usingCache;
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
 
@@ -35,11 +36,12 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private final CountDownLatch start = new CountDownLatch(1);
 
 
-    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data, boolean usingCache)
     {
         this.zone = zone;
         this.port = port;
         this.data = data;
+        this.usingCache = usingCache;
         this.serverName = "server"+zone;
 
         // Initialize the cache with LRU eviction policy
@@ -85,7 +87,14 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private void processRequest(Request request)
     {
         String cacheKey = request.getCacheKey();
-        int result = getFromCacheOrCompute(cacheKey, request.getComputation());
+
+        int result = 0;
+        if (usingCache) {
+            result = getFromCacheOrCompute(cacheKey, request.getComputation());
+        }
+        else {
+            result = request.getComputation().get();
+        }
         request.complete(result);
         System.out.printf("Finished %s = %d\n", request.getCacheKey(), result);
     }
