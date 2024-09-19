@@ -68,7 +68,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
                         // pulls out request at start
                         Request request = requestQueue.poll();
                         if (request != null) {
-                            System.out.printf("Executor [%d] processing : %s\n", zone, request);
+                            System.out.printf("Executor [server %d] processing : %s\n", zone, request);
                             processRequest(request);
                         }
                     } catch (Exception e) {

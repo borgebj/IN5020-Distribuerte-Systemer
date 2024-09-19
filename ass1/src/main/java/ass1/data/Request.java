@@ -32,6 +32,6 @@ public class Request {
 
 	@Override
 	public String toString() {
-		return String.format("request={%s ; %s ; %d}", cacheKey, computation.get(), result);
+		return String.format("request={%s ; %d}", cacheKey, result);
 	}
 }
