@@ -72,7 +72,6 @@ public class ProxyServer implements ProxyClientInterface {
 		// simulating additional delay based on zone distance
 		int zoneDistance = Math.abs(zone - destination.getZone());
 		int delay = (zoneDistance == 0) ? 80 : 170;
-
 		sleep(delay);
 
 		// 1. Save request-counter - increment requests
@@ -82,14 +81,17 @@ public class ProxyServer implements ProxyClientInterface {
 		int requests = zoneRequests.get(zone);
 		if (requests % WORKLOAD_THRESHOLD == 0)
 		{
-			try {
-				// attempt to fetch server load
-				int workload = destination.fetchWorkload();
-				zoneRequests.put(zone, workload);
-			}
-			catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			// updating proxy with servers workload happens on a separate thread
+			new Thread(()-> {
+				try {
+					// attempt to fetch server load
+					int workload = destination.fetchWorkload();
+					zoneRequests.put(zone, workload);
+				}
+				catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			});
 		}
 
 		// e.g. "server2:1099:2"
@@ -105,7 +107,7 @@ public class ProxyServer implements ProxyClientInterface {
 
 		Server server = servers.get(zone);
 
-		System.out.printf("\nRequesting zone %d\n", zone);
+		System.out.printf("\nRequesting zone %d (Workload: %d)\n", zone, zoneRequests.get(zone));
 
 		// load of requested zone + how many servers in total
 		int requestedWorkload = zoneRequests.get(zone);

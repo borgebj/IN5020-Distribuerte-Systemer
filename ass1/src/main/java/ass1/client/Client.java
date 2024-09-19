@@ -13,13 +13,16 @@ import ass1.data.InstructionInfo;
 
 public class Client {
 
+    // running info
+    private boolean usingCache;
+    private int LINE_DELAY; // T = 20 / 50
+
     // Hashmap with city data
     private static ArrayList<InstructionInfo> instructions;
     private int port;
 
 
     // Cache to store results, max size of 45
-    private boolean usingCache;
     private static final int CACHE_SIZE = 45;
     private LinkedHashMap<String, Integer> cache;
 
@@ -34,10 +37,11 @@ public class Client {
 
 
 
-    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache) {
+    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache, int lineDelay) {
         Client.instructions = instructions;
         this.port = port;
         this.usingCache = usingCache;
+        this.LINE_DELAY = lineDelay;
 
         // Initialize cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
@@ -183,6 +187,7 @@ public class Client {
         methodCounts.put(methodName, count + 1);
     }
 
+
     /**
      * Writes a line to a file containing query information
      *
@@ -234,12 +239,33 @@ public class Client {
         }
     }
 
+    private void flushResultsFile() {
+        File file = new File(NAIVE_FILEPATH);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file.");
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Goes through all previously parsed instructions and invokes request from a given server
      *
      * @param proxy proxy that will find server to be used
      */
     private void invokeRequests(ProxyClientInterface proxy, int lineReadingDelay) {
+
+        // flush output file
+        flushResultsFile();
+
         for (InstructionInfo instruc : instructions) {
 
             // T = 50 or T = 20 input line reading delay
@@ -314,8 +340,6 @@ public class Client {
             ProxyClientInterface proxy = (ProxyClientInterface) registry.lookup("proxy");
 
             System.out.printf("Client:%d has started\n", port);
-
-            int LINE_DELAY = 20; // T = 20 / 50
 
             // Invoke requests from instruction-set
             invokeRequests(proxy, LINE_DELAY);
