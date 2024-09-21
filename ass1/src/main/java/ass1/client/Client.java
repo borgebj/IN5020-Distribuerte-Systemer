@@ -33,7 +33,8 @@ public class Client {
 
 
     // filespaths
-    private final String NAIVE_FILEPATH = "output/results/naive_server.txt";
+    private final String OUT_FOLDER = "ass1/output/results";
+    private final String FILEPATH = OUT_FOLDER + "/naive_server.txt";
 
 
 
@@ -140,7 +141,7 @@ public class Client {
 
     private void appendAveragesToFile()
     {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(NAIVE_FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILEPATH, true));
              PrintWriter out = new PrintWriter(writer)) {
 
             out.println("\n[ === [ AVERAGES PER METHOD ] === \n");
@@ -225,13 +226,13 @@ public class Client {
         System.out.printf(fullQuery);
         
         // ensures directory exists
-        File resultsDir = new File("output/results");
+        File resultsDir = new File(OUT_FOLDER);
         if (!resultsDir.exists()) {
             resultsDir.mkdirs();
         }
 
         // print to file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(NAIVE_FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILEPATH, true));
              PrintWriter out = new PrintWriter(writer)) {
             out.print(fullQuery);
         } catch (IOException e) {
@@ -240,7 +241,7 @@ public class Client {
     }
 
     private void flushResultsFile() {
-        File file = new File(NAIVE_FILEPATH);
+        File file = new File(FILEPATH);
         if (file.exists()) {
             if (!file.delete()) {
                 System.err.println("Failed to delete the existing file.");
@@ -251,9 +252,7 @@ public class Client {
             if (!file.createNewFile()) {
                 System.err.println("Failed to create a new file.");
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) {}
     }
 
     /**
