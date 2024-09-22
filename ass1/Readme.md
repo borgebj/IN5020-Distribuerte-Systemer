@@ -22,10 +22,17 @@ Everything is done in the folder "ass1", so open terminal here.
 ### From here, 2 terminals needed
 
 * run the **ServerSimulator**, in terminal type:
-    - `java -cp .target/solution.jar ass1.server.ServerSimulator`
+    - `java -cp .target/solution.jar ass1.server.ServerSimulator <true/false>`
 
 * run the **ClientSimulator**, in terminal type:
-    - `java -cp ./target/solution.jar ass1.client.ClientSimulator`
+    - `java -cp ./target/solution.jar ass1.client.ClientSimulator <true/false>`
+ 
+or, run **Starter**, a dedicated class to run both 
+    - `java -cp ./target/solution.jar ass1.Starter <0/1/2`
+    - Where:
+    > 0 = no cache
+    > 1 = Client uses cache
+    > 2 = Server uses cache
 
 ## Data flow
 
