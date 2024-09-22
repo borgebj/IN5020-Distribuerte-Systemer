@@ -15,6 +15,7 @@ public class Client {
 
     // running info
     private boolean usingCache;
+    private int cacheMode;
     private int LINE_DELAY; // T = 20 / 50
 
     // Hashmap with city data
@@ -33,15 +34,20 @@ public class Client {
 
 
     // filespaths
-    private final String OUT_FOLDER = "ass1/output/results";
-    private final String FILEPATH = OUT_FOLDER + "/naive_server.txt";
+    private final String OUT_FOLDER = "output/results";
+    private final String NAIVE_SERVER_FILENAME = "/naive_server.txt";
+    private final String SERVER_CACHE_FILENAME = "/server_cache.txt";
+    private final String CLIENT_CACHE_FILENAME = "/client_cache.txt";
+   
+
+    private String filePath;
 
 
-
-    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache, int lineDelay) {
+    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache, int cacheMode , int lineDelay) {
         Client.instructions = instructions;
         this.port = port;
         this.usingCache = usingCache;
+        this.cacheMode = cacheMode;
         this.LINE_DELAY = lineDelay;
 
         // Initialize cache with LRU eviction policy
@@ -141,7 +147,7 @@ public class Client {
 
     private void appendAveragesToFile()
     {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
 
             out.println("\n[ === [ AVERAGES PER METHOD ] === \n");
@@ -226,13 +232,9 @@ public class Client {
         System.out.printf(fullQuery);
         
         // ensures directory exists
-        File resultsDir = new File(OUT_FOLDER);
-        if (!resultsDir.exists()) {
-            resultsDir.mkdirs();
-        }
-
+ 
         // print to file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
             out.print(fullQuery);
         } catch (IOException e) {
@@ -240,20 +242,49 @@ public class Client {
         }
     }
 
-    private void flushResultsFile() {
-        File file = new File(FILEPATH);
-        if (file.exists()) {
-            if (!file.delete()) {
-                System.err.println("Failed to delete the existing file.");
-            }
+
+
+    private String getCacheModePath(){
+        switch (cacheMode) {
+            case 0: return OUT_FOLDER + NAIVE_SERVER_FILENAME;
+                
+            case 1: return OUT_FOLDER + CLIENT_CACHE_FILENAME;
+        
+            case 2: return OUT_FOLDER + SERVER_CACHE_FILENAME;
+            default:
+            throw new IllegalArgumentException("Invalid cache mode: " + cacheMode);
         }
-        // Create a new file to ensure it's empty
-        try {
-            if (!file.createNewFile()) {
-                System.err.println("Failed to create a new file.");
-            }
-        } catch (IOException e) {}
+       
     }
+    private void flushResultsFile() {
+
+        // ensures directory exists
+       File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+       //Get caching information 
+       filePath  = getCacheModePath();
+      
+   
+       // Loop through each filename and delete/create the file
+       File file = new File(filePath);
+       if (file.exists()) {
+           if (!file.delete()) {
+               System.err.println("Failed to delete the existing file: " + filePath);
+           }
+       }
+           // Create a new file to ensure it's empty
+           try {
+               if (!file.createNewFile()) {
+                   System.err.println("Failed to create a new file: " + filePath);
+               }
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+       
+   }
 
     /**
      * Goes through all previously parsed instructions and invokes request from a given server
