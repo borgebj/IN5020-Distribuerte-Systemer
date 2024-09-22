@@ -104,7 +104,7 @@ public class ServerSimulator {
         int port = BASE_PORT;
 
         // using intenral cache or not
-        boolean usingCache = true;
+        boolean usingCache = Boolean.parseBoolean(args[0]);
 
         // start server and proxy
         createProxy(port);

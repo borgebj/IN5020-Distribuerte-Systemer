@@ -41,3 +41,5 @@ target/
 ass2/
 ass2/target
 output/results/naive_server.txt
+ass1/ass1/output/results/naive_server.txt
+ass1/output/results/naive_server.txt
