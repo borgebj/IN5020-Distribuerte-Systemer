@@ -18,8 +18,10 @@ public class Server implements ServerInterface, ProxyServerInterface {
 
     /** Global variables */
 
-    // Unix Timestamp list
-    private HashMap<Long, Integer> timestamps;
+    // output-info
+    String OUT_FOLDER = "output/results";
+    String filePath;
+
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
@@ -27,14 +29,17 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private int zone;
     private int port;
 
+
     // Cache with capacity of 150 entries
     private boolean usingCache;
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
 
+
     // request queue with FIFO policy
     private final Queue<Request> requestQueue;
     private Thread executioner;
+
 
     // latch awaiting first request
     private final CountDownLatch start = new CountDownLatch(1);
@@ -63,12 +68,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
             }
         };
 
-        this.timestamps = new HashMap<>();
         this.requestQueue = new LinkedBlockingQueue<>();
 
         startServer();
         startExecutionMode();
-        saveToFile();
+        createFile();
     }
 
     /**
@@ -85,6 +89,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
                     try {
                         // pulls out request at start
                         Request request = requestQueue.poll();
+
                         if (request != null) {
                             System.out.printf("Executor [server %d] processing : %s\n", zone, request);
                             processRequest(request);
@@ -102,24 +107,45 @@ public class Server implements ServerInterface, ProxyServerInterface {
         executioner.start();
     }
 
-    /**
-     * saves to txt from timestamps
-     *
-     */
-    private void saveToFile()
+    private void createFile()
     {
-        // new file object
-        File file = new File("output/results/server_graph.txt");
-        System.out.println(timestamps);
-        try (BufferedWriter bf = new BufferedWriter(new FileWriter(file))) {
-            bf.flush();
-            // iterate timestamps
-            for (Map.Entry<Long, Integer> entry : timestamps.entrySet()) {
+        // ensures directory exists
+        File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
 
-                bf.write(entry.getKey() + ":" + entry.getValue());
+        this.filePath = String.format("%s/%s_graph.txt", OUT_FOLDER, serverName);
 
-                bf.newLine();
+        // delete or create file
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file: " + filePath);
             }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file: " + filePath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * saves timestamps to txt
+     */
+    private void saveToFile(int workload)
+    {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
+             PrintWriter out = new PrintWriter(writer)) {
+
+            long unix = System.currentTimeMillis() / 1000;
+
+            out.println(unix + ":" + workload);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -243,10 +269,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 () -> _COMPUTE_getPopulationofCountry(countryName)
         );
 
-        // sets timestamp and queue numbers for timestamp hashmap
-        Long longTime = new Long(new Date().getTime()/1000);
-        timestamps.put(longTime, requestQueue.size());
-
         // put it on queue
         enqueueRequest(request);
 
@@ -277,10 +299,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getNumberofCities", countryName, min),
                 () -> _COMPUTE_getNumberofCities(countryName, min)
         );
-
-        // sets timestamp and queue numbers for timestamp hashmap
-        Long longTime = new Long(new Date().getTime()/1000);
-        timestamps.put(longTime, requestQueue.size());
 
         // put it on queue
         enqueueRequest(request);
@@ -313,10 +331,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation)
         );
 
-        // sets timestamp and queue numbers for timestamp hashmap
-        Long longTime = new Long(new Date().getTime()/1000);
-        timestamps.put(longTime, requestQueue.size());
-
         // put it on queue
         enqueueRequest(request);
 
@@ -348,10 +362,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getNumberofCountries", citycount, minpopulation, maxpopulation),
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation, maxpopulation)
         );
-
-        // sets timestamp and queue numbers for timestamp hashmap
-        Long longTime = new Long(new Date().getTime()/1000);
-        timestamps.put(longTime, requestQueue.size());
 
         // put it on queue
         enqueueRequest(request);

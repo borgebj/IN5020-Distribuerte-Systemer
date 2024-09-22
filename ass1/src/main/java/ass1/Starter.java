@@ -3,7 +3,6 @@ package ass1;
 import ass1.client.ClientSimulator;
 import ass1.server.ServerSimulator;
 
-import java.util.Arrays;
 
 public class Starter {
 	public static void main(String[] args) throws InterruptedException {
@@ -62,5 +61,10 @@ public class Starter {
 		// Start both threads
 		serverThread.start();
 		clientThread.start();
+
+		serverThread.join();
+		clientThread.join();
+
+		System.out.println("\n\n ===== [ END PROGRAM ] =====\n\n");
 	}
 }

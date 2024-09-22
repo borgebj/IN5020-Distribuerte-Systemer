@@ -230,9 +230,7 @@ public class Client {
 
         // print to terminal
         System.out.printf(fullQuery);
-        
-        // ensures directory exists
- 
+
         // print to file
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
@@ -275,10 +273,9 @@ public class Client {
         }
 
        //Get caching information 
-       filePath  = getCacheModePath();
-      
-   
-       // Loop through each filename and delete/create the file
+       this.filePath  = getCacheModePath();
+
+        // delete or create file
        File file = new File(filePath);
        if (file.exists()) {
            if (!file.delete()) {
@@ -293,7 +290,6 @@ public class Client {
            } catch (IOException e) {
                e.printStackTrace();
            }
-       
    }
 
     /**
