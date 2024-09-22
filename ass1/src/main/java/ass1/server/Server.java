@@ -18,11 +18,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
 
     /** Global variables */
 
-    // output-info
-    String OUT_FOLDER = "output/results";
-    String filePath;
-
-
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
     private String serverName;
@@ -72,7 +67,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
 
         startServer();
         startExecutionMode();
-        createFile();
     }
 
     /**
@@ -107,57 +101,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
         executioner.start();
     }
 
-    private void createFile()
-    {
-        // ensures directory exists
-        File resultsDir = new File(OUT_FOLDER);
-        if (!resultsDir.exists()) {
-            resultsDir.mkdirs();
-        }
-
-        this.filePath = String.format("%s/%s_graph.txt", OUT_FOLDER, serverName);
-
-        // delete or create file
-        File file = new File(filePath);
-        if (file.exists()) {
-            if (!file.delete()) {
-                System.err.println("Failed to delete the existing file: " + filePath);
-            }
-        }
-        // Create a new file to ensure it's empty
-        try {
-            if (!file.createNewFile()) {
-                System.err.println("Failed to create a new file: " + filePath);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /**
-     * saves timestamps to txt
-     */
-    private void saveToFile(int workload)
-    {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
-             PrintWriter out = new PrintWriter(writer)) {
-
-            long unix = System.currentTimeMillis() / 1000;
-
-            out.println(unix + ":" + workload);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 
     /**
      * processes requests
      * @param request
      */
-
     private void processRequest(Request request)
     {
         String cacheKey = request.getCacheKey();
@@ -204,7 +152,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
      * ask for queue space
      * @param request
      */
-
     private void enqueueRequest(Request request)
     {
         // puts in request at end
@@ -376,7 +323,8 @@ public class Server implements ServerInterface, ProxyServerInterface {
     }
 
     /**
-     * Occationally called by proxy for info on this server's workload
+     * Occasionally called by proxy for info on this server's workload
+     *
      * @return queue size
      * @throws RemoteException for RMI errors
      */
@@ -439,8 +387,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
     }
 
     /**
-     * Method that starts this current server Exporting server with stub, binding to
-     * registry
+     * Method that starts this current server Exporting server with stub, binding to registry
      */
     private void startServer() {
         try {
