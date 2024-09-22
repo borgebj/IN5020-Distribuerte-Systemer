@@ -35,6 +35,13 @@ public class Server implements ServerInterface, ProxyServerInterface {
     // latch awaiting first request
     private final CountDownLatch start = new CountDownLatch(1);
 
+    /**
+     *
+     * @param zone using zone
+     * @param port using port
+     * @param data using dataset
+     * @param usingCache used if true
+     */
 
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data, boolean usingCache)
     {
@@ -57,6 +64,10 @@ public class Server implements ServerInterface, ProxyServerInterface {
         startServer();
         startExecutionMode();
     }
+
+    /**
+     *  Starts request loop
+     */
 
     private void startExecutionMode() {
         executioner = new Thread(() -> {
@@ -83,6 +94,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
         executioner.setDaemon(true); // release the daemon
         executioner.start();
     }
+
+    /**
+     * processes requests
+     * @param request
+     */
 
     private void processRequest(Request request)
     {
@@ -126,6 +142,10 @@ public class Server implements ServerInterface, ProxyServerInterface {
         return function + Arrays.toString(args);
     }
 
+    /**
+     * ask for queue space
+     * @param request
+     */
 
     private void enqueueRequest(Request request)
     {

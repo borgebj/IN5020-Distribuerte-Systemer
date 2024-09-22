@@ -98,6 +98,12 @@ public class ProxyServer implements ProxyClientInterface {
 		return (destination.getHost()) + ":" + (destination.getPort()) + ":" + (destination.getZone());
 	}
 
+	/**
+	 *
+	 * @param zone
+	 * @return proper server based on zone param
+	 */
+
 	private Server handleQueue(int zone)
 	{
 		// color-codes for output
@@ -144,6 +150,10 @@ public class ProxyServer implements ProxyClientInterface {
 
 		return server ;
 	}
+
+	/**
+	 * starts proxy by using registry and port
+	 */
 
 	private void startProxy()
 	{

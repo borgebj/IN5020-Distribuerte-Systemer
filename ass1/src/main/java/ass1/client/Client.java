@@ -50,7 +50,7 @@ public class Client {
         this.cacheMode = cacheMode;
         this.LINE_DELAY = lineDelay;
 
-        // Initialize cache with LRU eviction policy
+        // Initializes cache with LRU
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
@@ -242,7 +242,11 @@ public class Client {
         }
     }
 
-
+    /**
+     *  changes filepath based on cachemode
+     *
+     * @return out folder + correct filename
+     */
 
     private String getCacheModePath(){
         switch (cacheMode) {
@@ -256,6 +260,12 @@ public class Client {
         }
        
     }
+
+    /**
+     *  function for making a file into out folder, while getting filepath based on getCacheModePath()
+     *
+     */
+
     private void flushResultsFile() {
 
         // ensures directory exists
