@@ -9,28 +9,28 @@ public class Starter {
 	public static void main(String[] args) throws InterruptedException {
 
 		/**
-		 * 0 = No cache
-		 * 1 = Client cache
-		 * 2 = Server Cache*
+		 * none = No cache
+		 * client = Client cache
+		 * server = Server Cache*
 		 */
-		int cacheOption = Integer.parseInt(args[0]);
+		String cacheOption = args[0];
 		String[] clientArgs = {"false", "0"};
 		String[] serverArgs = {"false", "0"};
 
 		switch (cacheOption) {
-			case 0:
+			case "none":
 				clientArgs[0] = "False";
 				serverArgs[0] = "False";
 				clientArgs[1] = "0";
 				System.out.println("\n[ No cache used ]\n");
 				break;
-			case 1:
+			case "client":
 				serverArgs[0] = "False";
 				clientArgs[0] = "True";
 				clientArgs[1] = "1";
 				System.out.println("\n[ Client cache used ]\n");
 				break;
-			case 2:
+			case "server":
 				serverArgs[0] = "True";
 				clientArgs[0] = "False";
 				clientArgs[1] = "2";
@@ -47,8 +47,6 @@ public class Starter {
 				e.printStackTrace();
 			}
 		});
-
-
 
 		// Create thread for ClientSimulator
 		Thread clientThread = new Thread(() -> {
