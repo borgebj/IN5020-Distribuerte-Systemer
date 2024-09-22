@@ -106,7 +106,7 @@ public class ClientSimulator {
 		int port = BASE_PORT;
 
 		// using intenral cache or not
-		boolean usingCache = true;
+		boolean usingCache = Boolean.parseBoolean(args[0]);
 
 		// delay for each request - test cases either T = 20 or T = 50
 		int lineDelay = 20;
