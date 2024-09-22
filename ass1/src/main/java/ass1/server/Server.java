@@ -4,6 +4,7 @@ import ass1.data.CityInfo;
 import ass1.data.Request;
 import ass1.proxy.ProxyServerInterface;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,6 +17,9 @@ import java.util.function.Supplier;
 public class Server implements ServerInterface, ProxyServerInterface {
 
     /** Global variables */
+
+    // Unix Timestamp list
+    private HashMap<Long, Integer> timestamps;
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
@@ -59,17 +63,20 @@ public class Server implements ServerInterface, ProxyServerInterface {
             }
         };
 
+        this.timestamps = new HashMap<>();
         this.requestQueue = new LinkedBlockingQueue<>();
 
         startServer();
         startExecutionMode();
+        saveToFile();
     }
 
     /**
      *  Starts request loop
      */
 
-    private void startExecutionMode() {
+    private void startExecutionMode()
+    {
         executioner = new Thread(() -> {
             try {
                 // Wait for the first request to be added
@@ -94,6 +101,31 @@ public class Server implements ServerInterface, ProxyServerInterface {
         executioner.setDaemon(true); // release the daemon
         executioner.start();
     }
+
+    /**
+     * saves to txt from timestamps
+     *
+     */
+    private void saveToFile()
+    {
+        // new file object
+        File file = new File("output/results/server_graph.txt");
+        System.out.println(timestamps);
+        try (BufferedWriter bf = new BufferedWriter(new FileWriter(file))) {
+            bf.flush();
+            // iterate timestamps
+            for (Map.Entry<Long, Integer> entry : timestamps.entrySet()) {
+
+                bf.write(entry.getKey() + ":" + entry.getValue());
+
+                bf.newLine();
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     /**
      * processes requests
@@ -210,6 +242,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getPopulationofCountry", countryName),
                 () -> _COMPUTE_getPopulationofCountry(countryName)
         );
+
+        // sets timestamp and queue numbers for timestamp hashmap
+        Long longTime = new Long(new Date().getTime()/1000);
+        timestamps.put(longTime, requestQueue.size());
+
         // put it on queue
         enqueueRequest(request);
 
@@ -240,6 +277,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getNumberofCities", countryName, min),
                 () -> _COMPUTE_getNumberofCities(countryName, min)
         );
+
+        // sets timestamp and queue numbers for timestamp hashmap
+        Long longTime = new Long(new Date().getTime()/1000);
+        timestamps.put(longTime, requestQueue.size());
+
         // put it on queue
         enqueueRequest(request);
 
@@ -270,6 +312,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getNumberofCountries", citycount, minpopulation),
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation)
         );
+
+        // sets timestamp and queue numbers for timestamp hashmap
+        Long longTime = new Long(new Date().getTime()/1000);
+        timestamps.put(longTime, requestQueue.size());
+
         // put it on queue
         enqueueRequest(request);
 
@@ -301,6 +348,11 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 generateCacheKey("getNumberofCountries", citycount, minpopulation, maxpopulation),
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation, maxpopulation)
         );
+
+        // sets timestamp and queue numbers for timestamp hashmap
+        Long longTime = new Long(new Date().getTime()/1000);
+        timestamps.put(longTime, requestQueue.size());
+
         // put it on queue
         enqueueRequest(request);
 
