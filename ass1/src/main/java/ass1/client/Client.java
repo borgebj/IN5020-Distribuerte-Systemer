@@ -150,7 +150,7 @@ public class Client {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
 
-            out.println("\n[ === [ AVERAGES PER METHOD ] === \n");
+            out.println("\n[ === [ AVERAGES PER METHOD ] === ]\n");
 
             for (Map.Entry<String, long[]> entry : methodTimings.entrySet()) {
                 String methodName = entry.getKey();

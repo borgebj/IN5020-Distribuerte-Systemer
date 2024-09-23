@@ -28,7 +28,7 @@ Everything is done in the folder "ass1", so open terminal here.
     - `java -cp ./target/solution.jar ass1.client.ClientSimulator <true/false>`
  
 or, run **Starter**, a dedicated class to run both 
-    - `java -cp ./target/solution.jar ass1.Starter <0/1/2`
+    - `java -cp ./target/solution.jar ass1.Starter <none/client/server> <line delay in ms>`
     - Where:
     > 0 = no cache
     > 1 = Client uses cache

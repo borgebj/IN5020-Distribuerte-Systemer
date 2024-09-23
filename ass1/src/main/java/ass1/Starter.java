@@ -13,27 +13,32 @@ public class Starter {
 		 * server = Server Cache*
 		 */
 		String cacheOption = args[0];
-		String[] clientArgs = {"false", "0"};
-		String[] serverArgs = {"false", "0"};
+		String lineDelay = args[1];
+		String[] clientArgs = {"false", "0", "20"};
+		String[] serverArgs = {"false", "0" };
 
 		switch (cacheOption) {
 			case "none":
 				clientArgs[0] = "False";
 				serverArgs[0] = "False";
 				clientArgs[1] = "0";
-				System.out.println("\n[ No cache used ]\n");
+				clientArgs[2] = lineDelay;
+				System.out.printf("\n[ No cache used, line delay %d ms]\n", Integer.parseInt(lineDelay));
+
 				break;
 			case "client":
 				serverArgs[0] = "False";
 				clientArgs[0] = "True";
 				clientArgs[1] = "1";
-				System.out.println("\n[ Client cache used ]\n");
+				clientArgs[2] = lineDelay;
+				System.out.printf("\n[ Client cache used, line delay %d ms]\n", Integer.parseInt(lineDelay));
 				break;
 			case "server":
 				serverArgs[0] = "True";
 				clientArgs[0] = "False";
 				clientArgs[1] = "2";
-				System.out.println("\n[ Server cache used ]\n");
+				clientArgs[2] = lineDelay;
+				System.out.printf("\n[ Server cache used, line delay %d ms]\n", Integer.parseInt(lineDelay));
 				break;
 		}
 		Thread.sleep(500);
@@ -64,6 +69,7 @@ public class Starter {
 
 		serverThread.join();
 		clientThread.join();
+
 
 		System.out.println("\n\n ===== [ END PROGRAM ] =====\n\n");
 	}

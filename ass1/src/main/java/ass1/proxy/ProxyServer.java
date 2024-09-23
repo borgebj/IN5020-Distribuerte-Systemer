@@ -24,7 +24,7 @@ public class ProxyServer implements ProxyClientInterface {
 	private HashMap<Integer, Server> servers;
 
 	// Hashmap keeping track of requests in each zone
-	private int WORKLOAD_THRESHOLD = 10;
+	private int WORKLOAD_THRESHOLD = 18;
 	private ConcurrentMap<Integer, Integer> zoneRequests;
 
 

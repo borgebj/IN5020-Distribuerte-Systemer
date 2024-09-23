@@ -112,7 +112,7 @@ public class ClientSimulator {
 		
 
 		// delay for each request - test cases either T = 20 or T = 50
-		int lineDelay = 20;
+		int lineDelay = Integer.parseInt(args[2]);
 
 		// start clients
 		createClients(numServers, port, instructions, usingCache, cacheMode ,lineDelay);
