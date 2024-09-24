@@ -86,7 +86,7 @@ public class ServerSimulator {
         for (int i = 1; i <= numServers; i++) {
             Server server = new Server(i, port + i, dataset, usingCache);
             servers[i-1] = server;
-            proxy.registerServer(i, server);
+            proxy.registerServer(i, port + i, server);
 
         }
     }

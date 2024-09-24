@@ -2,7 +2,6 @@ package ass1.server;
 
 import ass1.data.CityInfo;
 import ass1.data.Request;
-import ass1.proxy.ProxyServerInterface;
 
 import java.io.*;
 import java.rmi.RemoteException;
@@ -14,7 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
-public class Server implements ServerInterface, ProxyServerInterface {
+public class Server implements ServerInterface {
 
     /** Global variables */
 
@@ -81,6 +80,9 @@ public class Server implements ServerInterface, ProxyServerInterface {
                 start.await();
                 while (true) {
                     try {
+                        // simulate network latency
+                        sleep(80);
+
                         // pulls out request at start
                         Request request = requestQueue.poll();
 
@@ -207,9 +209,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getPopulationofCountry(String countryName) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getPopulationofCountry", countryName),
@@ -238,9 +237,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCities(String countryName, int min) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCities", countryName, min),
@@ -269,9 +265,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCountries", citycount, minpopulation),
@@ -301,9 +294,6 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCountries", citycount, minpopulation, maxpopulation),

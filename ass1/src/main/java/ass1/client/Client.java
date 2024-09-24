@@ -337,6 +337,10 @@ public class Client {
                     int serverPort = Integer.parseInt(addressParts[1]);
                     int resultZone = Integer.parseInt(addressParts[2]);
 
+                    // simulating additional delay based on zone distance
+                    int delay = (resultZone == zone) ? 80 : 170;
+                    sleep(delay);
+
                     // lookup server to use
                     Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
                     ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
