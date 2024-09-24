@@ -1,4 +1,6 @@
 target/
+.zip
+*.zip
 
 # IntelliJ IDEA
 .idea/
