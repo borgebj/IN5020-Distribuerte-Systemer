@@ -75,28 +75,22 @@ public class Server implements ServerInterface {
     private void startExecutionMode()
     {
         executioner = new Thread(() -> {
-            try {
-                // Wait for the first request to be added
-                start.await();
-                while (true) {
-                    try {
-                        // simulate network latency
-                        sleep(80);
+            // Wait for the first request to be added
+            while (true) {
+                try {
+                    // simulate network latency
+                    sleep(80);
 
-                        // pulls out request at start
-                        Request request = requestQueue.poll();
+                    // pulls out request at start
+                    Request request = requestQueue.poll();
 
-                        if (request != null) {
-                            System.out.printf("Executor [server %d] processing : %s\n", zone, request);
-                            processRequest(request);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (request != null) {
+                        System.out.printf("Executor [server %d] processing : %s\n", zone, request);
+                        processRequest(request);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                e.printStackTrace();
             }
         });
         executioner.setDaemon(true); // release the daemon
@@ -156,10 +150,6 @@ public class Server implements ServerInterface {
      */
     private void enqueueRequest(Request request)
     {
-        // puts in request at end
-        if (requestQueue.isEmpty()) {
-            start.countDown();
-        }
         requestQueue.offer(request);
     }
 
