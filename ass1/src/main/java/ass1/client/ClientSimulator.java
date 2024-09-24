@@ -91,7 +91,7 @@ public class ClientSimulator {
 	{
 		// Create clients
 		int clientPort = port + numServers;
-		Client client = new Client(clientPort, instructions, usingCache, cacheMode,lineDelay);
+		new Client(clientPort, instructions, usingCache, cacheMode,lineDelay);
 	}
 
 	public static void main(String[] args)
@@ -109,7 +109,6 @@ public class ClientSimulator {
 		boolean usingCache = Boolean.parseBoolean(args[0]);
 
 		int cacheMode = Integer.parseInt(args[1]);
-		
 
 		// delay for each request - test cases either T = 20 or T = 50
 		int lineDelay = Integer.parseInt(args[2]);

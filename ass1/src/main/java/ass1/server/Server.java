@@ -35,16 +35,11 @@ public class Server implements ServerInterface {
     private Thread executioner;
 
 
-    // latch awaiting first request
-    private final CountDownLatch start = new CountDownLatch(1);
+    // file info
+    private String OUT_FOLDER = "output/results/";
+    private String filePath;
 
-    /**
-     *
-     * @param zone using zone
-     * @param port using port
-     * @param data using dataset
-     * @param usingCache used if true
-     */
+
 
     public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data, boolean usingCache)
     {
@@ -53,6 +48,7 @@ public class Server implements ServerInterface {
         this.data = data;
         this.usingCache = usingCache;
         this.serverName = "server"+zone;
+        this.filePath = OUT_FOLDER + serverName+".txt";
 
         // Initialize the cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
@@ -64,14 +60,39 @@ public class Server implements ServerInterface {
 
         this.requestQueue = new LinkedBlockingQueue<>();
 
+        flushResultsFile();
         startServer();
         startExecutionMode();
+    }
+
+    private void flushResultsFile() {
+
+        // ensures directory exists
+        File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // delete or create file
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file: " + filePath);
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file: " + filePath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
      *  Starts request loop
      */
-
     private void startExecutionMode()
     {
         executioner = new Thread(() -> {
@@ -140,9 +161,23 @@ public class Server implements ServerInterface {
         return result;
     }
 
-    private static String generateCacheKey(String function, Object... args) {
+    private static String generateCacheKey(String function, Object... args)
+    {
         return function + Arrays.toString(args);
     }
+
+    private void saveToFile()
+    {
+        long unix = System.currentTimeMillis() / 1000;
+        int workload = requestQueue.size();
+
+        // print to file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
+             PrintWriter out = new PrintWriter(writer)) {
+            out.println(unix+":"+workload);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }    }
 
     /**
      * ask for queue space
@@ -150,6 +185,9 @@ public class Server implements ServerInterface {
      */
     private void enqueueRequest(Request request)
     {
+        // saves time and queue size to file
+        saveToFile();
+
         requestQueue.offer(request);
     }
 

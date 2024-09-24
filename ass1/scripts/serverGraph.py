@@ -6,7 +6,7 @@ import numpy as np
 output_dir = os.path.join('..', 'output', 'results')
 
 # List of server files to read
-file_names = ['server1_graph.txt', 'server2_graph.txt', 'server3_graph.txt', 'server4_graph.txt', 'server5_graph.txt']
+file_names = ['server1.txt', 'server2.txt', 'server3.txt', 'server4.txt', 'server5.txt']
 labels = ['Server 1', 'Server 2', 'Server 3', 'Server 4', 'Server 5']
 
 # Prepare a color map for different plots

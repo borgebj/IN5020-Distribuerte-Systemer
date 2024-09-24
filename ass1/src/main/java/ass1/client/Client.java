@@ -261,9 +261,7 @@ public class Client {
 
     /**
      *  function for making a file into out folder, while getting filepath based on getCacheModePath()
-     *
      */
-
     private void flushResultsFile() {
 
         // ensures directory exists
@@ -271,9 +269,6 @@ public class Client {
         if (!resultsDir.exists()) {
             resultsDir.mkdirs();
         }
-
-       //Get caching information 
-       this.filePath  = getCacheModePath();
 
         // delete or create file
        File file = new File(filePath);
@@ -324,48 +319,78 @@ public class Client {
             }
             // if not, ask for server to compute it
             else {
-                try {
-                    // asks proxy for server, proxy gives appropriate server
-                    String serverInfo = proxy.requestServer(zone);
+                Thread requester = new Thread(() -> {
+                    try {
+                        // asks proxy for server, proxy gives appropriate server
+                        String serverInfo = proxy.requestServer(zone);
 
-                    // error handling
-                    if (serverInfo == null) continue;
+                        // error handling
+                        if (serverInfo == null) return;
 
-                    // extracted data from
-                    String[] addressParts = serverInfo.split(":");
-                    String host = addressParts[0];
-                    int serverPort = Integer.parseInt(addressParts[1]);
-                    int resultZone = Integer.parseInt(addressParts[2]);
+                        // extracted data from
+                        String[] addressParts = serverInfo.split(":");
+                        String host = addressParts[0];
+                        int serverPort = Integer.parseInt(addressParts[1]);
+                        int resultZone = Integer.parseInt(addressParts[2]);
 
-                    // simulating additional delay based on zone distance
-                    int delay = (resultZone == zone) ? 80 : 170;
-                    sleep(delay);
+                        // simulating additional delay based on zone distance
+                        int delay = (resultZone == zone) ? 80 : 170;
+                        sleep(delay);
 
-                    // lookup server to use
-                    Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
-                    ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
+                        // lookup server to use
+                        Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
+                        ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                    // start execution timer,  extract response-result
-                    long startExecutionTime = System.currentTimeMillis();
-                    int result = handleRequest(function, args, server);
+                        // start execution timer,  extract response-result
+                        long startExecutionTime = System.currentTimeMillis();
+                        int result = handleRequest(function, args, server);
 
-                    // end and save timers
-                    long executionTime =  (System.currentTimeMillis() - startExecutionTime);
-                    long turnaroundTime = (System.currentTimeMillis() - startTurnaround);
-                    long waitingTime = (turnaroundTime - executionTime);
+                        // end and save timers
+                        long executionTime =  (System.currentTimeMillis() - startExecutionTime);
+                        long turnaroundTime = (System.currentTimeMillis() - startTurnaround);
+                        long waitingTime = (turnaroundTime - executionTime);
 
-                    // cache request
-                    if (usingCache) cache.put(cacheKey, result);
+                        // cache request
+                        if (usingCache) cache.put(cacheKey, result);
 
-                    // saves result and timing to file
-                    saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
+                        // saves result and timing to file
+                        saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
 
-                } catch (RemoteException | NotBoundException | NumberFormatException e) {
-                    e.printStackTrace();
-                }
+                    } catch (RemoteException | NotBoundException | NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                });
+                requester.start();
             }
         }
         appendAveragesToFile();
+    }
+
+    private void createFile()
+    {
+        this.filePath  = getCacheModePath();
+
+        // ensures directory exists
+        File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // delete or create file
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file: " + filePath);
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file: " + filePath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -373,6 +398,8 @@ public class Client {
      */
     public void startClient() {
         try {
+            createFile();
+
             // Create a new registry on the unique port
             Registry registry = LocateRegistry.getRegistry("localhost", 1098);  // <- 1098 is proxy-port
 

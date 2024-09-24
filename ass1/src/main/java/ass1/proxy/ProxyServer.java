@@ -1,24 +1,17 @@
 package ass1.proxy;
 
-import ass1.server.Server;
 import ass1.server.ServerInterface;
 
-import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 
 public class ProxyServer implements ProxyClientInterface {
-
-	// output info
-	String OUT_FOLDER = "output/results";
-	boolean first = true;
 
 	// network info
 	private int port;
@@ -37,63 +30,6 @@ public class ProxyServer implements ProxyClientInterface {
 		this.zoneRequests = new ConcurrentHashMap<>();
 
 		startProxy();
-		createFiles();
-	}
-
-	private void createFiles()
-	{
-		// ensures directory exists
-		File resultsDir = new File(OUT_FOLDER);
-		if (!resultsDir.exists()) {
-			resultsDir.mkdirs();
-		}
-
-		for (Map.Entry<Integer, Integer> entry : zoneRequests.entrySet()) {
-			Integer serverzone = entry.getKey();
-
-			String filePath = String.format("%s/%s_graph.txt", OUT_FOLDER, ("server" + serverzone));
-
-			// delete or create file
-			File file = new File(filePath);
-			if (file.exists()) {
-				if (!file.delete()) {
-					System.err.println("Failed to delete the existing file: " + filePath);
-				}
-			}
-			// Create a new file to ensure it's empty
-			try {
-				if (!file.createNewFile()) {
-					System.err.println("Failed to create a new file: " + filePath);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-
-	/**
-	 * saves timestamps to txt
-	 */
-	private void saveToFile()
-	{
-		for (Map.Entry<Integer, Integer> entry : zoneRequests.entrySet()) {
-			Integer serverzone = entry.getKey();
-			Integer workload = entry.getValue();
-
-			String filePath = String.format("%s/%s_graph.txt", OUT_FOLDER, ("server" + serverzone));
-
-			try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
-				 PrintWriter out = new PrintWriter(writer)) {
-
-				long unix = System.currentTimeMillis() / 1000;
-
-				out.println(unix + ":" + workload);
-
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
 	}
 
 
@@ -120,13 +56,6 @@ public class ProxyServer implements ProxyClientInterface {
 	@Override
 	public String requestServer(int zone) throws RemoteException
 	{
-		if (first) {
-			first = false;
-			createFiles();
-		}
-
-		saveToFile();
-
 		// error handling
 		if (!zoneRequests.containsKey(zone)) return null;
 
@@ -154,7 +83,6 @@ public class ProxyServer implements ProxyClientInterface {
 
 		// e.g. "server2:1099:2"
 		return serversInfo.get(destination);
-//		return (destination.getHost()) + ":" + (destination.getPort()) + ":" + (destination.getZone());
 	}
 
 	/**
