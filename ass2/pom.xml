@@ -10,7 +10,7 @@
   </parent>
   
   <groupId>ass2</groupId>
-  <artifactId>solution</artifactId>
+  <artifactId>spread</artifactId>
   <name>ass2</name>
   
   <url>http://maven.apache.org</url>
@@ -21,6 +21,13 @@
       <artifactId>junit</artifactId>
       <version>3.8.1</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+            <groupId>com.in5020</groupId>
+            <artifactId>spread</artifactId>
+            <version>1.0</version><scope>system</scope>
+			<systemPath>${project.basedir}/spread.jar</systemPath>        
     </dependency>
   </dependencies>
   
