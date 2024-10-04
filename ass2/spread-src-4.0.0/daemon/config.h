@@ -24,10 +24,10 @@
 /* #undef HAVE_SUN_LEN_IN_SOCKADDR_UN */
 
 /* Define if your system defines sys_errlist[] */
-#define HAVE_SYS_ERRLIST 1
+/* #undef HAVE_SYS_ERRLIST */
 
 /* Define if your system defines sys_nerr */
-#define HAVE_SYS_NERR 1
+/* #undef HAVE_SYS_NERR */
 
 /* Define if your snprintf is busted */
 /* #undef BROKEN_SNPRINTF */

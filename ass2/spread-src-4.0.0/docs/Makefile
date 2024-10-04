@@ -7,7 +7,7 @@ sbindir=${exec_prefix}/sbin
 libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 mandir=${prefix}/man
-mansubdir=cat
+mansubdir=man
 sysconfdir=${prefix}/etc
 datarootdir=@datarootdir@
 datadir=${prefix}/share
@@ -33,7 +33,7 @@ PAGENAMES = connect disconnect equal_group_ids error get_memb_info get_vs_sets_i
 
 DOCFILES = DynamicConfiguration.txt MultithreadedClients.txt PORTING Short_Buffer_Handling.txt Win32BuildInstructions.pdf TODO
 
-MANTYPE		= cat
+MANTYPE		= doc
 
 PATHSUBS	= \
 	-D/etc/spread.conf=$(sysconfdir)/spread.conf \
