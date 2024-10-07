@@ -1,9 +1,9 @@
 package ass2;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 import ass2.Transaction;
-import java.util.Random;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -37,19 +37,30 @@ public class Client implements ClientInterface {
 	private SpreadGroup group;
 
 	// constructor
-	public Client(String serverAdress, String accountName, int numOfReps) throws UnknownHostException, SpreadException {
-
-		this.serverAdress = "127.0.0.1";
-		//this.serverAdress = serverAdress;
+	public Client(String serverAdress, String accountName, int numOfReps, int clientnr) throws UnknownHostException, SpreadException {
+		this.serverAdress = serverAdress;
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		InitializeClient();
 		
-		// While true --> user input 
+		// While true --> user input
+		Scanner scanner = new Scanner(System.in);
+
+		System.out.printf("client %d: \n> ", clientnr);
+		String inp = scanner.nextLine().toLowerCase();
+
+		while (!Objects.equals(inp, "exit")) {
+			System.out.printf("client %d: ", clientnr);
+			inp = scanner.nextLine().toLowerCase();
+
+			switch (inp) {
+				// instruksjoner
+			}
+		}
+		System.out.println("Exiting ...");
 	}
 	public Client(String serverAdress, String accountName, int numOfReps, String filename) throws UnknownHostException, SpreadException {
-		//this.serverAdress = serverAdress;
-		this.serverAdress = "127.0.0.1";
+		this.serverAdress = serverAdress;
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		this.filename = filename;
@@ -59,15 +70,13 @@ public class Client implements ClientInterface {
 	}
 	
 	private void InitializeClient() throws UnknownHostException, SpreadException{
-		System.out.println("Initialize Client "+ id);
+
 		// Connects to spread server
 		SpreadConnection connection = new SpreadConnection();
-		
-//		Listener listener = new Listener(this.numOfReps, connection);
-//		connection.add(listener);
-		
-		connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
+		Listener listener = new Listener();
 
+		connection.add(listener);
+		connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
         
 		
 		this.balance = 0.0;
@@ -80,7 +89,13 @@ public class Client implements ClientInterface {
 		group = new SpreadGroup();
 		group.join(connection, "group8");
 
-		
+		System.out.println("Client " + id + " joined group: " + group);
+
+		// Send a test message
+		SpreadMessage msg = new SpreadMessage();
+		msg.addGroup(group);
+		msg.setObject("Hello from client " + id);
+		connection.multicast(msg);
 	}
 
 	@Override

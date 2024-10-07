@@ -1,22 +1,23 @@
 package ass2;
 
-import spread.SpreadConnection;
 import spread.SpreadException;
-import spread.SpreadGroup;
-import spread.SpreadMessage;
-
-import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Random;
 
 public class Starter {
-	public static void main(String[] args) throws SpreadException, UnknownHostException {
-		for (int i = 0; i <3; i++) {
-			System.out.println("yahoo");
-			Client client = new Client("localhost", "Top5Bombaclats", i);
-		}
+	public static void main(String[] args) {
+		int numOfReplicas = 1;
+		String account = "group8";
 
-		
+		for (int i = 0; i < numOfReplicas; i++) {
+			final int j = i + 1;
+			new Thread(() -> {
+				try {
+					Client client = new Client("127.0.0.72", account, numOfReplicas, j);
+					// Additional logic for client actions can be added here
+				} catch (UnknownHostException | SpreadException e) {
+					e.printStackTrace();
+				}
+			}).start();
+		}
 	}
 }
