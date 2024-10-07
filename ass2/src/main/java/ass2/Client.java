@@ -63,8 +63,8 @@ public class Client implements ClientInterface {
 		// Connects to spread server
 		SpreadConnection connection = new SpreadConnection();
 		
-		Listener listener = new Listener(this.numOfReps, connection);
-		connection.add(listener);	
+//		Listener listener = new Listener(this.numOfReps, connection);
+//		connection.add(listener);
 		
 		connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
 
