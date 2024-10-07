@@ -3,7 +3,7 @@
 
 ## How to run 
 
-- `cd spread-demon`
+- `cd spread-src-4.0.0`
 - `./configure`
 - `make`
 - `sudo make install`
