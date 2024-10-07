@@ -940,6 +940,8 @@ ${ac_dA}HAVE_STRUCT_TIMEVAL${ac_dB}HAVE_STRUCT_TIMEVAL${ac_dC}1${ac_dD}
 ${ac_dA}HAVE_SS_FAMILY_IN_SS${ac_dB}HAVE_SS_FAMILY_IN_SS${ac_dC}1${ac_dD}
 ${ac_dA}HAVE_PID_T${ac_dB}HAVE_PID_T${ac_dC}1${ac_dD}
 ${ac_dA}HAVE___PROGNAME${ac_dB}HAVE___PROGNAME${ac_dC}1${ac_dD}
+${ac_dA}HAVE_SYS_ERRLIST${ac_dB}HAVE_SYS_ERRLIST${ac_dC}1${ac_dD}
+${ac_dA}HAVE_SYS_NERR${ac_dB}HAVE_SYS_NERR${ac_dC}1${ac_dD}
 ${ac_dA}_PATH_SPREAD_PIDDIR${ac_dB}_PATH_SPREAD_PIDDIR${ac_dC}"/var/run"${ac_dD}
 ${ac_dA}SPREAD_ETCDIR${ac_dB}SPREAD_ETCDIR${ac_dC}"/usr/local/etc"${ac_dD}
 CEOF
@@ -1055,6 +1057,8 @@ ${ac_uA}HAVE_STRUCT_TIMEVAL${ac_uB}HAVE_STRUCT_TIMEVAL${ac_uC}1${ac_uD}
 ${ac_uA}HAVE_SS_FAMILY_IN_SS${ac_uB}HAVE_SS_FAMILY_IN_SS${ac_uC}1${ac_uD}
 ${ac_uA}HAVE_PID_T${ac_uB}HAVE_PID_T${ac_uC}1${ac_uD}
 ${ac_uA}HAVE___PROGNAME${ac_uB}HAVE___PROGNAME${ac_uC}1${ac_uD}
+${ac_uA}HAVE_SYS_ERRLIST${ac_uB}HAVE_SYS_ERRLIST${ac_uC}1${ac_uD}
+${ac_uA}HAVE_SYS_NERR${ac_uB}HAVE_SYS_NERR${ac_uC}1${ac_uD}
 ${ac_uA}_PATH_SPREAD_PIDDIR${ac_uB}_PATH_SPREAD_PIDDIR${ac_uC}"/var/run"${ac_uD}
 ${ac_uA}SPREAD_ETCDIR${ac_uB}SPREAD_ETCDIR${ac_uC}"/usr/local/etc"${ac_uD}
 s,^[	 ]*#[	 ]*undef[	 ][	 ]*[a-zA-Z_][a-zA-Z_0-9]*,/* & */,

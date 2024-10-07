@@ -26,7 +26,8 @@
     <dependency>
             <groupId>com.in5020</groupId>
             <artifactId>spread</artifactId>
-            <version>1.0</version><scope>system</scope>
+            <version>1.0</version>
+            <scope>system</scope>
 			<systemPath>${project.basedir}/spread.jar</systemPath>        
     </dependency>
   </dependencies>

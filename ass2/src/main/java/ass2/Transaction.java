@@ -1,6 +1,6 @@
 package ass2;
-
-public class Transaction {
+import java.io.Serializable;
+public class Transaction implements Serializable{
     String command;
     String uniqueId;
 }

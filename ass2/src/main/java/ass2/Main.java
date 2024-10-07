@@ -2,6 +2,7 @@ package ass2;
 
 import spread.*;
 
+import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -21,16 +22,16 @@ public class Main implements ClientInterface {
     private List<Transaction> outstanding_collection = new ArrayList<>();
 
     // Spread info
-    private SpreadConnection connection;
-    private SpreadGroup group;
+    static SpreadConnection connection;
+    static SpreadGroup group;
 
 
-    public void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, InterruptedIOException, SpreadException {
 
         // 1. creates a connection to the spread server
         SpreadConnection connection = new SpreadConnection();
 
-        Listener listener = new Listener();
+        Listener listener = new Listener(0, connection);
         Random rand = new Random();
         int id = rand.nextInt();
         try {
@@ -45,12 +46,12 @@ public class Main implements ClientInterface {
             connection.connect(InetAddress.getByName("127.0.0.1"), 4803, String.valueOf(id), false, true);
 
             // spread group
-            this.group = new SpreadGroup();
-            this.group.join(connection, "group");
+            group = new SpreadGroup();
+            group.join(connection, "group8");
 
             // spread messaged
             SpreadMessage message = new SpreadMessage();
-            message.addGroup(this.group);
+            message.addGroup("group8");
             message.setFifo();
             message.setReliable();
             message.setObject("client name : "+id);
@@ -63,7 +64,7 @@ public class Main implements ClientInterface {
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }
-
+       
 
         System.out.println("Hello world!");
         Thread.sleep(100000000);
