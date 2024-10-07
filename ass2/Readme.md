@@ -1,7 +1,7 @@
 
-# Assignment 1
+# Assignment 2
 
-## How to run #1
+## How to run 
 
 - `cd spread-demon`
 - `./configure`
