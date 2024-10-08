@@ -6,11 +6,6 @@ import java.util.Arrays;
 
 public class Listener implements AdvancedMessageListener {
 
-    int clientId;
-    public Listener(int clientId) {
-        this.clientId = clientId;
-    }
-
     public void regularMessageReceived(SpreadMessage message) {
         String msg = null;
         try {
@@ -18,12 +13,12 @@ public class Listener implements AdvancedMessageListener {
         } catch (SpreadException e) {
             throw new RuntimeException(e);
         }
-        System.out.printf("[%d] msg received: %s\n", clientId, msg);
+        System.out.printf("\nmsg received: %s\n", msg);
     }
 
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
-        System.out.printf("\n[%d] member joined: %s\n\n", clientId, Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
+        System.out.printf("\nmembers updated: %s\n\n", Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
     }
 
 }

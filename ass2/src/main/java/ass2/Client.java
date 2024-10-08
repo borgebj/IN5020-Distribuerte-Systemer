@@ -47,11 +47,9 @@ public class Client implements ClientInterface {
 		String command = "";
 
 		while (!Objects.equals(command, "exit")) {
-			System.out.printf("\nclient %d: \n> ", clientnr);
+			System.out.printf("\nCommand: \n> ");
 			args = scanner.nextLine().split(" ");
 			command = args[0].toLowerCase();
-
-			System.out.println(Arrays.toString(args));
 
 			try {
 				double res = -1;
@@ -120,7 +118,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener(id);
+		Listener listener = new Listener();
 
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);

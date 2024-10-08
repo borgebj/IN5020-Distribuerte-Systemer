@@ -19,7 +19,7 @@ public class Main {
 
         // 1. Connection and listener created
         SpreadConnection connection = new SpreadConnection();
-        Listener listener = new Listener(id);
+        Listener listener = new Listener();
 
         try {
 
