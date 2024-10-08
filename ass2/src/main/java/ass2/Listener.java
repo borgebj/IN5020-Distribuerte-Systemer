@@ -23,7 +23,7 @@ public class Listener implements AdvancedMessageListener {
 
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
-        System.out.printf("[%d] member: %s\n", clientId, Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
+        System.out.printf("\n[%d] member joined: %s\n\n", clientId, Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
     }
 
 }

@@ -84,6 +84,19 @@ public class Client implements ClientInterface {
 						int duration = Integer.parseInt(args[1]);
 						sleep(duration);
 						break;
+					//TODO remove
+					default:
+						SpreadMessage msg = new SpreadMessage();
+						msg.addGroup(group);
+						msg.setFifo();
+						msg.setReliable();
+						try {
+							msg.setObject('"' + String.join(" ", args) + '"');
+							connection.multicast(msg);
+						} catch (SpreadException e) {
+							e.printStackTrace();
+						}
+
 				}
 			}
 			catch (Exception e) {
