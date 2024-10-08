@@ -6,6 +6,8 @@ import java.util.Arrays;
 
 public class Listener implements AdvancedMessageListener {
 
+    SpreadGroup[] groupMembers = new SpreadGroup[0];
+
     public void regularMessageReceived(SpreadMessage message) {
         String msg = null;
         try {
@@ -18,7 +20,13 @@ public class Listener implements AdvancedMessageListener {
 
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
-        System.out.printf("\nmembers updated: %s\n\n", Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
+
+        groupMembers = spreadMessage.getMembershipInfo().getMembers();
+
+        System.out.printf("\nmembers updated: %s \t (%d members)\n\n", Arrays.toString(groupMembers), groupMembers.length);
     }
 
+    public int getMembers() {
+        return groupMembers.length;
+    }
 }
