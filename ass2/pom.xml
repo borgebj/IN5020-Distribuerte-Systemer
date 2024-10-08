@@ -8,11 +8,12 @@
     <artifactId>IN5020</artifactId>
     <version>1.0</version>
   </parent>
-  
-  <groupId>ass2</groupId>
-  <artifactId>spread</artifactId>
+
+  <artifactId>ass2</artifactId>
+  <packaging>jar</packaging>
   <name>ass2</name>
-  
+
+
   <url>http://maven.apache.org</url>
   
   <dependencies>
@@ -24,16 +25,24 @@
     </dependency>
 
     <dependency>
-            <groupId>com.in5020</groupId>
-            <artifactId>spread</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-			<systemPath>${project.basedir}/spread.jar</systemPath>        
+      <groupId>com.in5020</groupId>
+      <artifactId>spread</artifactId>
+      <version>1.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/spread.jar</systemPath>
     </dependency>
   </dependencies>
   
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <finalName>solution</finalName>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>

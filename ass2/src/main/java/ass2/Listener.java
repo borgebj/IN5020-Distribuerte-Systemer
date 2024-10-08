@@ -2,7 +2,15 @@ package ass2;
 
 import spread.*;
 
+import java.util.Arrays;
+
 public class Listener implements AdvancedMessageListener {
+
+    int clientId;
+    public Listener(int clientId) {
+        this.clientId = clientId;
+    }
+
     public void regularMessageReceived(SpreadMessage message) {
         String msg = null;
         try {
@@ -10,12 +18,12 @@ public class Listener implements AdvancedMessageListener {
         } catch (SpreadException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(msg);
+        System.out.printf("[%d] msg received: %s\n", clientId, msg);
     }
 
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
-        System.out.println(spreadMessage.getMembershipInfo().getMembers());
+        System.out.printf("[%d] member: %s\n", clientId, Arrays.toString(spreadMessage.getMembershipInfo().getMembers()));
     }
 
 }

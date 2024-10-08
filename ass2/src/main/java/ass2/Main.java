@@ -13,13 +13,13 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
 
-        // 1. Connection and listener created
-        SpreadConnection connection = new SpreadConnection();
-        Listener listener = new Listener();
-
         // Unique id created
         Random rand = new Random();
         int id = rand.nextInt();
+
+        // 1. Connection and listener created
+        SpreadConnection connection = new SpreadConnection();
+        Listener listener = new Listener(id);
 
         try {
 

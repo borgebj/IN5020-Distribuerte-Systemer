@@ -47,17 +47,12 @@ public interface ClientInterface {
      */
     void cleanHistory();
 
-    /** 
-     * Returns a list of current participants in the group.
-     * @return a list of participant names.
-     */
-    List<String> memberInfo();
 
     /** 
      * Causes the client to sleep for the specified duration in seconds.
      * @param duration the duration to sleep.
      */
-    void sleep(int duration);
+    void sleep(double duration);
 
     /** 
      * Exits the client.

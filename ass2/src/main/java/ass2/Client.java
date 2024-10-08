@@ -28,9 +28,6 @@ public class Client implements ClientInterface {
 	private List<Transaction> executedList;
 	private List<Transaction> outstandingCollection;
 
-	// Provides each client with unique id
-	static Random rand= new Random();
-	int id = rand.nextInt();
 	
 	// Spread info
 	private SpreadConnection connection;
@@ -41,44 +38,80 @@ public class Client implements ClientInterface {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
-		InitializeClient();
+		InitializeClient(clientnr);
 		
 		// While true --> user input
 		Scanner scanner = new Scanner(System.in);
 
-		System.out.printf("client %d: \n> ", clientnr);
-		String inp = scanner.nextLine().toLowerCase();
+		String[] args = null;
+		String command = "";
 
-		while (!Objects.equals(inp, "exit")) {
-			System.out.printf("client %d: ", clientnr);
-			inp = scanner.nextLine().toLowerCase();
+		while (!Objects.equals(command, "exit")) {
+			System.out.printf("\nclient %d: \n> ", clientnr);
+			args = scanner.nextLine().split(" ");
+			command = args[0].toLowerCase();
 
-			switch (inp) {
-				// instruksjoner
+			System.out.println(Arrays.toString(args));
+
+			try {
+				double res = -1;
+				switch (command) {
+					case "getquickbalance":
+						res = getQuickBalance();
+						break;
+					case "getsyncebalance":
+						res = getSyncedBalance();
+						break;
+					case "deposit":
+						double amount = Integer.parseInt(args[1]);
+						res = deposit(amount);
+						break;
+					case "addinterest":
+						double interest = Integer.parseInt(args[1]);
+						res = addInterest(interest);
+						break;
+					case "gethistory":
+						getHistory();
+						break;
+					case "checktxstatus":
+						int uniqueId = Integer.parseInt(args[1]);
+						String status = checkTxStatus(uniqueId);
+						break;
+					case "cleanhistory":
+						cleanHistory();
+						break;
+					case "sleep":
+						int duration = Integer.parseInt(args[1]);
+						sleep(duration);
+						break;
+				}
 			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			sleep(0.5);
 		}
 		System.out.println("Exiting ...");
 	}
-	public Client(String serverAdress, String accountName, int numOfReps, String filename) throws UnknownHostException, SpreadException {
+	public Client(String serverAdress, String accountName, int numOfReps, int clientnr, String filename) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		this.filename = filename;
-		InitializeClient();
+		InitializeClient(clientnr);
 
 		// Iterate File 
 	}
 	
-	private void InitializeClient() throws UnknownHostException, SpreadException{
+	private void InitializeClient(int id) throws UnknownHostException, SpreadException{
 
 		// Connects to spread server
-		SpreadConnection connection = new SpreadConnection();
-		Listener listener = new Listener();
+		this.connection = new SpreadConnection();
+		Listener listener = new Listener(id);
 
-		connection.add(listener);
-		connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
-        
-		
+		this.connection.add(listener);
+		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
+
 		this.balance = 0.0;
 		this.order_counter = 0;
 		this.oustanding_counter = 0;
@@ -88,14 +121,6 @@ public class Client implements ClientInterface {
 		// Client joins group 8
 		group = new SpreadGroup();
 		group.join(connection, "group8");
-
-		System.out.println("Client " + id + " joined group: " + group);
-
-		// Send a test message
-		SpreadMessage msg = new SpreadMessage();
-		msg.addGroup(group);
-		msg.setObject("Hello from client " + id);
-		connection.multicast(msg);
 	}
 
 	@Override
@@ -123,10 +148,11 @@ public class Client implements ClientInterface {
 		msg.setFifo();
 		msg.setReliable();
 		try {
-			msg.setObject(tx);
+			msg.setObject("deposit " + amount);
 			connection.multicast(msg);
 			return 1;
 		} catch (SpreadException e) {
+			e.printStackTrace();
 			return -1;
 		}
 	}
@@ -174,13 +200,12 @@ public class Client implements ClientInterface {
 	}
 
 	@Override
-	public List<String> memberInfo() {
-		return null;
-	}
-
-	@Override
-	public void sleep(int duration) {
-
+	public void sleep(double duration) {
+		try {
+			Thread.sleep((long) (duration * 1000L));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
