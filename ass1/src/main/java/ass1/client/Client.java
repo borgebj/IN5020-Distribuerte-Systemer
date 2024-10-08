@@ -304,10 +304,7 @@ public class Client {
 
             // T = 50 or T = 20 input line reading delay
 
-            x++;
-
-            if(x % 2 ==0)continue;
-            if( x%3 ==0)continue;
+     
             sleep(lineReadingDelay);
 
             // extract request info
