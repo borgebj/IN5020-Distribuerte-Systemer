@@ -2,8 +2,8 @@ package ass1.server;
 
 import ass1.data.CityInfo;
 import ass1.data.Request;
-import ass1.proxy.ProxyServerInterface;
 
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -13,7 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 
-public class Server implements ServerInterface, ProxyServerInterface {
+public class Server implements ServerInterface {
 
     /** Global variables */
 
@@ -25,24 +25,32 @@ public class Server implements ServerInterface, ProxyServerInterface {
     private int zone;
     private int port;
 
+
     // Cache with capacity of 150 entries
+    private boolean usingCache;
     private LinkedHashMap<String, Integer> cache;
     private static final int CACHE_SIZE = 150;
+
 
     // request queue with FIFO policy
     private final Queue<Request> requestQueue;
     private Thread executioner;
 
-    // latch awaiting first request
-    private final CountDownLatch start = new CountDownLatch(1);
+
+    // file info
+    private String OUT_FOLDER = "output/results/";
+    private String filePath;
 
 
-    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data)
+
+    public Server(int zone, int port, HashMap<String, HashMap<String, CityInfo>> data, boolean usingCache)
     {
         this.zone = zone;
         this.port = port;
         this.data = data;
+        this.usingCache = usingCache;
         this.serverName = "server"+zone;
+        this.filePath = OUT_FOLDER + serverName+".txt";
 
         // Initialize the cache with LRU eviction policy
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
@@ -54,40 +62,80 @@ public class Server implements ServerInterface, ProxyServerInterface {
 
         this.requestQueue = new LinkedBlockingQueue<>();
 
+        flushResultsFile();
         startServer();
         startExecutionMode();
     }
 
-    private void startExecutionMode() {
+    private void flushResultsFile() {
+
+        // ensures directory exists
+        File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // delete or create file
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file: " + filePath);
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file: " + filePath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     *  Starts request loop
+     */
+    private void startExecutionMode()
+    {
         executioner = new Thread(() -> {
-            try {
-                // Wait for the first request to be added
-                start.await();
-                while (true) {
-                    try {
-                        // pulls out request at start
-                        Request request = requestQueue.poll();
-                        if (request != null) {
-                            System.out.printf("Executor [%d] processing : %s\n", zone, request);
-                            processRequest(request);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+            // Wait for the first request to be added
+            while (true) {
+                try {
+                    // simulate network latency
+                    sleep(80);
+
+                    // pulls out request at start
+                    Request request = requestQueue.poll();
+
+                    if (request != null) {
+                        System.out.printf("Executor [server %d] processing : %s\n", zone, request);
+                        processRequest(request);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                e.printStackTrace();
             }
         });
         executioner.setDaemon(true); // release the daemon
         executioner.start();
     }
 
+
+    /**
+     * processes requests
+     * @param request
+     */
     private void processRequest(Request request)
     {
         String cacheKey = request.getCacheKey();
-        int result = getFromCacheOrCompute(cacheKey, request.getComputation());
+
+        int result = 0;
+        if (usingCache) {
+            result = getFromCacheOrCompute(cacheKey, request.getComputation());
+        }
+        else {
+            result = request.getComputation().get();
+        }
         request.complete(result);
         System.out.printf("Finished %s = %d\n", request.getCacheKey(), result);
     }
@@ -115,17 +163,33 @@ public class Server implements ServerInterface, ProxyServerInterface {
         return result;
     }
 
-    private static String generateCacheKey(String function, Object... args) {
+    private static String generateCacheKey(String function, Object... args)
+    {
         return function + Arrays.toString(args);
     }
 
+    private void saveToFile()
+    {
+        long unix = System.currentTimeMillis() / 1000;
+        int workload = requestQueue.size();
 
+        // print to file
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
+             PrintWriter out = new PrintWriter(writer)) {
+            out.println(unix+":"+workload);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }    }
+
+    /**
+     * ask for queue space
+     * @param request
+     */
     private void enqueueRequest(Request request)
     {
-        // puts in request at end
-        if (requestQueue.isEmpty()) {
-            start.countDown();
-        }
+        // saves time and queue size to file
+        saveToFile();
+
         requestQueue.offer(request);
     }
 
@@ -175,14 +239,12 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getPopulationofCountry(String countryName) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getPopulationofCountry", countryName),
                 () -> _COMPUTE_getPopulationofCountry(countryName)
         );
+
         // put it on queue
         enqueueRequest(request);
 
@@ -205,14 +267,12 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCities(String countryName, int min) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCities", countryName, min),
                 () -> _COMPUTE_getNumberofCities(countryName, min)
         );
+
         // put it on queue
         enqueueRequest(request);
 
@@ -235,14 +295,12 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCountries", citycount, minpopulation),
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation)
         );
+
         // put it on queue
         enqueueRequest(request);
 
@@ -266,14 +324,12 @@ public class Server implements ServerInterface, ProxyServerInterface {
     @Override
     public int getNumberofCountries(int citycount, int minpopulation, int maxpopulation) throws RemoteException
     {
-        // simulate network latency
-        sleep(80);
-
         // creates the request
         Request request = new Request(
                 generateCacheKey("getNumberofCountries", citycount, minpopulation, maxpopulation),
                 () -> _COMPUTE_getNumberofCountries(citycount, minpopulation, maxpopulation)
         );
+
         // put it on queue
         enqueueRequest(request);
 
@@ -287,14 +343,17 @@ public class Server implements ServerInterface, ProxyServerInterface {
     }
 
     /**
-     * Occationally called by proxy for info on this server's workload
+     * Occasionally called by proxy for info on this server's workload
+     *
      * @return queue size
      * @throws RemoteException for RMI errors
      */
     @Override
     public int fetchWorkload() throws RemoteException
     {
-        System.out.printf("Proxy requested workload (%d)\n", requestQueue.size());
+        String PURPLE = "\u001B[35m";
+        String RESET = "\u001B[0m";
+        System.out.printf(PURPLE + "Proxy requested workload zone %d (%d)" + RESET + "\n", zone, requestQueue.size());
         return requestQueue.size();
     }
 
@@ -348,8 +407,7 @@ public class Server implements ServerInterface, ProxyServerInterface {
     }
 
     /**
-     * Method that starts this current server Exporting server with stub, binding to
-     * registry
+     * Method that starts this current server Exporting server with stub, binding to registry
      */
     private void startServer() {
         try {

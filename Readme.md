@@ -6,4 +6,6 @@
 2) vegarhje  |  Vegard
 3) sellebaf  |  Selleban
 
+https://www.uio.no/studier/emner/matnat/ifi/IN5020/
+
 #wagwangang

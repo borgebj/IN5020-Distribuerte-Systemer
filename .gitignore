@@ -1,4 +1,6 @@
 target/
+.zip
+*.zip
 
 # IntelliJ IDEA
 .idea/
@@ -31,6 +33,8 @@ Thumbs.db
 *.class
 .class
 
+#Object files
+spread-src-4.0.0
 
 # Maven
 target/
@@ -38,5 +42,4 @@ target/
 .target/
 /target
 **/target/
-ass2/
-ass2/target
+ass2/group8

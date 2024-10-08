@@ -13,7 +13,6 @@
   
   <artifactId>ass1</artifactId>
   <packaging>jar</packaging>
-  
   <name>ass1</name>
   
   <url>http://maven.apache.org</url>

@@ -13,6 +13,11 @@ import ass1.data.InstructionInfo;
 
 public class Client {
 
+    // running info
+    private boolean usingCache;
+    private int cacheMode;
+    private int LINE_DELAY; // T = 20 / 50
+
     // Hashmap with city data
     private static ArrayList<InstructionInfo> instructions;
     private int port;
@@ -32,15 +37,23 @@ public class Client {
 
 
     // filespaths
-    private final String NAIVE_FILEPATH = "output/results/naive_server.txt";
+    private final String OUT_FOLDER = "output/results";
+    private final String NAIVE_SERVER_FILENAME = "/naive_server.txt";
+    private final String SERVER_CACHE_FILENAME = "/server_cache.txt";
+    private final String CLIENT_CACHE_FILENAME = "/client_cache.txt";
+   
+
+    private String filePath;
 
 
-
-    public Client(int port, ArrayList<InstructionInfo> instructions) {
+    public Client(int port, ArrayList<InstructionInfo> instructions, boolean usingCache, int cacheMode , int lineDelay) {
         Client.instructions = instructions;
         this.port = port;
+        this.usingCache = usingCache;
+        this.cacheMode = cacheMode;
+        this.LINE_DELAY = lineDelay;
 
-        // Initialize cache with LRU eviction policy
+        // Initializes cache with LRU
         this.cache = new LinkedHashMap<String, Integer>(CACHE_SIZE, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, Integer> eldest) {
@@ -137,10 +150,10 @@ public class Client {
 
     private void appendAveragesToFile()
     {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(NAIVE_FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
 
-            out.println("\n[ === [ AVERAGES PER METHOD ] === \n");
+            out.println("\n[ === [ AVERAGES PER METHOD ] === ]\n");
 
             for (Map.Entry<String, long[]> entry : methodTimings.entrySet()) {
                 String methodName = entry.getKey();
@@ -184,6 +197,7 @@ public class Client {
         methodCounts.put(methodName, count + 1);
     }
 
+
     /**
      * Writes a line to a file containing query information
      *
@@ -193,9 +207,7 @@ public class Client {
      * @param timing [turnaround, execution, waiting]
      */
 
-
-    
-    private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
+   private void saveResult(InstructionInfo instruc, int result, int zone, long[] timing)
     {
         long turnaround = timing[0];
         long execution = timing[1];
@@ -204,42 +216,26 @@ public class Client {
         // updates local timing-counter 
         String fullQuery =" ";
         
-        if(instruc.function.equals("getNumberofCountries")){
+        if (instruc.function.equals("getNumberofCountries")){
             
-            if(instruc.args.size()==2 ){   
+            if (instruc.args.size()==2 ){   
                 instruc.function = "getNumberofCountriesMin";
-            } else if( instruc.args.size() ==3){
+            } else if ( instruc.args.size() ==3){
                 instruc.function = "getNumberofCountriesMinMax";
             }
-              
-            updateMethodStats(instruc.function, timing);  
-            // query-string
-            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
-            result, instruc, turnaround, execution, waiting, zone);
-            // print to terminal
-            System.out.printf(fullQuery);
-            
-            
-        } else {
-            updateMethodStats(instruc.function, timing);
-    
-            // query-string
-            fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
-                                result, instruc, turnaround, execution, waiting, zone);
-    
-            // print to terminal
-            System.out.printf(fullQuery);
         }
-        
 
-        // ensures directory exists
-        File resultsDir = new File("output/results");
-        if (!resultsDir.exists()) {
-            resultsDir.mkdirs();
-        }
+        updateMethodStats(instruc.function, timing);
+
+        // query-string
+        fullQuery = String.format("%d %s (turnaround time: %d ms, execution time: %d ms, waiting time: %d, processed by server %d)\n",
+                result, instruc, turnaround, execution, waiting, zone);
+
+        // print to terminal
+        System.out.printf(fullQuery);
 
         // print to file
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(NAIVE_FILEPATH, true));
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, true));
              PrintWriter out = new PrintWriter(writer)) {
             out.print(fullQuery);
         } catch (IOException e) {
@@ -248,12 +244,62 @@ public class Client {
     }
 
     /**
+     *  changes filepath based on cachemode
+     *
+     * @return out folder + correct filename
+     */
+
+    private String getCacheModePath(){
+        switch (cacheMode) {
+            case 0: return OUT_FOLDER + NAIVE_SERVER_FILENAME;
+                
+            case 1: return OUT_FOLDER + CLIENT_CACHE_FILENAME;
+        
+            case 2: return OUT_FOLDER + SERVER_CACHE_FILENAME;
+            default:
+            throw new IllegalArgumentException("Invalid cache mode: " + cacheMode);
+        }
+       
+    }
+
+    /**
+     *  function for making a file into out folder, while getting filepath based on getCacheModePath()
+     */
+    private void flushResultsFile() {
+
+        // ensures directory exists
+       File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // delete or create file
+       File file = new File(filePath);
+       if (file.exists()) {
+           if (!file.delete()) {
+               System.err.println("Failed to delete the existing file: " + filePath);
+           }
+       }
+           // Create a new file to ensure it's empty
+           try {
+               if (!file.createNewFile()) {
+                   System.err.println("Failed to create a new file: " + filePath);
+               }
+           } catch (IOException e) {
+               e.printStackTrace();
+           }
+   }
+
+    /**
      * Goes through all previously parsed instructions and invokes request from a given server
      *
      * @param proxy proxy that will find server to be used
      */
     private void invokeRequests(ProxyClientInterface proxy, int lineReadingDelay) {
-        int x  = 0;
+
+        // flush output file
+        flushResultsFile();
+
         for (InstructionInfo instruc : instructions) {
 
             // T = 50 or T = 20 input line reading delay
@@ -275,47 +321,54 @@ public class Client {
             long startTurnaround = System.currentTimeMillis();
 
             // if request is cached, retrieve it!
-            if (cache.containsKey(cacheKey)) {
+            if (usingCache && cache.containsKey(cacheKey)) {
                 int result = cache.get(cacheKey);
                 saveResult(instruc, result, zone, new long[]{0, 0, 0});  // <-- result in cache? Time is "instant"
             }
             // if not, ask for server to compute it
             else {
-                try {
-                    // asks proxy for server, proxy gives appropriate server
-                    String serverInfo = proxy.requestServer(zone);
+                Thread requester = new Thread(() -> {
+                    try {
+                        // asks proxy for server, proxy gives appropriate server
+                        String serverInfo = proxy.requestServer(zone);
 
-                    // error handling
-                    if (serverInfo == null) continue;
+                        // error handling
+                        if (serverInfo == null) return;
 
-                    // extracted data from
-                    String[] addressParts = serverInfo.split(":");
-                    String host = addressParts[0];
-                    int serverPort = Integer.parseInt(addressParts[1]);
-                    int resultZone = Integer.parseInt(addressParts[2]);
+                        // extracted data from
+                        String[] addressParts = serverInfo.split(":");
+                        String host = addressParts[0];
+                        int serverPort = Integer.parseInt(addressParts[1]);
+                        int resultZone = Integer.parseInt(addressParts[2]);
 
-                    // lookup server to use
-                    Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
-                    ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
+                        // simulating additional delay based on zone distance
+                        int delay = (resultZone == zone) ? 80 : 170;
+                        sleep(delay);
 
-                    // start execution timer,  extract response-result
-                    long startExecutionTime = System.currentTimeMillis();
-                    int result = handleRequest(function, args, server);
+                        // lookup server to use
+                        Registry serverRegistry = LocateRegistry.getRegistry("127.0.0.1", serverPort);
+                        ServerInterface server = (ServerInterface) serverRegistry.lookup(host);
 
-                    // end and save timers
-                    long executionTime =  (System.currentTimeMillis() - startExecutionTime);
-                    long turnaroundTime = (System.currentTimeMillis() - startTurnaround);
-                    long waitingTime = (turnaroundTime - executionTime);
+                        // start execution timer,  extract response-result
+                        long startExecutionTime = System.currentTimeMillis();
+                        int result = handleRequest(function, args, server);
 
-                    // cache request
-                    cache.put(cacheKey, result);
+                        // end and save timers
+                        long executionTime =  (System.currentTimeMillis() - startExecutionTime);
+                        long turnaroundTime = (System.currentTimeMillis() - startTurnaround);
+                        long waitingTime = (turnaroundTime - executionTime);
 
-                    // saves result and timing to file
-                    saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
+                        // cache request
+                        if (usingCache) cache.put(cacheKey, result);
 
-                } catch (RemoteException | NotBoundException | NumberFormatException e) {
-                    e.printStackTrace();
-                }
+                        // saves result and timing to file
+                        saveResult(instruc, result, resultZone, new long[]{turnaroundTime, executionTime, waitingTime});
+
+                    } catch (RemoteException | NotBoundException | NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                });
+                requester.start();
             }
 
         
@@ -323,11 +376,40 @@ public class Client {
         appendAveragesToFile();
     }
 
+    private void createFile()
+    {
+        this.filePath  = getCacheModePath();
+
+        // ensures directory exists
+        File resultsDir = new File(OUT_FOLDER);
+        if (!resultsDir.exists()) {
+            resultsDir.mkdirs();
+        }
+
+        // delete or create file
+        File file = new File(filePath);
+        if (file.exists()) {
+            if (!file.delete()) {
+                System.err.println("Failed to delete the existing file: " + filePath);
+            }
+        }
+        // Create a new file to ensure it's empty
+        try {
+            if (!file.createNewFile()) {
+                System.err.println("Failed to create a new file: " + filePath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Starts the client by locating the proxy and invoking requests
      */
     public void startClient() {
         try {
+            createFile();
+
             // Create a new registry on the unique port
             Registry registry = LocateRegistry.getRegistry("localhost", 1098);  // <- 1098 is proxy-port
 
@@ -335,8 +417,6 @@ public class Client {
             ProxyClientInterface proxy = (ProxyClientInterface) registry.lookup("proxy");
 
             System.out.printf("Client:%d has started\n", port);
-
-            int LINE_DELAY = 20; // T = 20 / 50
 
             // Invoke requests from instruction-set
             invokeRequests(proxy, LINE_DELAY);

@@ -1,5 +1,7 @@
 package ass1.proxy;
 
+import ass1.server.ServerInterface;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashMap;

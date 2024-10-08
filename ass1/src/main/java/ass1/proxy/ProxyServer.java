@@ -1,8 +1,7 @@
 package ass1.proxy;
 
-import ass1.server.Server;
+import ass1.server.ServerInterface;
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,8 +15,11 @@ import java.util.concurrent.ConcurrentMap;
 
 
 public class ProxyServer implements ProxyClientInterface {
+
+	// network info
 	private int port;
-	private HashMap<Integer, Server> servers;
+	private HashMap<Integer, ServerInterface> servers;
+	private HashMap<ServerInterface, String> serversInfo;
 
 	// Hashmap keeping track of requests in each zone
 	private int WORKLOAD_THRESHOLD = 18;
@@ -29,24 +31,12 @@ public class ProxyServer implements ProxyClientInterface {
 	public ProxyServer(int port) {
 		this.port = port;
 		this.servers = new HashMap<>();
+		this.serversInfo = new HashMap<>();
 		this.zoneRequests = new ConcurrentHashMap<>();
 
 		startProxy();
 	}
 
-	/**
-	 * Sleeps 'ms' milliseconds
-	 *
-	 * @param ms integer, miliseconds to sleep
-	 */
-	private void sleep(int ms)
-	{
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * used to register a given server in a given zone to the proxy
@@ -54,9 +44,10 @@ public class ProxyServer implements ProxyClientInterface {
 	 * @param zone zone of server
 	 * @param server server provided
 	 */
-	public void registerServer(int zone, Server server) {
+	public void registerServer(int zone, int port, ServerInterface server) {
 		servers.put(zone, server);
 		zoneRequests.put(zone, 0);
+		serversInfo.put(server, "server"+zone+":"+port+":"+zone);
 	}
 
 	/**
@@ -73,13 +64,7 @@ public class ProxyServer implements ProxyClientInterface {
 		// error handling
 		if (!zoneRequests.containsKey(zone)) return null;
 
-		Server destination = handleQueue(zone);
-
-		// simulating additional delay based on zone distance
-		int zoneDistance = Math.abs(zone - destination.getZone());
-		int delay = (zoneDistance == 0) ? 80 : 170;
-
-		sleep(delay);
+		ServerInterface destination = handleQueue(zone);
 
 		// 1. Save request-counter - increment requests
 		zoneRequests.merge(zone, 1, Integer::sum);
@@ -88,32 +73,38 @@ public class ProxyServer implements ProxyClientInterface {
 		int requests = zoneRequests.get(zone);
 		if (requests % WORKLOAD_THRESHOLD == 0)
 		{
-			try {
-				// attempt to fetch server load
-				int workload = destination.fetchWorkload();
-				zoneRequests.put(zone, workload);
-			}
-			catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			// updating proxy with servers workload happens on a separate thread
+			new Thread(()-> {
+				try {
+					// attempt to fetch server load
+					int workload = destination.fetchWorkload();
+					zoneRequests.put(zone, workload);
+				}
+				catch (RemoteException e) {
+					e.printStackTrace();
+				}
+			}).start();
 		}
 
 		// e.g. "server2:1099:2"
-		return (destination.getHost()) + ":" + (destination.getPort()) + ":" + (destination.getZone());
+		return serversInfo.get(destination);
 	}
 
-	
-
-	private Server handleQueue(int zone)
+	/**
+	 *
+	 * @param zone requested zone client wants
+	 * @return proper server based on zone param
+	 */
+	private ServerInterface handleQueue(int zone)
 	{
 		// color-codes for output
 		String YELLOW = "\u001B[33m";
 		String CYAN = "\u001B[36m";
 		String RESET = "\u001B[0m";
 
-		Server server = servers.get(zone);
+		ServerInterface server = servers.get(zone);
 
-		System.out.printf("\nRequesting zone:%d\n", zone);
+		System.out.printf("\nRequesting zone %d (Workload: %d)\n", zone, zoneRequests.get(zone));
 
 		// load of requested zone + how many servers in total
 		int requestedWorkload = zoneRequests.get(zone);
@@ -126,8 +117,8 @@ public class ProxyServer implements ProxyClientInterface {
 			int adjacent2 = (adjacent1 % numServers) + 1;
 
 			// servers for adjacent zones
-			Server adjacentServer1 = servers.get(adjacent1) ;
-			Server adjacentServer2 = servers.get(adjacent2);
+			ServerInterface adjacentServer1 = servers.get(adjacent1) ;
+			ServerInterface adjacentServer2 = servers.get(adjacent2);
 
 			// workload for adjacent zones
 			int adjacentWorkload1 = zoneRequests.get(adjacent1);
@@ -152,6 +143,10 @@ public class ProxyServer implements ProxyClientInterface {
 
 		return server ;
 	}
+
+	/**
+	 * starts proxy by using registry and port
+	 */
 
 	private void startProxy()
 	{
