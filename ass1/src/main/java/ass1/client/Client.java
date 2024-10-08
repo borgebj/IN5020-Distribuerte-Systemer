@@ -26,9 +26,6 @@ public class Client {
     // Cache to store results, max size of 45
     private static final int CACHE_SIZE = 45;
     private LinkedHashMap<String, Integer> cache;
-    BufferedWriter writer; 
-
-
 
 
     // keeping track of average times
@@ -303,8 +300,6 @@ public class Client {
         for (InstructionInfo instruc : instructions) {
 
             // T = 50 or T = 20 input line reading delay
-
-     
             sleep(lineReadingDelay);
 
             // extract request info
@@ -367,8 +362,6 @@ public class Client {
                 });
                 requester.start();
             }
-
-        
         }
         appendAveragesToFile();
     }

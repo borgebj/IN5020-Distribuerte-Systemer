@@ -6,9 +6,6 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -25,9 +22,7 @@ public class ProxyServer implements ProxyClientInterface {
 	private int WORKLOAD_THRESHOLD = 18;
 	private ConcurrentMap<Integer, Integer> zoneRequests;
 
-	static int numberOfServers =5;
-	static int requestId =0; 
-	static int balanceThreshold = 18;
+
 	public ProxyServer(int port) {
 		this.port = port;
 		this.servers = new HashMap<>();
@@ -124,8 +119,6 @@ public class ProxyServer implements ProxyClientInterface {
 			int adjacentWorkload1 = zoneRequests.get(adjacent1);
 			int adjacentWorkload2 = zoneRequests.get(adjacent2);
 
-			
-
 			// redirect to adjacent zone 1 if below threshold
 			if (adjacentWorkload1 < WORKLOAD_THRESHOLD) {
 				System.out.printf(CYAN + "Redirecting to zone:%d (Workload: %d)\n" + RESET, adjacent1, adjacentWorkload1);
@@ -168,9 +161,4 @@ public class ProxyServer implements ProxyClientInterface {
 			e.printStackTrace();
 		}
 	}
-
-
-
-
-
 }

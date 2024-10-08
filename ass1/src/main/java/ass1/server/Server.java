@@ -19,8 +19,6 @@ public class Server implements ServerInterface {
 
     // Hashmap with city data
     private HashMap<String, HashMap<String, CityInfo>> data;
-    private Queue<ArrayList<String>> queue;
-    private Queue<Integer> reqQueue;
     private String serverName;
     private int zone;
     private int port;
@@ -425,10 +423,5 @@ public class Server implements ServerInterface {
         } catch (Exception e) {
             System.err.println();
         }
-    }
-
-    
-    public Queue<Integer> getReqQueue() {
-        return reqQueue;
     }
 }
