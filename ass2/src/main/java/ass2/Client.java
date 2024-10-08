@@ -42,64 +42,20 @@ public class Client implements ClientInterface {
 		
 		// While true --> user input
 		Scanner scanner = new Scanner(System.in);
-
 		String[] args = null;
 		String command = "";
 
+		System.out.println("\n===== [ Awaiting user-input ] ===== ");
+
 		while (!Objects.equals(command, "exit")) {
-			System.out.printf("\nCommand: \n> ");
+
+			System.out.print("\n> ");
 			args = scanner.nextLine().split(" ");
 			command = args[0].toLowerCase();
 
-			try {
-				double res = -1;
-				switch (command) {
-					case "getquickbalance":
-						res = getQuickBalance();
-						break;
-					case "getsyncebalance":
-						res = getSyncedBalance();
-						break;
-					case "deposit":
-						double amount = Integer.parseInt(args[1]);
-						res = deposit(amount);
-						break;
-					case "addinterest":
-						double interest = Integer.parseInt(args[1]);
-						res = addInterest(interest);
-						break;
-					case "gethistory":
-						getHistory();
-						break;
-					case "checktxstatus":
-						int uniqueId = Integer.parseInt(args[1]);
-						String status = checkTxStatus(uniqueId);
-						break;
-					case "cleanhistory":
-						cleanHistory();
-						break;
-					case "sleep":
-						int duration = Integer.parseInt(args[1]);
-						sleep(duration);
-						break;
-					//TODO remove
-					default:
-						SpreadMessage msg = new SpreadMessage();
-						msg.addGroup(group);
-						msg.setFifo();
-						msg.setReliable();
-						try {
-							msg.setObject('"' + String.join(" ", args) + '"');
-							connection.multicast(msg);
-						} catch (SpreadException e) {
-							e.printStackTrace();
-						}
+			// execute asked command
+			executeCommand( command, args );
 
-				}
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-			}
 			sleep(0.5);
 		}
 		System.out.println("Exiting ...");
@@ -132,7 +88,99 @@ public class Client implements ClientInterface {
 		// Client joins group 8
 		group = new SpreadGroup();
 		group.join(connection, "group8");
+
+		// wait for "numOfReps" has joined group8
+		while (listener.getMembers()  < numOfReps) {
+			this.sleep(0.5);
+			System.out.printf("Client%d waiting (%d / %d)\n", id, listener.getMembers(), numOfReps);
+		}
+		System.out.println("\n\nAll replicas has joined group8\n");
 	}
+
+	private void displayHelp() {
+		System.out.println("\n==== [ Command Help ] ====");
+		System.out.println("getquickbalance          - Get the current balance (quick, may be outdated)");
+		System.out.println("getsyncebalance          - Get the synchronized balance from all replicas");
+		System.out.println("deposit <amount>         - Deposit the specified amount into the account");
+		System.out.println("addinterest <percent>    - Add interest to the account based on the given percentage");
+		System.out.println("gethistory               - Show transaction history");
+		System.out.println("checktxstatus <uniqueId> - Check the status of a transaction by its unique ID");
+		System.out.println("cleanhistory             - Clear all executed transaction history");
+		System.out.println("sleep <duration>         - Pause the client for the specified duration in seconds");
+		System.out.println("help                     - Display this help menu");
+		System.out.println("exit                     - Exit the application");
+		System.out.println("=============================");
+	}
+
+
+	private void executeCommand(String command, String[] args) {
+		try {
+			double res = -1;
+			switch (command) {
+				case "getquickbalance":
+					res = getQuickBalance();
+					break;
+
+				case "getsyncebalance":
+					res = getSyncedBalance();
+					break;
+
+				case "deposit":
+					double amount = Integer.parseInt(args[1]);
+					res = deposit(amount);
+					break;
+
+				case "addinterest":
+					double interest = Integer.parseInt(args[1]);
+					res = addInterest(interest);
+					break;
+
+				case "gethistory":
+					getHistory();
+					break;
+
+				case "checktxstatus":
+					int uniqueId = Integer.parseInt(args[1]);
+					String status = checkTxStatus(uniqueId);
+					break;
+
+				case "cleanhistory":
+					cleanHistory();
+					break;
+
+				case "sleep":
+					int duration = Integer.parseInt(args[1]);
+					sleep(duration);
+					break;
+
+				case "help":
+					displayHelp();
+					break;
+
+//				default:
+//					System.out.println("Unknown command ... ");
+//					System.out.println("For help, type 'help'");
+
+				//TODO remove
+				default:
+					SpreadMessage msg = new SpreadMessage();
+					msg.addGroup(group);
+					msg.setFifo();
+					msg.setReliable();
+					try {
+						msg.setObject('"' + String.join(" ", args) + '"');
+						connection.multicast(msg);
+					} catch (SpreadException e) {
+						e.printStackTrace();
+					}
+
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	@Override
 	public double getQuickBalance() {
