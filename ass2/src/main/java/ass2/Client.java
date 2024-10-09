@@ -55,8 +55,6 @@ public class Client implements ClientInterface {
 
 			// execute asked command
 			executeCommand( command, args );
-
-			sleep(0.5);
 		}
 		System.out.println("Exiting ...");
 	}
@@ -74,7 +72,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener();
+		Listener listener = new Listener(this);
 
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
@@ -95,6 +93,8 @@ public class Client implements ClientInterface {
 			System.out.printf("Client%d waiting (%d / %d)\n", id, listener.getMembers(), numOfReps);
 		}
 		System.out.println("\n\nAll replicas has joined group8\n");
+		sleep(2);
+		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	}
 
 	private void displayHelp() {
@@ -119,19 +119,21 @@ public class Client implements ClientInterface {
 			switch (command) {
 				case "getquickbalance":
 					res = getQuickBalance();
+					System.out.printf(">> %f\n", res);
 					break;
 
 				case "getsyncebalance":
 					res = getSyncedBalance();
+					System.out.printf(">> %f\n", res);
 					break;
 
 				case "deposit":
-					double amount = Integer.parseInt(args[1]);
+					double amount = Double.parseDouble(args[1]);
 					res = deposit(amount);
 					break;
 
 				case "addinterest":
-					double interest = Integer.parseInt(args[1]);
+					double interest = Double.parseDouble(args[1]);
 					res = addInterest(interest);
 					break;
 
@@ -181,6 +183,26 @@ public class Client implements ClientInterface {
 		}
 	}
 
+	private int multicastCommand(String command, double amount) {
+		Transaction tx = new Transaction();
+		tx.command = (command + " " + amount);
+		tx.uniqueId = accountName;
+		outstandingCollection.add(tx);
+
+		// broadcast transaction to all other replicas
+		SpreadMessage msg = new SpreadMessage();
+		msg.addGroup(group);
+		msg.setFifo();
+		msg.setReliable();
+		try {
+			msg.setObject(command + " " + amount);
+			connection.multicast(msg);
+			return 1;
+		} catch (SpreadException e) {
+			e.printStackTrace();
+			return -1;
+		}
+	}
 
 	@Override
 	public double getQuickBalance() {
@@ -195,31 +217,14 @@ public class Client implements ClientInterface {
 
 	@Override
 	public int deposit(double amount) {
-
-		Transaction tx = new Transaction();
-		tx.command = "deposit " +amount;
-		tx.uniqueId = accountName;
-		outstandingCollection.add(tx);
-		
-		// broadcast transaction to all other replicas
-		SpreadMessage msg = new SpreadMessage();
-		msg.addGroup(group);
-		msg.setFifo();
-		msg.setReliable();
-		try {
-			msg.setObject("deposit " + amount);
-			connection.multicast(msg);
-			return 1;
-		} catch (SpreadException e) {
-			e.printStackTrace();
-			return -1;
-		}
+		return multicastCommand("deposit", amount);
 	}
 
 	@Override
 	public int addInterest(double percent) {
-		return 0;
+		return multicastCommand("addinterest", percent);
 	}
+
 
 	@Override
 	public void getHistory() {
@@ -270,5 +275,13 @@ public class Client implements ClientInterface {
 	@Override
 	public void exit() {
 
+	}
+
+	/**
+	 * Adds amount to this accounts balance
+	 * @param amount how much to add
+	 */
+	public void addToAccount(double amount) {
+		this.balance += amount;
 	}
 }

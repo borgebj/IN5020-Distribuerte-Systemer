@@ -11,7 +11,7 @@ import java.util.Random;
 
 public class Main {
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, UnknownHostException, SpreadException {
 
         // Unique id created
         Random rand = new Random();
@@ -19,7 +19,8 @@ public class Main {
 
         // 1. Connection and listener created
         SpreadConnection connection = new SpreadConnection();
-        Listener listener = new Listener();
+        Client client = new Client(null, null, 0, 0);
+        Listener listener = new Listener(client);
 
         try {
 
