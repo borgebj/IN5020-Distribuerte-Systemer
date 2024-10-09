@@ -116,7 +116,7 @@ public class Client implements ClientInterface {
 		msg.setFifo();
 		msg.setReliable();
 		try {
-			msg.setObject((Serializable) outstandingCollection);
+			msg.setObject((Serializable) this.outstandingCollection);
 			connection.multicast(msg);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -297,7 +297,7 @@ public class Client implements ClientInterface {
 	 */
 	public void addToAccount(double amount, boolean interest) {
 		if (interest) {
-			this.balance = this.balance * amount;
+			this.balance = this.balance * (1 + amount/100);
 		}
 		else {
 			this.balance += amount;

@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 public class Starter {
 	public static void main(String[] args) {
 		int id = Integer.parseInt(args[0]);
-		int numOfReplicas = 1;
+		int numOfReplicas = 2;
 		String account = "group8";
 
 		for (int i = 0; i < numOfReplicas; i++) {
