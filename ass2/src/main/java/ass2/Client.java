@@ -22,6 +22,7 @@ public class Client implements ClientInterface {
 	// Client info
 	private String serverAdress;
 	private String accountName;
+	private int clientnr;
 	private int numOfReps;
 	private String filename;
 
@@ -40,7 +41,7 @@ public class Client implements ClientInterface {
 
 
 	// Scheduler for broadcasting every 10 seconds
-	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+	private ScheduledExecutorService scheduler;
 
 
 	// constructor
@@ -48,7 +49,8 @@ public class Client implements ClientInterface {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
-		InitializeClient(clientnr);
+		this.clientnr = clientnr;
+		InitializeClient();
 		
 		// While true --> user input
 		Scanner scanner = new Scanner(System.in);
@@ -73,25 +75,27 @@ public class Client implements ClientInterface {
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		this.filename = filename;
-		InitializeClient(clientnr);
+		this.clientnr = clientnr;
+		InitializeClient();
 
 		// Iterate File 
 	}
 	
-	private void InitializeClient(int id) throws UnknownHostException, SpreadException{
+	private void InitializeClient() throws UnknownHostException, SpreadException{
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener(this, id);
-
+		Listener listener = new Listener(this, this.clientnr);
 		this.connection.add(listener);
-		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
+		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
 
+		// set account info + scheduler
 		this.balance = 0.0;
 		this.order_counter = 0;
 		this.outstanding_counter = 0;
 		this.executedList = new ArrayList<>();
 		this.outstandingCollection = new ArrayList<>();
+		this.scheduler = Executors.newScheduledThreadPool(1);
 		
 		// Client joins group 8
 		group = new SpreadGroup();
@@ -100,14 +104,23 @@ public class Client implements ClientInterface {
 		// wait for "numOfReps" has joined group8
 		while (listener.getMembers()  < numOfReps) {
 			this.sleep(0.5);
-			System.out.printf("Client%d waiting (%d / %d)\n", id, listener.getMembers(), numOfReps);
+			System.out.printf("Client%d waiting (%d / %d)\n", clientnr, listener.getMembers(), numOfReps);
 		}
 		System.out.println("\n\nAll replicas has joined group8\n");
 		sleep(2);
-		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 
 		// start broadcast
-		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 0, 10, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
+	}
+
+	// todo remove
+	public String printOutstanding(Collection<Transaction> outstanding) {
+		StringBuilder out = new StringBuilder("[ ");
+		for (Transaction tx : outstanding) {
+			out.append("(").append(tx.command).append(" ").append(tx.uniqueId).append(") ");
+		}
+		return out + "]";
 	}
 
 	private void broadcastOutstandingTransactions() {
@@ -143,16 +156,19 @@ public class Client implements ClientInterface {
 		try {
 			double res = -1;
 			switch (command) {
+				case "gqb":
 				case "getquickbalance":
 					res = getQuickBalance();
 					System.out.printf(">> %f\n", res);
 					break;
 
+				case "gsb":
 				case "getsyncebalance":
 					res = getSyncedBalance();
 					System.out.printf(">> %f\n", res);
 					break;
 
+				case "d":
 				case "deposit":
 					double amount = Double.parseDouble(args[1]);
 					deposit(amount);
@@ -186,8 +202,8 @@ public class Client implements ClientInterface {
 					break;
 
 				default:
-					System.out.println("Unknown command ... ");
-					System.out.println("For help, type 'help'");
+					System.out.println("\nUnknown command ... ");
+					System.out.println("For help, type 'help'\n");
 
 			}
 		}
@@ -289,18 +305,26 @@ public class Client implements ClientInterface {
 		System.exit(0);
 	}
 
-	/**
-	 * Adds amount to this accounts balance
-	 *
-	 * @param amount how much to add
-	 * @param interest if adding interest
-	 */
-	public void addToAccount(double amount, boolean interest) {
+	public void addToAccount(Transaction tx, boolean interest) {
+		double amount = Double.parseDouble(tx.command.split(" ")[1]);
+
 		if (interest) {
 			this.balance = this.balance * (1 + amount/100);
 		}
 		else {
 			this.balance += amount;
 		}
+
+		// remove from outstanding, add to executed
+		outstandingCollection.removeIf(e -> e.uniqueId.equals(tx.uniqueId) && e.command.equals(tx.command));
+		this.executedList.add(tx);
+		order_counter++;
+	}
+
+	public boolean hasExecuted(String uniqueId) {
+		for (Transaction tx : executedList) {
+			if (Objects.equals(tx.uniqueId, uniqueId)) return true;
+		}
+		return false;
 	}
 }
