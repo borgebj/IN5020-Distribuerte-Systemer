@@ -6,12 +6,11 @@ import java.net.UnknownHostException;
 public class Starter {
 	public static void main(String[] args) {
 		int id = Integer.parseInt(args[0]);
-		int numOfReplicas = 3;
+		int numOfReplicas = 2;
 		String account = "group8";
 
 		for (int i = 0; i < numOfReplicas; i++) {
 			try {
-
 				// note:  endre under til public ip til Børge (står på disc) :)
 				Client client = new Client("127.0.0.1", account, numOfReplicas, id);
 

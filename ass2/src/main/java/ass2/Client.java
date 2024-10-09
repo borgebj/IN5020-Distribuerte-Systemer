@@ -1,11 +1,15 @@
 package ass2;
 
+import java.io.Serializable;
 import java.util.*;
 
 import ass2.Transaction;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import spread.SpreadConnection;
 import spread.SpreadException;
@@ -21,17 +25,23 @@ public class Client implements ClientInterface {
 	private int numOfReps;
 	private String filename;
 
+
 	// Bank info
 	private double balance;
 	private int order_counter;
-	private int oustanding_counter;
+	private int outstanding_counter;
 	private List<Transaction> executedList;
-	private List<Transaction> outstandingCollection;
+	private Collection<Transaction> outstandingCollection;
 
 	
 	// Spread info
 	private SpreadConnection connection;
 	private SpreadGroup group;
+
+
+	// Scheduler for broadcasting every 10 seconds
+	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 
 	// constructor
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr) throws UnknownHostException, SpreadException {
@@ -49,7 +59,7 @@ public class Client implements ClientInterface {
 
 		while (!Objects.equals(command, "exit")) {
 
-			System.out.print("\n> ");
+//			System.out.print("\n> ");
 			args = scanner.nextLine().split(" ");
 			command = args[0].toLowerCase();
 
@@ -72,14 +82,14 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener(this);
+		Listener listener = new Listener(this, id);
 
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
 
 		this.balance = 0.0;
 		this.order_counter = 0;
-		this.oustanding_counter = 0;
+		this.outstanding_counter = 0;
 		this.executedList = new ArrayList<>();
 		this.outstandingCollection = new ArrayList<>();
 		
@@ -95,6 +105,22 @@ public class Client implements ClientInterface {
 		System.out.println("\n\nAll replicas has joined group8\n");
 		sleep(2);
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
+		// start broadcast
+		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 0, 20, TimeUnit.SECONDS);
+	}
+
+	private void broadcastOutstandingTransactions() {
+		SpreadMessage msg = new SpreadMessage();
+		msg.addGroup(group);
+		msg.setFifo();
+		msg.setReliable();
+		try {
+			msg.setObject((Serializable) outstandingCollection);
+			connection.multicast(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private void displayHelp() {
@@ -129,12 +155,12 @@ public class Client implements ClientInterface {
 
 				case "deposit":
 					double amount = Double.parseDouble(args[1]);
-					res = deposit(amount);
+					deposit(amount);
 					break;
 
 				case "addinterest":
 					double interest = Double.parseDouble(args[1]);
-					res = addInterest(interest);
+					addInterest(interest);
 					break;
 
 				case "gethistory":
@@ -159,22 +185,9 @@ public class Client implements ClientInterface {
 					displayHelp();
 					break;
 
-//				default:
-//					System.out.println("Unknown command ... ");
-//					System.out.println("For help, type 'help'");
-
-				//TODO remove
 				default:
-					SpreadMessage msg = new SpreadMessage();
-					msg.addGroup(group);
-					msg.setFifo();
-					msg.setReliable();
-					try {
-						msg.setObject('"' + String.join(" ", args) + '"');
-						connection.multicast(msg);
-					} catch (SpreadException e) {
-						e.printStackTrace();
-					}
+					System.out.println("Unknown command ... ");
+					System.out.println("For help, type 'help'");
 
 			}
 		}
@@ -183,25 +196,15 @@ public class Client implements ClientInterface {
 		}
 	}
 
-	private int multicastCommand(String command, double amount) {
+	private void addCommandToCollection(String command, double amount) {
+
+		// Transaction-object associated with command
 		Transaction tx = new Transaction();
 		tx.command = (command + " " + amount);
-		tx.uniqueId = accountName;
-		outstandingCollection.add(tx);
+		tx.uniqueId = (accountName + " " + outstanding_counter);
 
-		// broadcast transaction to all other replicas
-		SpreadMessage msg = new SpreadMessage();
-		msg.addGroup(group);
-		msg.setFifo();
-		msg.setReliable();
-		try {
-			msg.setObject(command + " " + amount);
-			connection.multicast(msg);
-			return 1;
-		} catch (SpreadException e) {
-			e.printStackTrace();
-			return -1;
-		}
+		outstandingCollection.add(tx);
+		outstanding_counter++;
 	}
 
 	@Override
@@ -216,13 +219,13 @@ public class Client implements ClientInterface {
 	}
 
 	@Override
-	public int deposit(double amount) {
-		return multicastCommand("deposit", amount);
+	public void deposit(double amount) {
+		addCommandToCollection("deposit", amount);
 	}
 
 	@Override
-	public int addInterest(double percent) {
-		return multicastCommand("addinterest", percent);
+	public void addInterest(double percent) {
+		addCommandToCollection("addinterest", percent);
 	}
 
 
@@ -272,13 +275,23 @@ public class Client implements ClientInterface {
 		}
 	}
 
+	/**
+	 * Disconnects connection and exits program
+	 */
 	@Override
 	public void exit() {
-
+		try {
+			connection.disconnect();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
 
 	/**
 	 * Adds amount to this accounts balance
+	 *
 	 * @param amount how much to add
 	 * @param interest if adding interest
 	 */

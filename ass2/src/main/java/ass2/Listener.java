@@ -2,52 +2,37 @@ package ass2;
 
 import spread.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Listener implements AdvancedMessageListener {
 
     SpreadGroup[] groupMembers = new SpreadGroup[0];
     Client client;
+    int id;
 
-    public Listener(Client client) {
+    public Listener(Client client, int id) {
         this.client = client;
+        this.id = id;
     }
 
-
-    private void performDeposit(double amount) {
-        client.addToAccount(amount, false);
-    }
-
-    private void performAddInterest(double amount) {
-        double multiplier = (1 + amount / 100);
-        client.addToAccount(multiplier, true);
-    }
 
     public void regularMessageReceived(SpreadMessage message) {
-        String msg = null;
+        ArrayList<Transaction> outstanding = null;
         try {
-            msg = (String) message.getObject();
+            outstanding = (ArrayList<Transaction>) message.getObject();
         } catch (SpreadException e) {
             throw new RuntimeException(e);
         }
 
-        String[] args = msg.split(" ");
-        String command = args[0];
+         System.out.printf("[from %s]\n", message.getSender());
 
-        switch (command) {
-            case "deposit":
-                double amount = Double.parseDouble(args[1]);
-                performDeposit(amount);
-                break;
-
-            case "addinterest":
-                double interest = Double.parseDouble(args[1]);
-                performAddInterest(interest);
-                break;
-
+        // go through outstanding and perform commands
+        for (Transaction tx : outstanding) {
+            System.out.println("> " + tx);
         }
-
-        // System.out.printf("\nmsg received: %s\n", msg);
+        System.out.println();
     }
 
     @Override

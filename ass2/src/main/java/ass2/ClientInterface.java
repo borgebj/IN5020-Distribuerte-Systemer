@@ -19,16 +19,14 @@ public interface ClientInterface {
     /** 
      * Deposits the specified amount into the account.
      * @param amount the amount to be deposited.
-     * @return 1 for success, -1 for failure.
      */
-    int deposit(double amount);
+    void deposit(double amount);
 
     /** 
      * Adds interest to the current balance based on the specified percentage.
      * @param percent the percentage of interest to be added.
-     * @return 1 for success, -1 for failure.
      */
-    int addInterest(double percent);
+    void addInterest(double percent);
 
     /** 
      * Prints the transaction history including executed and outstanding transactions.
