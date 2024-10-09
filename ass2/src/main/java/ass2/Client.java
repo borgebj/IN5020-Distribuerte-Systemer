@@ -28,10 +28,10 @@ public class Client implements ClientInterface {
 
 	// Bank info
 	private double balance;
-	private int order_counter;
-	private int outstanding_counter;
-	private List<Transaction> executedList;
-	private Collection<Transaction> outstandingCollection;
+	public int order_counter;
+	public int outstanding_counter;
+	public List<Transaction> executedList;
+	public Collection<Transaction> outstandingCollection;
 
 	
 	// Spread info
@@ -107,7 +107,7 @@ public class Client implements ClientInterface {
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 
 		// start broadcast
-		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 0, 20, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 0, 10, TimeUnit.SECONDS);
 	}
 
 	private void broadcastOutstandingTransactions() {
