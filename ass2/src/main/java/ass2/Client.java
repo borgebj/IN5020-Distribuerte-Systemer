@@ -61,7 +61,7 @@ public class Client implements ClientInterface {
 
 		while (!Objects.equals(command, "exit")) {
 
-//			System.out.print("\n> ");
+			System.out.print("\n> ");
 			args = scanner.nextLine().split(" ");
 			command = args[0].toLowerCase();
 

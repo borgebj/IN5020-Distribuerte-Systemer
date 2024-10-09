@@ -38,7 +38,7 @@ public class Listener implements AdvancedMessageListener {
             throw new RuntimeException(e);
         }
 
-         System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], client.printOutstanding(outstanding));
+//         System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], client.printOutstanding(outstanding));
 
         // go through outstanding and perform commands
         for (Transaction tx : outstanding) {
