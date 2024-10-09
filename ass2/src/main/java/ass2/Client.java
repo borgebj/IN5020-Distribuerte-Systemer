@@ -280,8 +280,14 @@ public class Client implements ClientInterface {
 	/**
 	 * Adds amount to this accounts balance
 	 * @param amount how much to add
+	 * @param interest if adding interest
 	 */
-	public void addToAccount(double amount) {
-		this.balance += amount;
+	public void addToAccount(double amount, boolean interest) {
+		if (interest) {
+			this.balance = this.balance * amount;
+		}
+		else {
+			this.balance += amount;
+		}
 	}
 }

@@ -15,12 +15,12 @@ public class Listener implements AdvancedMessageListener {
 
 
     private void performDeposit(double amount) {
-        client.addToAccount(amount);
+        client.addToAccount(amount, false);
     }
 
     private void performAddInterest(double amount) {
-        double multiplier = (1 + amount  / 100);
-//        client.addToAccount(multiplier, 1);
+        double multiplier = (1 + amount / 100);
+        client.addToAccount(multiplier, true);
     }
 
     public void regularMessageReceived(SpreadMessage message) {
@@ -35,7 +35,6 @@ public class Listener implements AdvancedMessageListener {
         String command = args[0];
 
         switch (command) {
-
             case "deposit":
                 double amount = Double.parseDouble(args[1]);
                 performDeposit(amount);
