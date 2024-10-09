@@ -2,9 +2,7 @@ package ass2;
 
 import spread.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Listener implements AdvancedMessageListener {
 
@@ -18,6 +16,8 @@ public class Listener implements AdvancedMessageListener {
     }
 
     private void performCommand(String command) {
+
+        System.out.println("Executing " + command);
 
         // parse action and amount
         String[] args = command.split(" ");
@@ -36,6 +36,22 @@ public class Listener implements AdvancedMessageListener {
         }
     }
 
+    private void removeTransaction(Transaction tx) {
+        String removeId = tx.uniqueId;
+        Iterator<Transaction> iterator = client.outstandingCollection.iterator();
+
+        while (iterator.hasNext()) {
+            Transaction t = iterator.next();
+            String currentId = t.uniqueId;
+
+            if (Objects.equals(currentId, removeId)) {
+                iterator.remove();
+                break;
+            }
+        }
+    }
+
+
     public void regularMessageReceived(SpreadMessage message) {
         ArrayList<Transaction> outstanding = null;
         try {
@@ -44,21 +60,18 @@ public class Listener implements AdvancedMessageListener {
             throw new RuntimeException(e);
         }
 
-         System.out.printf("[from %s] = %s\n", message.getSender(), outstanding);
+         System.out.printf("from %s = %s\n", message.getSender(), outstanding);
 
         // go through outstanding and perform commands
         for (Transaction tx : outstanding) {
 
-            String command = tx.command;
-            String uniqueid = tx.uniqueId;
-            
             // removes transaction from outstanding collection, add to executed
-            client.outstandingCollection.remove(tx);
+            removeTransaction(tx);
             client.executedList.add(tx);
             client.order_counter++;
 
             // performs the command
-            performCommand(command);
+            performCommand(tx.command);
         }
         System.out.println();
     }
