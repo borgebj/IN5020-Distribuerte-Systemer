@@ -43,3 +43,5 @@ target/
 /target
 **/target/
 ass2/group8
+ass2/spread.conf
+*.conf
