@@ -59,17 +59,18 @@ public class Client implements ClientInterface {
 
 		System.out.println("\n===== [ Awaiting user-input ] ===== ");
 
-		while (!Objects.equals(command, "exit")) {
+		while (true) {
 
 			System.out.print("\n> ");
 			args = scanner.nextLine().split(" ");
-			command = args[0].toLowerCase();
+			command = args[0].strip().toLowerCase();
 
 			// execute asked command
 			executeCommand( command, args );
 		}
-		System.out.println("Exiting ...");
+		this.exit();
 	}
+
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr, String filename) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
@@ -78,7 +79,10 @@ public class Client implements ClientInterface {
 		this.clientnr = clientnr;
 		InitializeClient();
 
-		// Iterate File 
+		// Iterate File
+
+		System.out.println("Exiting ...");
+		this.exit();
 	}
 	
 	private void InitializeClient() throws UnknownHostException, SpreadException{
@@ -156,19 +160,16 @@ public class Client implements ClientInterface {
 		try {
 			double res = -1;
 			switch (command) {
-				case "gqb":
 				case "getquickbalance":
 					res = getQuickBalance();
 					System.out.printf(">> %f\n", res);
 					break;
 
-				case "gsb":
 				case "getsyncebalance":
 					res = getSyncedBalance();
 					System.out.printf(">> %f\n", res);
 					break;
 
-				case "d":
 				case "deposit":
 					double amount = Double.parseDouble(args[1]);
 					deposit(amount);
@@ -195,6 +196,10 @@ public class Client implements ClientInterface {
 				case "sleep":
 					int duration = Integer.parseInt(args[1]);
 					sleep(duration);
+					break;
+
+				case "exit":
+					exit();
 					break;
 
 				case "help":
@@ -296,14 +301,23 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public void exit() {
+		System.out.println("Exiting ...");
+
+		// 1. Force shutdown scheduler
+		scheduler.shutdownNow();
+
+		// 2. Disconnect from spread-server
 		try {
 			connection.disconnect();
-		}
-		catch (Exception e) {
+		} catch (SpreadException e) {
 			e.printStackTrace();
 		}
+
+		// 3. Fully exit the process
 		System.exit(0);
 	}
+
+
 
 	public void addToAccount(Transaction tx, boolean interest) {
 		double amount = Double.parseDouble(tx.command.split(" ")[1]);
@@ -319,12 +333,5 @@ public class Client implements ClientInterface {
 		outstandingCollection.removeIf(e -> e.uniqueId.equals(tx.uniqueId) && e.command.equals(tx.command));
 		this.executedList.add(tx);
 		order_counter++;
-	}
-
-	public boolean hasExecuted(String uniqueId) {
-		for (Transaction tx : executedList) {
-			if (Objects.equals(tx.uniqueId, uniqueId)) return true;
-		}
-		return false;
 	}
 }
