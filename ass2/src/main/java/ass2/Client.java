@@ -52,7 +52,7 @@ public class Client implements ClientInterface {
 		this.clientnr = clientnr;
 		InitializeClient();
 		
-		// While true --> user input
+		// Scanner for user-input
 		Scanner scanner = new Scanner(System.in);
 		String[] args = null;
 		String command = "";
@@ -65,7 +65,7 @@ public class Client implements ClientInterface {
 			args = scanner.nextLine().split(" ");
 			command = args[0].toLowerCase();
 
-			// execute asked command
+			// execute requested command
 			executeCommand( command, args );
 		}
 		System.out.println("Exiting ...");
@@ -114,15 +114,9 @@ public class Client implements ClientInterface {
 		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
 	}
 
-	// todo remove
-	public String printOutstanding(Collection<Transaction> outstanding) {
-		StringBuilder out = new StringBuilder("[ ");
-		for (Transaction tx : outstanding) {
-			out.append("(").append(tx.command).append(" ").append(tx.uniqueId).append(") ");
-		}
-		return out + "]";
-	}
-
+	/**
+	 * Method used by scheduler which broadcasts every 10 seconds
+	 */
 	private void broadcastOutstandingTransactions() {
 		SpreadMessage msg = new SpreadMessage();
 		msg.addGroup(group);
@@ -154,21 +148,15 @@ public class Client implements ClientInterface {
 
 	private void executeCommand(String command, String[] args) {
 		try {
-			double res = -1;
 			switch (command) {
-				case "gqb":
 				case "getquickbalance":
-					res = getQuickBalance();
-					System.out.printf(">> %f\n", res);
+					System.out.printf("[Balance] >> %f\n", getQuickBalance());
 					break;
 
-				case "gsb":
 				case "getsyncebalance":
-					res = getSyncedBalance();
-					System.out.printf(">> %f\n", res);
+					System.out.printf("[Balance] >> %f\n", getSyncedBalance());
 					break;
 
-				case "d":
 				case "deposit":
 					double amount = Double.parseDouble(args[1]);
 					deposit(amount);
