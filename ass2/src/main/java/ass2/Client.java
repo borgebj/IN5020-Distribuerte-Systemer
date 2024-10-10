@@ -1,5 +1,8 @@
 package ass2;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
@@ -25,6 +28,7 @@ public class Client implements ClientInterface {
 	private int clientnr;
 	private int numOfReps;
 	private String filename;
+	private Listener listener;
 
 
 	// Bank info
@@ -83,8 +87,27 @@ public class Client implements ClientInterface {
 		InitializeClient();
 
 		// Iterate File
+		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
 
-		System.out.println("Exiting ...");
+			String line;
+			double T;
+			while ((line = br.readLine()) != null) {
+
+				System.out.println(line);
+
+				String[] args = line.trim().split(" ");
+				String command = args[0].toLowerCase();
+				executeCommand(command, args);
+
+				// sleep [0.5, 1.5] seconds
+				T = 0.5 + new Random().nextDouble();
+				sleep(T);
+				System.out.println();
+			}
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
 		this.exit();
 	}
 	
@@ -92,7 +115,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener(this, this.clientnr);
+		this.listener = new Listener(this, this.clientnr);
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
 
@@ -342,6 +365,12 @@ public class Client implements ClientInterface {
 	}
 
 	@Override
+	public List<String> memberInfo() {
+		//TODO:
+		return null;
+	}
+
+	@Override
 	public void sleep(double duration) {
 		try {
 			Thread.sleep((long) (duration * 1000L));
@@ -355,9 +384,24 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public void exit() {
-		System.out.println("\nExiting ...");
-		System.exit(0);
+
+		// 1. shuts down scheduler
+		scheduler.shutdownNow();
+		try {
+			// 2. attempt to disconnect
+			if (connection != null) {
+				group.leave();
+				connection.remove(listener);      // <--- denne skaper output på exit btw
+				connection.disconnect();
+			}
+		} catch (SpreadException e) {
+			System.err.println("Error during disconnection: " + e.getMessage());
+		} finally {
+			System.out.println("\nExiting ...");
+			System.exit(0);
+		}
 	}
+
 
 
 
@@ -372,7 +416,9 @@ public class Client implements ClientInterface {
 		}
 
 		// remove from outstanding, add to executed
-		outstandingCollection.removeIf(e -> e.uniqueId.equals(tx.uniqueId) && e.command.equals(tx.command));
+		outstandingCollection.removeIf( e ->
+				e.uniqueId.equals(tx.uniqueId) &&
+				e.command.equals(tx.command));
 		this.executedList.add(tx);
 		order_counter++;
 	}
