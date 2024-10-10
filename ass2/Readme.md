@@ -18,7 +18,7 @@ This must be done on multiple instances / terminals
 
 - `java Starter <id> [filename]` 
 
-where [ id ] uniquely represents the client
+where <id> uniquely represents the client, and [filename] represents an optional file with queries
 
 ### Examples
 
