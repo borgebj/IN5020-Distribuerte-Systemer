@@ -31,6 +31,7 @@ public class Client implements ClientInterface {
 	public int order_counter;
 	public int outstanding_counter;
 	public List<Transaction> executedList;
+	public Collection<Transaction> catchUpCollection;
 	public Collection<Transaction> outstandingCollection;
 
 	
@@ -73,6 +74,7 @@ public class Client implements ClientInterface {
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		this.filename = filename;
+		
 		InitializeClient(clientnr);
 
 		// Iterate File 
@@ -82,7 +84,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		Listener listener = new Listener(this, id);
+		Listener listener = new Listener(this, id, numOfReps);
 
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(id), false, true);
@@ -92,12 +94,15 @@ public class Client implements ClientInterface {
 		this.outstanding_counter = 0;
 		this.executedList = new ArrayList<>();
 		this.outstandingCollection = new ArrayList<>();
+		this.catchUpCollection = new ArrayList<>();
 		
 		// Client joins group 8
 		group = new SpreadGroup();
 		group.join(connection, "group8");
 
 		// wait for "numOfReps" has joined group8
+
+		
 		while (listener.getMembers()  < numOfReps) {
 			this.sleep(0.5);
 			System.out.printf("Client%d waiting (%d / %d)\n", id, listener.getMembers(), numOfReps);
@@ -107,7 +112,7 @@ public class Client implements ClientInterface {
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 
 		// start broadcast
-		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 0, 10, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
 	}
 
 	private void broadcastOutstandingTransactions() {
@@ -205,7 +210,37 @@ public class Client implements ClientInterface {
 
 		outstandingCollection.add(tx);
 		outstanding_counter++;
+		catchUpCollection.add(tx);
 	}
+
+	public void catchUpClient(SpreadGroup newMember) {
+        SpreadMessage msg = new SpreadMessage();
+        msg.addGroup(group);
+        msg.setFifo();
+        msg.setReliable();
+		
+			System.out.println("we get here kinda " + catchUpCollection.size());
+
+		try {
+			ArrayList<Transaction> missedTransactions = (ArrayList<Transaction>) catchUpCollection;
+			msg.setObject((Serializable) missedTransactions);
+			connection.multicast(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	
+			
+    }
+	private void addCommandToCollection(String command) {
+
+		// Transaction-object associated with command
+		Transaction tx = new Transaction();
+		tx.uniqueId = (accountName + " " + outstanding_counter);
+
+		outstandingCollection.add(tx);
+		outstanding_counter++;
+	}
+
 
 	@Override
 	public double getQuickBalance() {
@@ -214,8 +249,8 @@ public class Client implements ClientInterface {
 
 	@Override
 	public double getSyncedBalance() {
-		//TODO:
-		return 0;
+		addCommandToCollection("getsyncebalance");
+		return 0.0;
 	}
 
 	@Override
@@ -248,13 +283,15 @@ public class Client implements ClientInterface {
 		// check all outstanding transactions
 		for (Transaction tx : outstandingCollection) {
 			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
+				
 				return "Pending";
 			}
 		}
 
 		// check all executed transactions
 		for (Transaction tx : executedList) {
-			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
+			System.out.println("CHECKING EXEC LIST " + tx.uniqueId);
+			if (tx.uniqueId.equals(String.valueOf(accountName + " " + uniqueId))) {
 				return "Executed";
 			}
 		}
