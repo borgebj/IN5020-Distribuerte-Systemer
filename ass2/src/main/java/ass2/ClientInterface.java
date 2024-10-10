@@ -45,6 +45,11 @@ public interface ClientInterface {
      */
     void cleanHistory();
 
+    /**
+     * Returns and prints members in yhe actove group
+     * @return members in group8
+     */
+    List<String> memberInfo();
 
     /** 
      * Causes the client to sleep for the specified duration in seconds.
