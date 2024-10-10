@@ -102,7 +102,7 @@ public class Client implements ClientInterface {
 				// sleep [0.5, 1.5] seconds
 				T = 0.5 + new Random().nextDouble();
 				sleep(T);
-				System.out.println();
+				System.out.println('\n');
 			}
 		}
 		catch (IOException e) {
@@ -163,7 +163,7 @@ public class Client implements ClientInterface {
 	private void displayHelp() {
 		System.out.println("\n==== [ Command Help ] ====");
 		System.out.println("getquickbalance          - Get the current balance (quick, may be outdated)");
-		System.out.println("getsyncebalance          - Get the synchronized balance from all replicas");
+		System.out.println("getsyncedbalance         - Get the synchronized balance from all replicas");
 		System.out.println("deposit <amount>         - Deposit the specified amount into the account");
 		System.out.println("addinterest <percent>    - Add interest to the account based on the given percentage");
 		System.out.println("gethistory               - Show transaction history");
@@ -183,7 +183,7 @@ public class Client implements ClientInterface {
 					System.out.printf("[Balance] >> %f\n", getQuickBalance());
 					break;
 
-				case "getsyncebalance":
+				case "getsyncedbalance":
 					System.out.printf("[Balance] >> %f\n", getSyncedBalance());
 					break;
 
@@ -210,6 +210,10 @@ public class Client implements ClientInterface {
 					cleanHistory();
 					break;
 
+				case "memberinfo":
+					memberInfo();
+					break;
+
 				case "sleep":
 					int duration = Integer.parseInt(args[1]);
 					sleep(duration);
@@ -226,9 +230,9 @@ public class Client implements ClientInterface {
 				default:
 					String closestCommand = getClosestCommand(command);
 					if (closestCommand != null) {
-						System.out.printf("\nUnknown command '%s'. Did you mean '%s'?\n", command, closestCommand);
+						System.out.printf("Unknown command '%s'. Did you mean '%s'?\n", command, closestCommand);
 					} else {
-						System.out.println("\nUnknown command ... ");
+						System.out.println("Unknown command ... ");
 					}
 			}
 		}
