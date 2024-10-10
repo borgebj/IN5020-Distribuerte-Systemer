@@ -34,18 +34,18 @@ public class Listener implements AdvancedMessageListener {
         ArrayList<Transaction> outstanding = null;
         try {
             outstanding = (ArrayList<Transaction>) message.getObject();
+
+//            System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], (outstanding));
+
+            // go through outstanding and perform commands
+            for (Transaction tx : outstanding) {
+                process(tx);
+            }
+
         } catch (SpreadException e) {
             throw new RuntimeException(e);
         }
 
-//         System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], client.printOutstanding(outstanding));
-
-        // go through outstanding and perform commands
-        for (Transaction tx : outstanding) {
-
-            process(tx);
-
-        }
     }
 
     @Override
