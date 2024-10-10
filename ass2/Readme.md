@@ -20,6 +20,8 @@ This must be done on multiple instances / terminals
 
 where [ id ] uniquely represents the client
 
+### Examples
+
 Example 1: three clients (without file):
 - `Starter 1`
 - `Starter 2`
