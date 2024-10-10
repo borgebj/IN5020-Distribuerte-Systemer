@@ -51,25 +51,29 @@ public class Client implements ClientInterface {
 		this.numOfReps = numOfReps;
 		this.clientnr = clientnr;
 		InitializeClient();
-		
-		// While true --> user input
-		Scanner scanner = new Scanner(System.in);
-		String[] args = null;
-		String command = "";
 
-		System.out.println("\n===== [ Awaiting user-input ] ===== ");
+// Scanner for user input
+		try (Scanner scanner = new Scanner(System.in)) {
+			String command;
+			System.out.println("\n===== [ Awaiting user input ] ===== ");
 
-		while (!Objects.equals(command, "exit")) {
+			while (true) {
+				System.out.print("\n> ");
+				String[] args = scanner.nextLine().trim().split(" ");
+				command = args[0].toLowerCase();
 
-			System.out.print("\n> ");
-			args = scanner.nextLine().split(" ");
-			command = args[0].toLowerCase();
+				if ("exit".equals(command)) {
+					break;
+				}
 
-			// execute asked command
-			executeCommand( command, args );
+				// Execute the requested command
+				executeCommand(command, args);
+			}
 		}
-		System.out.println("Exiting ...");
+		this.exit();
+
 	}
+
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr, String filename) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
@@ -78,7 +82,10 @@ public class Client implements ClientInterface {
 		this.clientnr = clientnr;
 		InitializeClient();
 
-		// Iterate File 
+		// Iterate File
+
+		System.out.println("Exiting ...");
+		this.exit();
 	}
 	
 	private void InitializeClient() throws UnknownHostException, SpreadException{
@@ -114,15 +121,9 @@ public class Client implements ClientInterface {
 		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
 	}
 
-	// todo remove
-	public String printOutstanding(Collection<Transaction> outstanding) {
-		StringBuilder out = new StringBuilder("[ ");
-		for (Transaction tx : outstanding) {
-			out.append("(").append(tx.command).append(" ").append(tx.uniqueId).append(") ");
-		}
-		return out + "]";
-	}
-
+	/**
+	 * Method used by scheduler which broadcasts every 10 seconds
+	 */
 	private void broadcastOutstandingTransactions() {
 		SpreadMessage msg = new SpreadMessage();
 		msg.addGroup(group);
@@ -154,21 +155,15 @@ public class Client implements ClientInterface {
 
 	private void executeCommand(String command, String[] args) {
 		try {
-			double res = -1;
 			switch (command) {
-				case "gqb":
 				case "getquickbalance":
-					res = getQuickBalance();
-					System.out.printf(">> %f\n", res);
+					System.out.printf("[Balance] >> %f\n", getQuickBalance());
 					break;
 
-				case "gsb":
 				case "getsyncebalance":
-					res = getSyncedBalance();
-					System.out.printf(">> %f\n", res);
+					System.out.printf("[Balance] >> %f\n", getSyncedBalance());
 					break;
 
-				case "d":
 				case "deposit":
 					double amount = Double.parseDouble(args[1]);
 					deposit(amount);
@@ -197,19 +192,83 @@ public class Client implements ClientInterface {
 					sleep(duration);
 					break;
 
+				case "exit":
+					exit();
+					break;
+
 				case "help":
 					displayHelp();
 					break;
 
 				default:
-					System.out.println("\nUnknown command ... ");
-					System.out.println("For help, type 'help'\n");
-
+					String closestCommand = getClosestCommand(command);
+					if (closestCommand != null) {
+						System.out.printf("\nUnknown command '%s'. Did you mean '%s'?\n", command, closestCommand);
+					} else {
+						System.out.println("\nUnknown command ... ");
+					}
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Gets closest possible command to given input using levensthein distance algorithm
+	 *
+	 * @param input requested command
+	 * @return null or closest command
+	 */
+	private String getClosestCommand(String input) {
+		String[] commands = {
+				"getquickbalance", "getsyncebalance", "deposit", "addinterest", "gethistory",
+				"checktxstatus", "cleanhistory", "sleep", "help", "exit"
+		};
+
+		String closestCommand = null;
+		int minDistance = Integer.MAX_VALUE;
+		int threshold = 3; // suggestion threshold
+
+		for (String command : commands) {
+			int distance = getLevenshteinDistance(input, command);
+			if (distance < minDistance && distance <= threshold) {
+				minDistance = distance;
+				closestCommand = command;
+			}
+		}
+
+		return closestCommand;
+	}
+
+	/**
+	 * Compares strings (commands) by counting minimum edits needed to change one string to another
+	 * e.g. "help" and "hegpl" levensthein distance is 2:
+	 * 	- substitute g with l -> "helpl"
+	 * 	- delete last l -> "help"
+	 *
+	 * @param a first string to compare (e.g. help)
+	 * @param b second string to compare (e.g. hegpl)
+	 * @return the levensthein distance
+	 */
+	private int getLevenshteinDistance(String a, String b) {
+		int[][] dp = new int[a.length() + 1][b.length() + 1];
+
+		for (int i = 0; i <= a.length(); i++) {
+			for (int j = 0; j <= b.length(); j++) {
+				if (i == 0) {
+					dp[i][j] = j;
+				} else if (j == 0) {
+					dp[i][j] = i;
+				} else {
+					dp[i][j] = Math.min(dp[i - 1][j - 1]
+									+ (a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1),
+							Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1));
+				}
+			}
+		}
+
+		return dp[a.length()][b.length()];
 	}
 
 	private void addCommandToCollection(String command, double amount) {
@@ -247,10 +306,10 @@ public class Client implements ClientInterface {
 
 	@Override
 	public void getHistory() {
-		System.out.println("Executed Transactions:");
+		System.out.println("\nExecuted Transactions:");
 		for (int i = 0; i < executedList.size(); i++) {
 			Transaction tx = executedList.get(i);
-			System.out.println((i+1) + "."+tx.command);
+			System.out.println((i+1) + ".\t"+tx.command);
 		}
 
 		System.out.println("\nOutstanding Transactions:");
@@ -296,14 +355,11 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public void exit() {
-		try {
-			connection.disconnect();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
+		System.out.println("\nExiting ...");
 		System.exit(0);
 	}
+
+
 
 	public void addToAccount(Transaction tx, boolean interest) {
 		double amount = Double.parseDouble(tx.command.split(" ")[1]);
@@ -319,12 +375,5 @@ public class Client implements ClientInterface {
 		outstandingCollection.removeIf(e -> e.uniqueId.equals(tx.uniqueId) && e.command.equals(tx.command));
 		this.executedList.add(tx);
 		order_counter++;
-	}
-
-	public boolean hasExecuted(String uniqueId) {
-		for (Transaction tx : executedList) {
-			if (Objects.equals(tx.uniqueId, uniqueId)) return true;
-		}
-		return false;
 	}
 }
