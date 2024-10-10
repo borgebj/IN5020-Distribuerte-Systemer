@@ -236,8 +236,8 @@ public class Client implements ClientInterface {
 					}
 			}
 		}
-		catch (Exception e) {
-			e.printStackTrace();
+		catch (NumberFormatException e) {
+			System.err.println("\nInvalid argument provided for ("+command+")");
 		}
 	}
 
