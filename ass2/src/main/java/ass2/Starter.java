@@ -27,21 +27,18 @@ public class Starter {
 			return;
 		}
 
-		int numOfReplicas = 1;
+		int numOfReplicas = 1;      // <---------- THIS DECIDES HOW MANY REPLICAS IN USE
 		String account = "group8";
 
-		for (int i = 0; i < numOfReplicas; i++) {
-			try {
-				Client client;
-				if (filename != null) {
-					client = new Client("127.0.0.1", account, numOfReplicas, id, filename);
-				} else {
-					client = new Client("127.0.0.1", account, numOfReplicas, id);
-				}
-
-			} catch (UnknownHostException | SpreadException e) {
-				e.printStackTrace();
+		try {
+			if (filename != null) {
+				new Client("127.0.0.1", account, numOfReplicas, id, filename);
+			} else {
+				 new Client("127.0.0.1", account, numOfReplicas, id);
 			}
+
+		} catch (UnknownHostException | SpreadException e) {
+			e.printStackTrace();
 		}
 	}
 }
