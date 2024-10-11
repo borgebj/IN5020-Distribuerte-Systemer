@@ -1,14 +1,21 @@
 package ass2;
 
-import spread.*;
+// utility
+import java.util.ArrayList;
 
-import java.util.*;
+// spread imports
+import spread.SpreadGroup;
+import spread.SpreadMessage;
+import spread.SpreadException;
+import spread.AdvancedMessageListener;
+
 
 public class Listener implements AdvancedMessageListener {
 
-    SpreadGroup[] groupMembers = new SpreadGroup[0];
-    Client client;
     int id;
+    Client client;
+    SpreadGroup[] groupMembers = new SpreadGroup[0];
+
 
     public Listener(Client client, int id) {
         this.client = client;
@@ -35,7 +42,7 @@ public class Listener implements AdvancedMessageListener {
         try {
             outstanding = (ArrayList<Transaction>) message.getObject();
 
-//            System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], (outstanding));
+            // System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], (outstanding));
 
             // go through outstanding and perform commands
             for (Transaction tx : outstanding) {
@@ -53,8 +60,9 @@ public class Listener implements AdvancedMessageListener {
 
         groupMembers = spreadMessage.getMembershipInfo().getMembers();
 
-//        System.out.printf("\nmembers updated: %s \t (%d member/s)\n", Arrays.toString(groupMembers), groupMembers.length);
+        // System.out.printf("\nmembers updated: %s \t (%d member/s)\n", Arrays.toString(groupMembers), groupMembers.length);
     }
+
 
     public int getMembers() {
         return groupMembers.length;

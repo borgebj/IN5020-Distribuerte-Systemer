@@ -38,7 +38,7 @@ public interface ClientInterface {
      * @param uniqueId the unique identifier of the transaction.
      * @return a string representing the status (e.g., "completed", "pending").
      */
-    String checkTxStatus(int uniqueId);
+    String checkTxStatus(String uniqueId);
 
     /** 
      * Clears the transaction history.

@@ -1,23 +1,27 @@
 package ass2;
 
-import java.io.BufferedReader;
+// input and file-reading
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+// utility
 import java.util.*;
-
-import ass2.Transaction;
-
-import java.net.InetAddress;
+import java.net.InetAddress;   							 // for internet connection through spread
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
-import spread.SpreadConnection;
-import spread.SpreadException;
+// spread imports
 import spread.SpreadGroup;
 import spread.SpreadMessage;
+import spread.SpreadException;
+import spread.SpreadConnection;
+
 
 public class Client implements ClientInterface {
 
@@ -48,7 +52,16 @@ public class Client implements ClientInterface {
 	private ScheduledExecutorService scheduler;
 
 
-	// constructor
+	/**
+	 * Initiates client for user-input
+	 *
+	 * @param serverAdress address to spread-server
+	 * @param accountName name of account-in-use
+	 * @param numOfReps how many total replicas should be active
+	 * @param clientnr ID for _this_ client
+	 * @throws UnknownHostException
+	 * @throws SpreadException
+	 */
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
@@ -56,14 +69,14 @@ public class Client implements ClientInterface {
 		this.clientnr = clientnr;
 		InitializeClient();
 
-// Scanner for user input
-		try (Scanner scanner = new Scanner(System.in)) {
+		// Scanner for user input
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
 			String command;
 			System.out.println("\n===== [ Awaiting user input ] ===== ");
 
 			while (true) {
 				System.out.print("\n> ");
-				String[] args = scanner.nextLine().trim().split(" ");
+				String[] args = br.readLine().trim().split(" ");
 				command = args[0].toLowerCase();
 
 				if ("exit".equals(command)) {
@@ -73,11 +86,23 @@ public class Client implements ClientInterface {
 				// Execute the requested command
 				executeCommand(command, args);
 			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 		this.exit();
 
 	}
 
+	/**
+	 * Initiates client for file-reading
+	 *
+	 * @param serverAdress address to spread-server
+	 * @param accountName name of account-in-use
+	 * @param numOfReps how many total replicas should be active
+	 * @param clientnr ID for _this_ client
+	 * @throws UnknownHostException
+	 * @throws SpreadException
+	 */
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr, String filename) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
 		this.accountName = accountName;
@@ -99,7 +124,7 @@ public class Client implements ClientInterface {
 				String command = args[0].toLowerCase();
 				executeCommand(command, args);
 
-				// sleep [0.5, 1.5] seconds
+				// sleep between [0.5, 1.5] seconds
 				T = 0.5 + new Random().nextDouble();
 				sleep(T);
 				System.out.println('\n');
@@ -202,8 +227,11 @@ public class Client implements ClientInterface {
 					break;
 
 				case "checktxstatus":
-					int uniqueId = Integer.parseInt(args[1]);
+//					String uniqueId = (args[1] + " " + args[2]);
+					String uniqueId = handleFileTest(args);
 					String status = checkTxStatus(uniqueId);
+
+					System.out.printf("[Status for %s] >> %s\n", uniqueId, status);
 					break;
 
 				case "cleanhistory":
@@ -239,6 +267,46 @@ public class Client implements ClientInterface {
 		catch (NumberFormatException e) {
 			System.err.println("\nInvalid argument provided for ("+command+")");
 		}
+	}
+	
+	/**
+	 * Supports non-edited 'examples.txt' containing "... add transaction ID of ..."
+	 *
+	 * @param args argument of user-input
+	 * @return the uniqueId requested
+	 */
+	private String handleFileTest(String[] args) {
+
+		//TODO: denne kan kanskje slettes, er mer for testing siden example.txt ber oss skrive inn ID
+
+		// case 1: user-specified transaction Id
+		if (args.length == 3) {
+			return (args[1] + " " + args[2]);
+		}
+
+		// case 2: requested from example-file
+
+		// assuming always end in command>
+		String arg = args[args.length - 2]+".0";
+		String command = args[args.length - 3].toLowerCase();
+		String query = command + " " + arg;
+
+		// check both queued and executed lists for requested command
+		String id = null;
+		for (Transaction tx : outstandingCollection) {
+			if (tx.command.equals(query)) {
+				id = tx.uniqueId;
+				break;
+			}
+		}
+		for (Transaction tx : executedList) {
+			if (tx.command.equals(query)) {
+				id = tx.uniqueId;
+				break;
+			}
+		}
+
+		return id;
 	}
 
 	/**
@@ -333,20 +401,32 @@ public class Client implements ClientInterface {
 
 	@Override
 	public void getHistory() {
-		System.out.println("\nExecuted Transactions:");
+		int commandWidth = 20;
+		final String RESET = "\u001B[0m";
+		final String HEADER_COLOR = "\u001B[34m";
+
+		System.out.println("======================================");
+		System.out.println(HEADER_COLOR + "\n[ Executed Transactions ]" + RESET);
+
+		// goes through executed queries
 		for (int i = 0; i < executedList.size(); i++) {
 			Transaction tx = executedList.get(i);
-			System.out.println((i+1) + ".\t"+tx.command);
+			System.out.printf("%d.\t%-" + commandWidth + "s\t%s\n", (i + 1), tx.command, tx.uniqueId);
 		}
 
-		System.out.println("\nOutstanding Transactions:");
+		// goes through queries in queue
+		System.out.println(HEADER_COLOR + "\n[ Outstanding Transactions ]" + RESET);
+		int i = 0;
 		for (Transaction tx : outstandingCollection) {
-			System.out.println(tx.command);
+			System.out.printf("%d.\t%-" + commandWidth + "s\t%s\n", (++i), tx.command, tx.uniqueId);
 		}
+		System.out.println("\n======================================");
 	}
 
+
+
 	@Override
-	public String checkTxStatus(int uniqueId) {
+	public String checkTxStatus(String uniqueId) {
 		// check all outstanding transactions
 		for (Transaction tx : outstandingCollection) {
 			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
@@ -407,13 +487,11 @@ public class Client implements ClientInterface {
 	}
 
 
-
-
 	public void addToAccount(Transaction tx, boolean interest) {
 		double amount = Double.parseDouble(tx.command.split(" ")[1]);
 
 		if (interest) {
-			this.balance = this.balance * (1 + amount/100);
+			this.balance *= (1 + amount/100);
 		}
 		else {
 			this.balance += amount;
