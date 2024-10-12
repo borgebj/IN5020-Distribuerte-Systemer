@@ -3,12 +3,15 @@
 
 ## How to run 
 
+1. Compile spread
 - `cd spread-src-4.0.0`
 - `./configure`
 - `make`
 - `sudo make install`
 
 Now go back to directory folder
+
+2. Run spread
 - `cd ..`
 - `spread -l y -n group8 -c spread.conf`
 
@@ -16,6 +19,7 @@ Create multiple client-instances through the 'Starter' class
 
 This must be done on multiple instances / terminals
 
+3. Run client
 - `java Starter <id> [filename]` 
 
 where <id> uniquely represents the client, and [filename] represents an optional file with queries
@@ -34,7 +38,14 @@ Example 2:  three clients (with file=example.txt):
 
 ## Data flow
 
-1. ...
+1. The spread server starts (point 2 above)
+2. Client is initiated through Starter (point 3 above)
+   - Client is initiated for either file-reading or user-input
+   - Client connects to the spread server, as well as create a listener for itself
+   - Group is joined and client awaits all replicas
+3. Once all replicas are connected, the client initiates a scheduler broadcaster, that repeats a function multicasting outstandingCollection every 10 seconds
+
+- Each client can now perform commands, whilst constantly updating each 10 seconds with actions from other replicas.
 
 ## How it works
 * ...
