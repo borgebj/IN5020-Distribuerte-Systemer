@@ -3,12 +3,18 @@
 
 ## How to run 
 
+__1. Compile spread__
 - `cd spread-src-4.0.0`
 - `./configure`
 - `make`
 - `sudo make install`
 
+__2. Compile maven__
+- `mvn clean package`
+
 Now go back to directory folder
+
+__3. Run spread__
 - `cd ..`
 - `spread -l y -n group8 -c spread.conf`
 
@@ -16,9 +22,10 @@ Create multiple client-instances through the 'Starter' class
 
 This must be done on multiple instances / terminals
 
-- `java Starter <id> [filename]` 
+__4. Run client__
+- `java -cp target/solution.jar:spread.jar <id> [filename]` 
 
-where <id> uniquely represents the client, and [filename] represents an optional file with queries
+where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
 
 ### Examples
 
@@ -32,9 +39,14 @@ Example 2:  three clients (with file=example.txt):
 - `Starter 2 example.txt`
 - `Starter 3 example.txt`
 
-## Data flow
+## Data flow / Wow it works
 
-1. ...
+1. The spread server starts (point 2 above)
+2. Client is initiated through Starter (point 3 above)
+   - Client is initiated for either file-reading or user-input
+        - For file-reading:  input is read through file every $`s \in [0.5, 1.5]`$ seconds
+   - Client connects to the spread server, as well as create a listener for itself
+   - Group is joined and client awaits all replicas
+3. Once all replicas are connected, the client initiates a scheduler broadcaster, that repeats a function multicasting outstandingCollection every 10 seconds
 
-## How it works
-* ...
+- Each client can now perform commands, whilst constantly updating each 10 seconds with actions from other replicas.
