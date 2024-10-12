@@ -16,14 +16,21 @@ Create multiple client-instances through the 'Starter' class
 
 This must be done on multiple instances / terminals
 
-- `Stater <id>` 
+- `java Starter <id> [filename]` 
 
-where [ id ] uniquely represents the client
+where <id> uniquely represents the client, and [filename] represents an optional file with queries
 
-For example 3 clients:
+### Examples
+
+Example 1: three clients (without file):
 - `Starter 1`
 - `Starter 2`
 - `Starter 3`
+
+Example 2:  three clients (with file=example.txt):
+- `Starter 1 example.txt`
+- `Starter 2 example.txt`
+- `Starter 3 example.txt`
 
 ## Data flow
 

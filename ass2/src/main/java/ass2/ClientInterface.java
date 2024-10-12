@@ -38,13 +38,18 @@ public interface ClientInterface {
      * @param uniqueId the unique identifier of the transaction.
      * @return a string representing the status (e.g., "completed", "pending").
      */
-    String checkTxStatus(int uniqueId);
+    String checkTxStatus(String uniqueId);
 
     /** 
      * Clears the transaction history.
      */
     void cleanHistory();
 
+    /**
+     * Returns and prints members in yhe actove group
+     * @return members in group8
+     */
+    List<String> memberInfo();
 
     /** 
      * Causes the client to sleep for the specified duration in seconds.
