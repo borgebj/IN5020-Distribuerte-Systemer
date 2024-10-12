@@ -3,7 +3,7 @@
 
 ## How to run 
 
-1. Compile spread
+__1. Compile spread__
 - `cd spread-src-4.0.0`
 - `./configure`
 - `make`
@@ -11,7 +11,7 @@
 
 Now go back to directory folder
 
-2. Run spread
+__2. Run spread__
 - `cd ..`
 - `spread -l y -n group8 -c spread.conf`
 
@@ -19,7 +19,7 @@ Create multiple client-instances through the 'Starter' class
 
 This must be done on multiple instances / terminals
 
-3. Run client
+__3. Run client__
 - `java Starter <id> [filename]` 
 
 where <id> uniquely represents the client, and [filename] represents an optional file with queries
