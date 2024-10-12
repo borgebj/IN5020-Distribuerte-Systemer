@@ -9,9 +9,12 @@ __1. Compile spread__
 - `make`
 - `sudo make install`
 
+__2. Compile maven__
+- `mvn clean package`
+
 Now go back to directory folder
 
-__2. Run spread__
+__3. Run spread__
 - `cd ..`
 - `spread -l y -n group8 -c spread.conf`
 
@@ -19,8 +22,8 @@ Create multiple client-instances through the 'Starter' class
 
 This must be done on multiple instances / terminals
 
-__3. Run client__
-- `java Starter <id> [filename]` 
+__4. Run client__
+- `java -cp target/solution.jar:spread.jar <id> [filename]` 
 
 where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
 
