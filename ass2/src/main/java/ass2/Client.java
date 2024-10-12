@@ -392,7 +392,7 @@ public class Client implements ClientInterface {
 
 		try {
 			ArrayList<Transaction> missedTransactions = (ArrayList<Transaction>) catchUpCollection;
-			msg.setObject((Serializable) missedTransactions);
+			msg.setObject((Serializable) getQuickBalance());
 			connection.multicast(msg);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -503,11 +503,11 @@ public class Client implements ClientInterface {
 
 	public void printMemberInfo(List<String> memberInfo){
 		//takes list of members and prints 		
-		System.out.printf("---------[ Spreadgroup %s Members ]----------\n", accountName);
+		System.out.printf("===========[ Spreadgroup %s Members ]===========\n\n", accountName);
 		for (String memberString : memberInfo) {
 			System.out.println(memberString);
 		}
-		System.out.println("-------------------------------------------------");
+		System.out.println("\n====================================================");
 
 	}
 
