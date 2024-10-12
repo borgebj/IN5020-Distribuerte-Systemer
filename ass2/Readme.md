@@ -36,7 +36,7 @@ Example 2:  three clients (with file=example.txt):
 - `Starter 2 example.txt`
 - `Starter 3 example.txt`
 
-## Data flow
+## Data flow / Wow it works
 
 1. The spread server starts (point 2 above)
 2. Client is initiated through Starter (point 3 above)
@@ -46,6 +46,3 @@ Example 2:  three clients (with file=example.txt):
 3. Once all replicas are connected, the client initiates a scheduler broadcaster, that repeats a function multicasting outstandingCollection every 10 seconds
 
 - Each client can now perform commands, whilst constantly updating each 10 seconds with actions from other replicas.
-
-## How it works
-* ...
