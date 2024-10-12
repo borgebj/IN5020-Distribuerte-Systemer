@@ -40,6 +40,7 @@ public class Client implements ClientInterface {
 	public int order_counter;
 	public int outstanding_counter;
 	public List<Transaction> executedList;
+	public Collection<Transaction> catchUpCollection;
 	public Collection<Transaction> outstandingCollection;
 
 	
@@ -140,7 +141,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		this.listener = new Listener(this, this.clientnr);
+		this.listener = new Listener(this, this.clientnr, numOfReps);
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
 
@@ -157,6 +158,8 @@ public class Client implements ClientInterface {
 		group.join(connection, "group8");
 
 		// wait for "numOfReps" has joined group8
+
+		
 		while (listener.getMembers()  < numOfReps) {
 			this.sleep(0.5);
 			System.out.printf("Client%d waiting (%d / %d)\n", clientnr, listener.getMembers(), numOfReps);
@@ -239,7 +242,8 @@ public class Client implements ClientInterface {
 					break;
 
 				case "memberinfo":
-					memberInfo();
+					List <String> memberInfo = memberInfo();
+					printMemberInfo(memberInfo);
 					break;
 
 				case "sleep":
@@ -375,7 +379,37 @@ public class Client implements ClientInterface {
 
 		outstandingCollection.add(tx);
 		outstanding_counter++;
+		//catchUpCollection.add(tx);
 	}
+
+	public void catchUpClient(SpreadGroup newMember) {
+        SpreadMessage msg = new SpreadMessage();
+        msg.addGroup(group);
+        msg.setFifo();
+        msg.setReliable();
+		
+			System.out.println("we get here kinda " + catchUpCollection.size());
+
+		try {
+			ArrayList<Transaction> missedTransactions = (ArrayList<Transaction>) catchUpCollection;
+			msg.setObject((Serializable) getQuickBalance());
+			connection.multicast(msg);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	
+			
+    }
+	private void addCommandToCollection(String command) {
+
+		// Transaction-object associated with command
+		Transaction tx = new Transaction();
+		tx.uniqueId = (accountName + " " + outstanding_counter);
+
+		outstandingCollection.add(tx);
+		outstanding_counter++;
+	}
+
 
 	@Override
 	public double getQuickBalance() {
@@ -384,8 +418,8 @@ public class Client implements ClientInterface {
 
 	@Override
 	public double getSyncedBalance() {
-		//TODO:
-		return 0;
+		addCommandToCollection("getsyncebalance");
+		return 0.0;
 	}
 
 	@Override
@@ -430,13 +464,15 @@ public class Client implements ClientInterface {
 		// check all outstanding transactions
 		for (Transaction tx : outstandingCollection) {
 			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
+				
 				return "Pending";
 			}
 		}
 
 		// check all executed transactions
 		for (Transaction tx : executedList) {
-			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
+			System.out.println("CHECKING EXEC LIST " + tx.uniqueId);
+			if (tx.uniqueId.equals(String.valueOf(accountName + " " + uniqueId))) {
 				return "Executed";
 			}
 		}
@@ -450,8 +486,29 @@ public class Client implements ClientInterface {
 
 	@Override
 	public List<String> memberInfo() {
-		//TODO:
-		return null;
+		
+		//Takes list of members from listener and builds a pretty print
+		int x =0;
+		List<String> members = new ArrayList<>();
+		for (SpreadGroup member : this.listener.groupMembers) {
+			x++;
+			String[] seperateId = member.toString().split("#");
+			String memberPrint= String.format("Member %d: ID = %s",x, seperateId[1]);
+			//System.out.println(onlyMemberName[1]);
+			members.add(memberPrint);
+			
+		}
+		return members;
+	}
+
+	public void printMemberInfo(List<String> memberInfo){
+		//takes list of members and prints 		
+		System.out.printf("===========[ Spreadgroup %s Members ]===========\n\n", accountName);
+		for (String memberString : memberInfo) {
+			System.out.println(memberString);
+		}
+		System.out.println("\n====================================================");
+
 	}
 
 	@Override
