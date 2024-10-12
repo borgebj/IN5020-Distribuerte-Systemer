@@ -25,6 +25,10 @@ import spread.SpreadConnection;
 
 public class Client implements ClientInterface {
 
+	// formatting / design
+	private final String RESET = "\u001B[0m";
+	private final String HEADER_COLOR = "\u001B[34m";
+
 
 	// Client info
 	private String serverAdress;
@@ -239,7 +243,8 @@ public class Client implements ClientInterface {
 					break;
 
 				case "memberinfo":
-					memberInfo();
+					List<String> members = memberInfo();
+					printMemberInfo(members);
 					break;
 
 				case "sleep":
@@ -402,8 +407,6 @@ public class Client implements ClientInterface {
 	@Override
 	public void getHistory() {
 		int commandWidth = 20;
-		final String RESET = "\u001B[0m";
-		final String HEADER_COLOR = "\u001B[34m";
 
 		System.out.println("======================================");
 		System.out.println(HEADER_COLOR + "\n[ Executed Transactions ]" + RESET);
@@ -450,8 +453,33 @@ public class Client implements ClientInterface {
 
 	@Override
 	public List<String> memberInfo() {
-		//TODO:
-		return null;
+
+		//Takes list of members from listener and builds a pretty print
+		int x =0;
+		List<String> members = new ArrayList<>();
+		for (SpreadGroup member : this.listener.groupMembers) {
+			x++;
+			String[] seperateId = member.toString().split("#");
+			String memberPrint= String.format("Member %d: ID = %s",x, seperateId[1]);
+			//System.out.println(onlyMemberName[1]);
+			members.add(memberPrint);
+
+		}
+		return members;
+	}
+
+	/**
+	 * takes list of members and prints them
+	 *
+	 * @param memberInfo list of members
+	 */
+	public void printMemberInfo(List<String> memberInfo){
+		System.out.printf("===========%s[ Spreadgroup %s Members ]%s===========\n\n", HEADER_COLOR, accountName, RESET);
+		for (String memberString : memberInfo) {
+			System.out.println(memberString);
+		}
+		System.out.println("\n====================================================");
+
 	}
 
 	@Override
