@@ -22,7 +22,7 @@ This must be done on multiple instances / terminals
 __3. Run client__
 - `java Starter <id> [filename]` 
 
-where `<id>` uniquely represents the client, and [filename] represents an optional file with queries
+where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
 
 ### Examples
 
