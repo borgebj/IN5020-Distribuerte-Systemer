@@ -41,7 +41,7 @@ Example 2:  three clients (with file=example.txt):
 1. The spread server starts (point 2 above)
 2. Client is initiated through Starter (point 3 above)
    - Client is initiated for either file-reading or user-input
-        - For file-reading:  input is read through file every $`s \in [0.5, 1.5] seconds`$
+        - For file-reading:  input is read through file every $`s \in [0.5, 1.5]` seconds$
    - Client connects to the spread server, as well as create a listener for itself
    - Group is joined and client awaits all replicas
 3. Once all replicas are connected, the client initiates a scheduler broadcaster, that repeats a function multicasting outstandingCollection every 10 seconds
