@@ -18,12 +18,11 @@ import java.util.HashSet;
 public class Listener implements AdvancedMessageListener {
 
     int id;
+    int numOfReps;
     Client client;
     SpreadGroup[] groupMembers = new SpreadGroup[0];
-    int numOfReps;
+    Set<String> previouslyConnectedMembers = new HashSet<String>();
 
-    
-   Set< String> previouslyConnectedMembers = new HashSet<String>();
     public Listener(Client client, int id, int numOfReps) {
         this.client = client;
         this.id = id;
