@@ -203,9 +203,11 @@ public class Client implements ClientInterface {
 		System.out.println("gethistory               - Show transaction history");
 		System.out.println("checktxstatus <uniqueId> - Check the status of a transaction by its unique ID");
 		System.out.println("cleanhistory             - Clear all executed transaction history");
+		System.out.println("memberinfo               - Displays members of current connection-session");
 		System.out.println("sleep <duration>         - Pause the client for the specified duration in seconds");
 		System.out.println("help                     - Display this help menu");
 		System.out.println("exit                     - Exit the application");
+		System.out.println("clear                    - Clears the screen");
 		System.out.println("=============================");
 	}
 
@@ -218,7 +220,7 @@ public class Client implements ClientInterface {
 					break;
 
 				case "getsyncedbalance":
-					System.out.printf("[Balance] >> %f\n", getSyncedBalance());
+					System.out.printf("[Synced Balance] >> %f\n", getSyncedBalance());
 					break;
 
 				case "deposit":
@@ -259,6 +261,10 @@ public class Client implements ClientInterface {
 
 				case "exit":
 					exit();
+					break;
+
+				case "clear":
+					System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 					break;
 
 				case "help":
@@ -327,8 +333,8 @@ public class Client implements ClientInterface {
 	 */
 	private String getClosestCommand(String input) {
 		String[] commands = {
-				"getquickbalance", "getsyncebalance", "deposit", "addinterest", "gethistory",
-				"checktxstatus", "cleanhistory", "sleep", "help", "exit"
+				"getquickbalance", "getsyncedbalance", "deposit", "addinterest", "gethistory",
+				"checktxstatus", "memberinfo", "cleanhistory", "sleep", "help", "clear", "exit"
 		};
 
 		String closestCommand = null;
@@ -394,8 +400,16 @@ public class Client implements ClientInterface {
 
 	@Override
 	public double getSyncedBalance() {
-		//TODO:
-		return 0;
+		while (!outstandingCollection.isEmpty()) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				Thread.currentThread().interrupt();
+				System.err.println("Sync balance interrupted");
+				return balance;
+			}
+		}
+		return balance;
 	}
 
 	@Override
@@ -518,6 +532,10 @@ public class Client implements ClientInterface {
 			sleep(1);
 			System.exit(0);
 		}
+	}
+
+	public String getAccountName() {
+		return accountName;
 	}
 
 
