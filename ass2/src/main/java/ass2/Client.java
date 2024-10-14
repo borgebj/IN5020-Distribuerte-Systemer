@@ -1,7 +1,7 @@
 package ass2;
 
 // input and file-reading
-import java.io.FileReader;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.BufferedReader;
@@ -10,11 +10,10 @@ import java.io.InputStreamReader;
 // utility
 import java.util.*;
 import java.net.InetAddress;   							 // for internet connection through spread
+import java.util.concurrent.TimeUnit;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
 
 // spread imports
 import spread.SpreadGroup;
@@ -116,7 +115,13 @@ public class Client implements ClientInterface {
 		InitializeClient();
 
 		// Iterate File
-		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+		InputStream inputStream = Client.class.getClassLoader().getResourceAsStream(filename);
+		if (inputStream == null) {
+			System.err.printf("File '%s' not found!\n", filename);
+			exit();
+		}
+
+		try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
 
 			String line;
 			double T;
@@ -510,6 +515,7 @@ public class Client implements ClientInterface {
 			System.err.println("Error during disconnection: " + e.getMessage());
 		} finally {
 			System.out.println("\nExiting ...");
+			sleep(1);
 			System.exit(0);
 		}
 	}

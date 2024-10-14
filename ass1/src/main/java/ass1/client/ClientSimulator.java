@@ -21,7 +21,7 @@ public class ClientSimulator {
 	 */
 	private static ArrayList<InstructionInfo> parseInstructions()
 	{
-		ArrayList<InstructionInfo> instructions = new ArrayList<>();
+		ArrayList<InstructionInfo> instructions = new ArrayList<InstructionInfo>();
 
 		InputStream inputStream = ClientSimulator.class.getClassLoader().getResourceAsStream(filepath);
 		if (inputStream == null) {
