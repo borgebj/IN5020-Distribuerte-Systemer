@@ -6,15 +6,16 @@ public interface ClientInterface {
     
     /** 
      * Returns the current balance without synchronizing with any previously issued transactions.
+     * @param format if add input-line after or not
      * @return the current balance.
      */
-    double getQuickBalance();
+    void getQuickBalance(boolean format);
 
     /** 
      * Returns the synchronized balance after applying outstanding transactions.
      * @return the synchronized balance.
      */
-    double getSyncedBalance();
+    void getSyncedBalance();
 
     /** 
      * Deposits the specified amount into the account.

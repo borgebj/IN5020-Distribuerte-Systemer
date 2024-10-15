@@ -127,8 +127,10 @@ public class Client implements ClientInterface {
 			double T;
 			while ((line = br.readLine()) != null) {
 
+				// prints command from file
 				System.out.println(line);
 
+				// parse command and argument, run it
 				String[] args = line.trim().split(" ");
 				String command = args[0].toLowerCase();
 				executeCommand(command, args);
@@ -149,7 +151,7 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		this.listener = new Listener(this, this.clientnr);
+		this.listener = new Listener(this, this.clientnr, this.accountName);
 		this.connection.add(listener);
 		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
 
@@ -216,11 +218,11 @@ public class Client implements ClientInterface {
 		try {
 			switch (command) {
 				case "getquickbalance":
-					System.out.printf("[Balance] >> %f\n", getQuickBalance());
+					getQuickBalance(false);
 					break;
 
 				case "getsyncedbalance":
-					System.out.printf("[Synced Balance] >> %f\n", getSyncedBalance());
+					getSyncedBalance();
 					break;
 
 				case "deposit":
@@ -238,10 +240,9 @@ public class Client implements ClientInterface {
 					break;
 
 				case "checktxstatus":
-//					String uniqueId = (args[1] + " " + args[2]);
+//					String uniqueId = (args[1] + " " + args[2]); // <-- uten 'handleFileTest'
 					String uniqueId = handleFileTest(args);
 					String status = checkTxStatus(uniqueId);
-
 					System.out.printf("[Status for %s] >> %s\n", uniqueId, status);
 					break;
 
@@ -264,7 +265,7 @@ public class Client implements ClientInterface {
 					break;
 
 				case "clear":
-					System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+					System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 					break;
 
 				case "help":
@@ -394,22 +395,16 @@ public class Client implements ClientInterface {
 	}
 
 	@Override
-	public double getQuickBalance() {
-		return balance;
+	public void getQuickBalance(boolean format) {
+		if (format) System.out.println("\n");
+		System.out.printf("[Balance] >> %f\n", balance);
+		if (format) System.out.print("\n> ");
 	}
 
 	@Override
-	public double getSyncedBalance() {
-		while (!outstandingCollection.isEmpty()) {
-			try {
-				Thread.sleep(100);
-			} catch (Exception e) {
-				Thread.currentThread().interrupt();
-				System.err.println("Sync balance interrupted");
-				return balance;
-			}
-		}
-		return balance;
+	public void getSyncedBalance() {
+		System.out.println("(balance will be presented shortly)");
+		addCommandToCollection("getsyncedbalance", 0.0);
 	}
 
 	@Override
@@ -533,11 +528,6 @@ public class Client implements ClientInterface {
 			System.exit(0);
 		}
 	}
-
-	public String getAccountName() {
-		return accountName;
-	}
-
 
 	public void addToAccount(Transaction tx, boolean interest) {
 		double amount = Double.parseDouble(tx.command.split(" ")[1]);
