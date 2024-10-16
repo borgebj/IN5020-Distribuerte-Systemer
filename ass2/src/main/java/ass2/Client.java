@@ -401,6 +401,24 @@ public class Client implements ClientInterface {
 		if (format) System.out.print("\n> ");
 	}
 
+	/**
+	 * Naive implementation - waits for outstanding collection to be empty
+	 * @return balance
+	 */
+//	@Override
+//	public double getSyncedBalance() {
+//		while (!outstandingCollection.isEmpty()) {
+//			try {
+//				Thread.sleep(100);
+//			} catch (Exception e) {
+//				Thread.currentThread().interrupt();
+//				System.err.println("Sync balance interrupted");
+//				return balance;
+//			}
+//		}
+//		return balance;
+//	}
+
 	@Override
 	public void getSyncedBalance() {
 		System.out.println("(balance will be presented shortly)");
@@ -496,6 +514,11 @@ public class Client implements ClientInterface {
 
 	}
 
+	/**
+	 * Sleeps for given duration
+	 *
+	 * @param duration the duration to sleep.
+	 */
 	@Override
 	public void sleep(double duration) {
 		try {
@@ -529,6 +552,24 @@ public class Client implements ClientInterface {
 		}
 	}
 
+	/**
+	 * Removes transaction from outstandingCollection
+	 * (Inspired by the wisdom of Selleban™)
+	 *
+	 * @param tx the transaction object
+	 */
+	public void removeFromOutstanding(Transaction tx) {
+		outstandingCollection.removeIf( e ->
+				e.uniqueId.equals(tx.uniqueId) &&
+						e.command.equals(tx.command));
+	}
+
+	/**
+	 * Adds balance from given transaction to this account
+	 *
+	 * @param tx Transaction with command and amount
+	 * @param interest if interest or not
+	 */
 	public void addToAccount(Transaction tx, boolean interest) {
 		double amount = Double.parseDouble(tx.command.split(" ")[1]);
 
@@ -539,10 +580,8 @@ public class Client implements ClientInterface {
 			this.balance += amount;
 		}
 
-		// remove from outstanding, add to executed
-		outstandingCollection.removeIf( e ->
-				e.uniqueId.equals(tx.uniqueId) &&
-				e.command.equals(tx.command));
+		// removes from outstanding, adds to executed
+		removeFromOutstanding(tx);
 		this.executedList.add(tx);
 		order_counter++;
 	}
