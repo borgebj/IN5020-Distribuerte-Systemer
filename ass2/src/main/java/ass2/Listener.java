@@ -2,12 +2,15 @@ package ass2;
 
 // utility
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 // spread imports
 import spread.SpreadGroup;
 import spread.SpreadMessage;
 import spread.SpreadException;
 import spread.AdvancedMessageListener;
+import spread.MembershipInfo;
 
 
 public class Listener implements AdvancedMessageListener {
@@ -65,11 +68,26 @@ public class Listener implements AdvancedMessageListener {
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
 
-        groupMembers = spreadMessage.getMembershipInfo().getMembers();
+      // Ensure the set is always up-to-date with group members             
+        MembershipInfo membershipInfo = spreadMessage.getMembershipInfo();
+        groupMembers = membershipInfo.getMembers();
 
-        // System.out.printf("\nmembers updated: %s \t (%d member/s)\n", Arrays.toString(groupMembers), groupMembers.length);
+        //Prints Ids of joining and leaving members
+        if (membershipInfo.isCausedByDisconnect()) {
+            SpreadGroup memberDisconnected =  membershipInfo.getLeft();
+            System.out.printf("\nClient %s disconnected\n", getIdFromMemberShipInfo(memberDisconnected));
+        }
+    
+        if (membershipInfo.isCausedByJoin()) {
+            SpreadGroup newMember = membershipInfo.getJoined();
+            System.out.printf("\nClient %s Joined\n", getIdFromMemberShipInfo(newMember));
+        }
+        
     }
 
+    public String getIdFromMemberShipInfo(SpreadGroup member ){
+        return member.toString().split("#")[1];
+    }
 
     public int getMembers() {
         return groupMembers.length;
