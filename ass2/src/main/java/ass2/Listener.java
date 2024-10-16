@@ -40,10 +40,11 @@ public class Listener implements AdvancedMessageListener {
                 client.addToAccount(tx, true);
                 break;
 
+            // performs only for the receiver who sendt it
             case "getsyncedbalance":
                 if (msg.getSender().toString().equals(spreadIdentifier)) {
                     client.getQuickBalance(true);
-                    client.addToAccount(tx, false);  // <-- Makes sure it's removed from outstanding
+                    client.removeFromOutstanding(tx);
                 }
         }
     }
