@@ -17,13 +17,18 @@ public class Listener implements AdvancedMessageListener {
 
     int id;
     Client client;
-    SpreadGroup[] groupMembers = new SpreadGroup[0];
-    public Listener(Client client, int id) {
+    String spreadIdentifier; // how client is presented through Spread
+    String accountName;    SpreadGroup[] groupMembers = new SpreadGroup[0];
+
+
+    public Listener(Client client, int id, String accountName) {
         this.client = client;
         this.id = id;
+        this.accountName = accountName;
+        this.spreadIdentifier = String.format("#%d#%s", id, accountName);
     }
 
-    private void process(Transaction tx) {
+    private void process(Transaction tx, SpreadMessage msg) {
 
         // perform the requested action
         switch (tx.command.split(" ")[0]) {
@@ -34,6 +39,12 @@ public class Listener implements AdvancedMessageListener {
             case "addinterest":
                 client.addToAccount(tx, true);
                 break;
+
+            case "getsyncedbalance":
+                if (msg.getSender().toString().equals(spreadIdentifier)) {
+                    client.getQuickBalance(true);
+                    client.addToAccount(tx, false);  // <-- Makes sure it's removed from outstanding
+                }
         }
     }
 
@@ -43,11 +54,9 @@ public class Listener implements AdvancedMessageListener {
         try {
             outstanding = (ArrayList<Transaction>) message.getObject();
 
-            // System.out.printf("from %s = %s\n", message.getSender().toString().split("group")[0], (outstanding));
-
             // go through outstanding and perform commands
             for (Transaction tx : outstanding) {
-                process(tx);
+                process(tx, message);
             }
 
         } catch (SpreadException e) {
