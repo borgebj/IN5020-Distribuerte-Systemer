@@ -2,8 +2,6 @@ package ass2;
 
 // utility
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 // spread imports
 import spread.SpreadGroup;
@@ -28,6 +26,12 @@ public class Listener implements AdvancedMessageListener {
         this.spreadIdentifier = String.format("#%d#%s", id, accountName);
     }
 
+    /**
+     * Given a transaction-object and a message, process it by executing the corresponding command
+     *
+     * @param tx Transaction containing command
+     * @param msg message containing sender
+     */
     private void process(Transaction tx, SpreadMessage msg) {
 
         // perform the requested action
@@ -50,6 +54,13 @@ public class Listener implements AdvancedMessageListener {
     }
 
 
+    /**
+     * Called every time a message is picked up (multicasted)
+     * Processes commands in the message-list
+     *
+     * @param message multicasted message
+     */
+    @Override
     public void regularMessageReceived(SpreadMessage message) {
         ArrayList<Transaction> outstanding = null;
         try {
@@ -66,6 +77,11 @@ public class Listener implements AdvancedMessageListener {
 
     }
 
+    /**
+     * Called every time a member has joined the connection
+     *
+     * @param spreadMessage message containing member info
+     */
     @Override
     public void membershipMessageReceived(SpreadMessage spreadMessage) {
 
@@ -86,10 +102,17 @@ public class Listener implements AdvancedMessageListener {
         
     }
 
+    /**
+     * @param member A spreadgroup member
+     * @return the ID of given member
+     */
     public String getIdFromMemberShipInfo(SpreadGroup member ){
         return member.toString().split("#")[1];
     }
 
+    /**
+     * @return members of current Spread-session through memberinfo
+     */
     public int getMembers() {
         return groupMembers.length;
     }

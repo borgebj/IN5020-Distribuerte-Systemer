@@ -24,7 +24,8 @@ import spread.SpreadConnection;
 
 public class Client implements ClientInterface {
 
-	// formatting / design
+	// formatting / design / run-info
+	private Date startTime;
 	private final String RESET = "\u001B[0m";
 	private final String HEADER_COLOR = "\u001B[34m";
 
@@ -62,8 +63,8 @@ public class Client implements ClientInterface {
 	 * @param accountName name of account-in-use
 	 * @param numOfReps how many total replicas should be active
 	 * @param clientnr ID for _this_ client
-	 * @throws UnknownHostException
-	 * @throws SpreadException
+	 * @throws UnknownHostException for spread-issues
+	 * @throws SpreadException for spread-issues
 	 */
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
@@ -103,8 +104,8 @@ public class Client implements ClientInterface {
 	 * @param accountName name of account-in-use
 	 * @param numOfReps how many total replicas should be active
 	 * @param clientnr ID for _this_ client
-	 * @throws UnknownHostException
-	 * @throws SpreadException
+	 * @throws UnknownHostException for spread-issues
+	 * @throws SpreadException for spread-issues
 	 */
 	public Client(String serverAdress, String accountName, int numOfReps, int clientnr, String filename) throws UnknownHostException, SpreadException {
 		this.serverAdress = serverAdress;
@@ -127,12 +128,12 @@ public class Client implements ClientInterface {
 			double T;
 			while ((line = br.readLine()) != null) {
 
-				// prints command from file
-				System.out.println(line);
-
-				// parse command and argument, run it
+				// parse command and argument
 				String[] args = line.trim().split(" ");
 				String command = args[0].toLowerCase();
+
+				// run, print timestamp
+				System.out.printf("%.1f: %s%n", getTimestamp(), line);
 				executeCommand(command, args);
 
 				// sleep between [0.5, 1.5] seconds
@@ -146,7 +147,13 @@ public class Client implements ClientInterface {
 		}
 		this.exit();
 	}
-	
+
+	/**
+	 * Initialization of the client - various info is set such as Spread-info, group-info and the scheduler
+	 *
+	 * @throws UnknownHostException for spread-issues
+	 * @throws SpreadException for spread-issues
+	 */
 	private void InitializeClient() throws UnknownHostException, SpreadException{
 
 		// Connects to spread server
@@ -174,10 +181,13 @@ public class Client implements ClientInterface {
 		}
 		System.out.println("\n\nAll replicas has joined group8\n");
 		sleep(2);
-		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n	\n\n\n\n\n\n\n\n");
 
 		// start broadcast
 		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
+
+		// set timestamp timer
+		this.startTime = new Date();
 	}
 
 	/**
@@ -189,6 +199,9 @@ public class Client implements ClientInterface {
 		msg.setFifo();
 		msg.setReliable();
 		try {
+			System.out.printf("%nTimestamp %.1f%n", getTimestamp());
+			System.out.printf("\t"+HEADER_COLOR+"Rep%d broadcasts:%n"+RESET, clientnr);
+			outstandingCollection.forEach(item -> System.out.print("\t\t" + item));
 			msg.setObject((Serializable) this.outstandingCollection);
 			connection.multicast(msg);
 		} catch (Exception e) {
@@ -196,6 +209,9 @@ public class Client implements ClientInterface {
 		}
 	}
 
+	/**
+	 * A simple help-interface to show the user in the terminal
+	 */
 	private void displayHelp() {
 		System.out.println("\n==== [ Command Help ] ====");
 		System.out.println("getquickbalance          - Get the current balance (quick, may be outdated)");
@@ -214,6 +230,12 @@ public class Client implements ClientInterface {
 	}
 
 
+	/**
+	 * Given a command and its arguments, execute the correct one through switch-case
+	 *
+	 * @param command command to be executed
+	 * @param args args to provide with command
+	 */
 	private void executeCommand(String command, String[] args) {
 		try {
 			switch (command) {
@@ -285,16 +307,22 @@ public class Client implements ClientInterface {
 			System.err.println("\nInvalid argument provided for ("+command+")");
 		}
 	}
+
+	/**
+	 * @return current timestamp in seconds
+	 */
+	private double getTimestamp() {
+		return (new Date().getTime() - startTime.getTime()) / 1000.0;
+	}
 	
 	/**
 	 * Supports non-edited 'examples.txt' containing "... add transaction ID of ..."
+	 * (makes it possible to run raw unedited input-files)
 	 *
 	 * @param args argument of user-input
 	 * @return the uniqueId requested
 	 */
 	private String handleFileTest(String[] args) {
-
-		//TODO: denne kan kanskje slettes, er mer for testing siden example.txt ber oss skrive inn ID
 
 		// case 1: user-specified transaction Id
 		if (args.length == 3) {
@@ -383,10 +411,17 @@ public class Client implements ClientInterface {
 		return dp[a.length()][b.length()];
 	}
 
+	/**
+	 * Given a command and its amount, add it to future broadcasting list
+	 *
+	 * @param command command to be broadcast
+	 * @param amount amount to be provided with command
+	 */
 	private void addCommandToCollection(String command, double amount) {
 
 		// Transaction-object associated with command
 		Transaction tx = new Transaction();
+		tx.timestamp = getTimestamp();;
 		tx.command = (command + " " + amount);
 		tx.uniqueId = (accountName + " " + outstanding_counter);
 
@@ -419,23 +454,38 @@ public class Client implements ClientInterface {
 //		return balance;
 //	}
 
+	/**
+	 * Prints out synchronized balance (later) by adding the command to broadcasting list
+	 */
 	@Override
 	public void getSyncedBalance() {
 		System.out.println("(balance will be presented shortly)");
 		addCommandToCollection("getsyncedbalance", 0.0);
 	}
 
+	/**
+	 * Deposit given amount to all replicas
+	 *
+	 * @param amount the amount to be deposited.
+	 */
 	@Override
 	public void deposit(double amount) {
 		addCommandToCollection("deposit", amount);
 	}
 
+	/**
+	 * Adds given percent interest to all replicas
+	 *
+	 * @param percent the percentage of interest to be added.
+	 */
 	@Override
 	public void addInterest(double percent) {
 		addCommandToCollection("addinterest", percent);
 	}
 
-
+	/**
+	 * Prints the 'history' of this replica, meaning its executing and outstanding ist
+	 */
 	@Override
 	public void getHistory() {
 		int commandWidth = 20;
@@ -459,7 +509,12 @@ public class Client implements ClientInterface {
 	}
 
 
-
+	/**
+	 * Given an ID, check its current status
+	 *
+	 * @param uniqueId the unique identifier of the transaction.
+	 * @return status in string-form
+	 */
 	@Override
 	public String checkTxStatus(String uniqueId) {
 		// check all outstanding transactions
@@ -478,11 +533,19 @@ public class Client implements ClientInterface {
 		return "Transaction not found";
 	}
 
+	/**
+	 * Cleans history by emptying executed list
+	 */
 	@Override
 	public void cleanHistory() {
 		executedList.clear();
 	}
 
+	/**
+	 * Prints all members of current connection
+	 *
+	 * @return List of members
+	 */
 	@Override
 	public List<String> memberInfo() {
 
