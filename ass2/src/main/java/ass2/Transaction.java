@@ -7,6 +7,6 @@ public class Transaction implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%.1f:%s%n",timestamp,  command);
+        return String.format("%.1f: %s%n",timestamp,  command);
     }
 }
