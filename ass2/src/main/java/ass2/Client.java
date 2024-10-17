@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 // spread imports
 import spread.SpreadGroup;
@@ -34,9 +35,11 @@ public class Client implements ClientInterface {
 	private String serverAdress;
 	private String accountName;
 	private int clientnr;
+	private String clientName;
 	private int numOfReps;
 	private String filename;
 	private Listener listener;
+	private boolean usingFile;
 
 
 	// Bank info
@@ -71,6 +74,7 @@ public class Client implements ClientInterface {
 		this.accountName = accountName;
 		this.numOfReps = numOfReps;
 		this.clientnr = clientnr;
+		this.usingFile = false;
 		InitializeClient();
 
 		// Scanner for user input
@@ -113,6 +117,7 @@ public class Client implements ClientInterface {
 		this.numOfReps = numOfReps;
 		this.filename = filename;
 		this.clientnr = clientnr;
+		this.usingFile = true;
 		InitializeClient();
 
 		// Iterate File
@@ -186,8 +191,9 @@ public class Client implements ClientInterface {
 		// start broadcast
 		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
 
-		// set timestamp timer
+		// set timestamp timer and set name of client
 		this.startTime = new Date();
+		this.clientName = String.format("Rep%d", clientnr);
 	}
 
 	/**
@@ -199,9 +205,23 @@ public class Client implements ClientInterface {
 		msg.setFifo();
 		msg.setReliable();
 		try {
-			System.out.printf("%nTimestamp %.1f%n", getTimestamp());
-			System.out.printf("\t"+HEADER_COLOR+"Rep%d broadcasts:%n"+RESET, clientnr);
-			outstandingCollection.forEach(item -> System.out.print("\t\t" + item));
+//			System.out.printf("%nTimestamp %.1f%n", getTimestamp());
+//			System.out.printf("\t"+HEADER_COLOR+"%s broadcasts:%n"+RESET, clientName, clientnr);
+//			outstandingCollection.forEach(item -> System.out.print("\t\t" + item));
+
+			// prints as one string
+			String output =
+					"\n================================================" +
+					String.format("%nTimestamp %.1f%n", getTimestamp()) +
+					String.format("\t%s%s broadcasts:%s%n", HEADER_COLOR, clientName, RESET) +
+					outstandingCollection.stream()
+							.map(item -> "\t\t" + item)
+							.collect(Collectors.joining("")) +
+							"================================================\n\n";
+			System.out.print("\n"+output+"\n");
+
+
+
 			msg.setObject((Serializable) this.outstandingCollection);
 			connection.multicast(msg);
 		} catch (Exception e) {
@@ -240,7 +260,7 @@ public class Client implements ClientInterface {
 		try {
 			switch (command) {
 				case "getquickbalance":
-					getQuickBalance(false);
+					getQuickBalance(false, false);
 					break;
 
 				case "getsyncedbalance":
@@ -423,17 +443,17 @@ public class Client implements ClientInterface {
 		Transaction tx = new Transaction();
 		tx.timestamp = getTimestamp();;
 		tx.command = (command + " " + amount);
-		tx.uniqueId = (accountName + " " + outstanding_counter);
+		tx.uniqueId = (clientName + " " + outstanding_counter);
 
 		outstandingCollection.add(tx);
 		outstanding_counter++;
 	}
 
 	@Override
-	public void getQuickBalance(boolean format) {
-		if (format) System.out.println("\n");
-		System.out.printf("[Balance] >> %f\n", balance);
-		if (format) System.out.print("\n> ");
+	public void getQuickBalance(boolean format, boolean synced) {
+		if (format && !usingFile) System.out.println("\n");
+		System.out.printf("[%sBalance] >> %.2f\n", synced ? "(synced) " : "", balance);
+		if (format && !usingFile) System.out.print("\n> ");
 	}
 
 	/**
@@ -517,6 +537,7 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public String checkTxStatus(String uniqueId) {
+
 		// check all outstanding transactions
 		for (Transaction tx : outstandingCollection) {
 			if (tx.uniqueId.equals(String.valueOf(uniqueId))) {
@@ -530,6 +551,7 @@ public class Client implements ClientInterface {
 				return "Executed";
 			}
 		}
+		exit();
 		return "Transaction not found";
 	}
 
@@ -556,7 +578,6 @@ public class Client implements ClientInterface {
 			x++;
 			String[] seperateId = member.toString().split("#");
 			String memberPrint= String.format("Member %d: ID = %s",x, seperateId[1]);
-			//System.out.println(onlyMemberName[1]);
 			members.add(memberPrint);
 
 		}
