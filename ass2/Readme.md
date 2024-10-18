@@ -25,8 +25,8 @@ This must be done on multiple instances / terminals
 __4. Run client__
 - `java -cp target/solution.jar:spread.jar ass2.Starter <id> [filename]` 
 
-- where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
-- 'Starter' is the file that starts Client with given parameters
+where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
+'Starter' is the file that starts Client with given parameters
 
 ### Examples
 
