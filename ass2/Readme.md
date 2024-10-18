@@ -23,9 +23,10 @@ Create multiple client-instances through the 'Starter' class
 This must be done on multiple instances / terminals
 
 __4. Run client__
-- `java -cp target/solution.jar:spread.jar <id> [filename]` 
+- `java -cp target/solution.jar:spread.jar ass2.Starter <id> [filename]` 
 
-where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
+- where `<id>` uniquely represents the client, and `[filename]` represents an optional file with queries
+- 'Starter' is the file that starts Client with given parameters
 
 ### Examples
 
@@ -34,15 +35,15 @@ Example 1: three clients (without file):
 - `Starter 2`
 - `Starter 3`
 
-Example 2:  three clients (with file=example.txt):
-- `Starter 1 example.txt`
-- `Starter 2 example.txt`
-- `Starter 3 example.txt`
+Example 2:  three clients (with replica files):
+- `Starter 1 Rep1.txt`
+- `Starter 2 Rep2.txt`
+- `Starter 3 Rep2.txt`
 
 ## Data flow / How it works
 
-1. The spread server starts (point 2 above)
-2. Client is initiated through Starter (point 3 above)
+1. The spread server starts ( 3 above )
+2. Client is initiated through Starter ( 4 above )
    - Client is initiated for either file-reading or user-input
         - For file-reading:  input is read through file every $`s \in [0.5, 1.5]`$ seconds
    - Client connects to the spread server, as well as create a listener for itself
