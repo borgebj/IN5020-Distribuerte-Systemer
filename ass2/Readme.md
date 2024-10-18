@@ -39,7 +39,7 @@ Example 2:  three clients (with file=example.txt):
 - `Starter 2 example.txt`
 - `Starter 3 example.txt`
 
-## Data flow / Wow it works
+## Data flow / How it works
 
 1. The spread server starts (point 2 above)
 2. Client is initiated through Starter (point 3 above)
