@@ -9,7 +9,7 @@ public interface ClientInterface {
      * @param format if add input-line after or not
      * @return the current balance.
      */
-    void getQuickBalance(boolean format);
+    void getQuickBalance(boolean format, boolean synced);
 
     /** 
      * Returns the synchronized balance after applying outstanding transactions.
