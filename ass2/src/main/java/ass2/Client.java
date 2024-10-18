@@ -460,20 +460,23 @@ public class Client implements ClientInterface {
 	 * Naive implementation - waits for outstanding collection to be empty
 	 * @return balance
 	 */
-//	@Override
-//	public double getSyncedBalance() {
-//		while (!outstandingCollection.isEmpty()) {
-//			try {
-//				Thread.sleep(100);
-//			} catch (Exception e) {
-//				Thread.currentThread().interrupt();
-//				System.err.println("Sync balance interrupted");
-//				return balance;
-//			}
-//		}
-//		return balance;
-//	}
 
+	 /*
+	 @Override
+	 public void getSyncedBalance(){
+		while (!outstandingCollection.isEmpty()) {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				Thread.currentThread().interrupt();
+				System.err.println("Sync balance interrupted");
+				getQuickBalance(false, true );
+			}
+		}
+		getQuickBalance(false, true);
+	}
+	*/
+	
 	/**
 	 * Prints out synchronized balance (later) by adding the command to broadcasting list
 	 */
