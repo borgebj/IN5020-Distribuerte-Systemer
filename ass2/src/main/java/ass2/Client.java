@@ -40,7 +40,7 @@ public class Client implements ClientInterface {
 	private String filename;
 	private Listener listener;
 	private boolean usingFile;
-
+	private boolean syncing;
 
 	// Bank info
 	private double balance;
@@ -165,12 +165,13 @@ public class Client implements ClientInterface {
 		this.connection = new SpreadConnection();
 		this.listener = new Listener(this, numOfReps, this.clientnr, this.accountName);
 		this.connection.add(listener);
-		this.connection.connect(InetAddress.getByName(serverAdress), 4810, String.valueOf(this.clientnr), false, true);
+		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
 
 		// set account info + scheduler
 		this.balance = 0.0;
 		this.order_counter = 0;
 		this.outstanding_counter = 0;
+		this.syncing = false;
 		this.executedList = new ArrayList<>();
 		this.outstandingCollection = new ArrayList<>();
 		this.scheduler = Executors.newScheduledThreadPool(1);
@@ -193,13 +194,35 @@ public class Client implements ClientInterface {
 		this.clientName = String.format("Rep%d", clientnr);
 
 		// start broadcast
-		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(() -> {
+			try {
+				if (!syncing) broadcastOutstandingTransactions(); 
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}, 2, 10, TimeUnit.SECONDS);
 
 	}
 
 	/**
 	 * Method used by scheduler which broadcasts every 10 seconds
 	 */
+
+	private void broadcastSyncOutstanding(Collection<Transaction> syncTransactions){
+		SpreadMessage msg = new SpreadMessage();
+		msg.addGroup(group);
+		msg.setFifo();
+		msg.setReliable();
+
+		try {
+			
+			msg.setObject((Serializable) syncTransactions);
+	   		connection.multicast(msg);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	private void broadcastOutstandingTransactions() {
 		SpreadMessage msg = new SpreadMessage();
 		msg.addGroup(group);
@@ -557,7 +580,6 @@ public class Client implements ClientInterface {
 				return "Executed";
 			}
 		}
-		exit();
 		return "Transaction not found";
 	}
 
@@ -677,11 +699,43 @@ public class Client implements ClientInterface {
 	}
 
 	public void requestLatest() {
-		addCommandToCollection("askLatest", 0.0, true);
+
+		Collection<Transaction> askReq= new ArrayList<>();
+		Transaction tx = new Transaction();
+		tx.timestamp = getTimestamp();;
+		tx.command = ("askLatest" + " " + 0.0);
+		tx.uniqueId = (clientName + " " + "-1");
+
+		askReq.add(tx);
+
+		broadcastSyncOutstanding(askReq);
+		//addCommandToCollection("askLatest", 0.0, true);
 	}
 	public void sendLatest() {
-		addCommandToCollection("sendLatest", this.balance, true);
+
+		Collection<Transaction> sendLatest= new ArrayList<>();
+		Transaction tx = new Transaction();
+		tx.timestamp = getTimestamp();
+		tx.command = ("sendLatest" + " " + this.balance);
+		tx.uniqueId = (clientName + " " + "-1");
+
+		sendLatest.add(tx);
+
+		broadcastSyncOutstanding(sendLatest);
+		setSyncModeFalse();
+		//addCommandToCollection("sendLatest", this.balance, true);
 	}
+
+	synchronized void  setSyncModeTrue(){
+		this.syncing = true;
+
+		System.out.printf("\nRep %d entering syncing mode\n" , clientnr);
+	}
+	synchronized void  setSyncModeFalse(){
+		this.syncing = false;
+		System.out.printf("\nRep %d exiting syncing mode\n" , clientnr);
+	}
+	
 	public void setBalance(Transaction tx) {
 		this.balance = Double.parseDouble(tx.command.split(" ")[1]);
 		this.getQuickBalance(true, false);

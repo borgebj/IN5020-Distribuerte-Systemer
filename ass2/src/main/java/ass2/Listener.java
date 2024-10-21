@@ -56,15 +56,17 @@ public class Listener implements AdvancedMessageListener {
                 break;
 
             case "sendLatest":
-                client.removeFromOutstanding(tx);
+                //client.removeFromOutstanding(tx);
                 client.setBalance(tx);
+                client.setSyncModeFalse();
                 break;
 
             case "askLatest":
-                client.removeFromOutstanding(tx);
+              // client.removeFromOutstanding(tx);
                 if (!msg.getSender().toString().equals(spreadIdentifier)) {
                     client.sendLatest();
-                }
+                } 
+                client.setSyncModeFalse();
                 break;
         }
     }
@@ -109,16 +111,18 @@ public class Listener implements AdvancedMessageListener {
         //Prints Ids of joining and leaving members
         if (membershipInfo.isCausedByDisconnect()) {
             SpreadGroup memberDisconnected =  membershipInfo.getLeft();
-            System.out.printf("\nClient %s disconnected\n", getIdFromMemberShipInfo(memberDisconnected));
+            System.out.printf("\nClient %d disconnected\n", getIdFromMemberShipInfo(memberDisconnected));
         }
 
         if (membershipInfo.isCausedByJoin()) {
             SpreadGroup newMember = membershipInfo.getJoined();
-            System.out.printf("\nClient %s Joined\n", getIdFromMemberShipInfo(newMember));
+            System.out.printf("\nClient %d Joined\n", getIdFromMemberShipInfo(newMember));
 
             // ensures only happens first time
             if (groupMembers.length > reps) {
-                client.requestLatest();
+            
+                client.setSyncModeTrue();
+                if(getIdFromMemberShipInfo(newMember) == id )client.requestLatest();
             }
         }
 
@@ -128,8 +132,9 @@ public class Listener implements AdvancedMessageListener {
      * @param member A spreadgroup member
      * @return the ID of given member
      */
-    public String getIdFromMemberShipInfo(SpreadGroup member ){
-        return member.toString().split("#")[1];
+    public int getIdFromMemberShipInfo(SpreadGroup member ){
+        
+        return Integer.parseInt(member.toString().split("#")[1]);
     }
 
     /**
