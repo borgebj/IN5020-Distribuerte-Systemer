@@ -163,9 +163,9 @@ public class Client implements ClientInterface {
 
 		// Connects to spread server
 		this.connection = new SpreadConnection();
-		this.listener = new Listener(this, this.clientnr, this.accountName);
+		this.listener = new Listener(this, numOfReps, this.clientnr, this.accountName);
 		this.connection.add(listener);
-		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
+		this.connection.connect(InetAddress.getByName(serverAdress), 4810, String.valueOf(this.clientnr), false, true);
 
 		// set account info + scheduler
 		this.balance = 0.0;
@@ -188,12 +188,13 @@ public class Client implements ClientInterface {
 		sleep(2);
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n	\n\n\n\n\n\n\n\n");
 
-		// start broadcast
-		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
-
 		// set timestamp timer and set name of client
 		this.startTime = new Date();
 		this.clientName = String.format("Rep%d", clientnr);
+
+		// start broadcast
+		scheduler.scheduleAtFixedRate(this::broadcastOutstandingTransactions, 2, 10, TimeUnit.SECONDS);
+
 	}
 
 	/**
@@ -332,6 +333,7 @@ public class Client implements ClientInterface {
 	 * @return current timestamp in seconds
 	 */
 	private double getTimestamp() {
+		if (startTime == null) startTime = new Date();
 		return (new Date().getTime() - startTime.getTime()) / 1000.0;
 	}
 	
@@ -436,8 +438,9 @@ public class Client implements ClientInterface {
 	 *
 	 * @param command command to be broadcast
 	 * @param amount amount to be provided with command
+	 * @param exclude exclude incrementations
 	 */
-	private void addCommandToCollection(String command, double amount) {
+	private void addCommandToCollection(String command, double amount, boolean exclude) {
 
 		// Transaction-object associated with command
 		Transaction tx = new Transaction();
@@ -446,7 +449,7 @@ public class Client implements ClientInterface {
 		tx.uniqueId = (clientName + " " + outstanding_counter);
 
 		outstandingCollection.add(tx);
-		outstanding_counter++;
+		if (!exclude) outstanding_counter++;
 	}
 
 	@Override
@@ -483,7 +486,7 @@ public class Client implements ClientInterface {
 	@Override
 	public void getSyncedBalance() {
 		System.out.println("(balance will be presented shortly)");
-		addCommandToCollection("getsyncedbalance", 0.0);
+		addCommandToCollection("getsyncedbalance", 0.0, false);
 	}
 
 	/**
@@ -493,7 +496,7 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public void deposit(double amount) {
-		addCommandToCollection("deposit", amount);
+		addCommandToCollection("deposit", amount, false);
 	}
 
 	/**
@@ -503,7 +506,7 @@ public class Client implements ClientInterface {
 	 */
 	@Override
 	public void addInterest(double percent) {
-		addCommandToCollection("addinterest", percent);
+		addCommandToCollection("addinterest", percent, false);
 	}
 
 	/**
@@ -580,7 +583,7 @@ public class Client implements ClientInterface {
 		for (SpreadGroup member : this.listener.groupMembers) {
 			x++;
 			String[] seperateId = member.toString().split("#");
-			String memberPrint= String.format("Member %d: ID = %s",x, seperateId[1]);
+			String memberPrint= String.format("Rep%d: ID = %s",x, seperateId[1]);
 			members.add(memberPrint);
 
 		}
@@ -671,5 +674,16 @@ public class Client implements ClientInterface {
 		removeFromOutstanding(tx);
 		this.executedList.add(tx);
 		order_counter++;
+	}
+
+	public void requestLatest() {
+		addCommandToCollection("askLatest", 0.0, true);
+	}
+	public void sendLatest() {
+		addCommandToCollection("sendLatest", this.balance, true);
+	}
+	public void setBalance(Transaction tx) {
+		this.balance = Double.parseDouble(tx.command.split(" ")[1]);
+		this.getQuickBalance(true, false);
 	}
 }

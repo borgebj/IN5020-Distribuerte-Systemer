@@ -27,7 +27,7 @@ public class Starter {
 			return;
 		}
 
-		int numOfReplicas = 3;      // <---------- THIS DECIDES HOW MANY REPLICAS IN USE
+		int numOfReplicas = 2;      // <---------- THIS DECIDES HOW MANY REPLICAS IN USE
 		String account = "group8";
 
 		try {

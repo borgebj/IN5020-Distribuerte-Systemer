@@ -14,16 +14,18 @@ import spread.MembershipInfo;
 public class Listener implements AdvancedMessageListener {
 
     int id;
+    int reps;
     Client client;
     String spreadIdentifier; // how client is presented through Spread
     String accountName;    SpreadGroup[] groupMembers = new SpreadGroup[0];
 
 
-    public Listener(Client client, int id, String accountName) {
+    public Listener(Client client, int reps, int id, String accountName) {
         this.client = client;
+        this.reps = reps;
         this.id = id;
         this.accountName = accountName;
-        this.spreadIdentifier = String.format("#%d#%s", id, accountName);
+        this.spreadIdentifier = String.format("#%d#%s", id, accountName); // e.g. #1#group8    <- 1 is client id, group8 is group
     }
 
     /**
@@ -51,6 +53,19 @@ public class Listener implements AdvancedMessageListener {
                     client.removeFromOutstanding(tx);
                     client.outstanding_counter--; // because getSynced adds one
                 }
+                break;
+
+            case "sendLatest":
+                client.removeFromOutstanding(tx);
+                client.setBalance(tx);
+                break;
+
+            case "askLatest":
+                client.removeFromOutstanding(tx);
+                if (!msg.getSender().toString().equals(spreadIdentifier)) {
+                    client.sendLatest();
+                }
+                break;
         }
     }
 
@@ -90,17 +105,23 @@ public class Listener implements AdvancedMessageListener {
         MembershipInfo membershipInfo = spreadMessage.getMembershipInfo();
         groupMembers = membershipInfo.getMembers();
 
+
         //Prints Ids of joining and leaving members
         if (membershipInfo.isCausedByDisconnect()) {
             SpreadGroup memberDisconnected =  membershipInfo.getLeft();
             System.out.printf("\nClient %s disconnected\n", getIdFromMemberShipInfo(memberDisconnected));
         }
-    
+
         if (membershipInfo.isCausedByJoin()) {
             SpreadGroup newMember = membershipInfo.getJoined();
             System.out.printf("\nClient %s Joined\n", getIdFromMemberShipInfo(newMember));
+
+            // ensures only happens first time
+            if (groupMembers.length > reps) {
+                client.requestLatest();
+            }
         }
-        
+
     }
 
     /**
