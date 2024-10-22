@@ -165,7 +165,7 @@ public class Client implements ClientInterface {
 		this.connection = new SpreadConnection();
 		this.listener = new Listener(this, numOfReps, this.clientnr, this.accountName);
 		this.connection.add(listener);
-		this.connection.connect(InetAddress.getByName(serverAdress), 4803, String.valueOf(this.clientnr), false, true);
+		this.connection.connect(InetAddress.getByName(serverAdress), 4801, String.valueOf(this.clientnr), false, true);
 
 		// set account info + scheduler
 		this.balance = 0.0;
@@ -187,7 +187,7 @@ public class Client implements ClientInterface {
 		}
 		System.out.println("\n\nAll replicas has joined group8\n");
 		sleep(2);
-		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n	\n\n\n\n\n\n\n\n");
+		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
 
 		// set timestamp timer and set name of client
 		this.startTime = new Date();
@@ -215,7 +215,6 @@ public class Client implements ClientInterface {
 		msg.setReliable();
 
 		try {
-			
 			msg.setObject((Serializable) syncTransactions);
 	   		connection.multicast(msg);
 			
@@ -223,6 +222,7 @@ public class Client implements ClientInterface {
 			e.printStackTrace();
 		}
 	}
+
 	private void broadcastOutstandingTransactions() {
 		SpreadMessage msg = new SpreadMessage();
 		msg.addGroup(group);
@@ -369,7 +369,7 @@ public class Client implements ClientInterface {
 	 */
 	private String handleFileTest(String[] args) {
 
-		// case 1: user-specified transaction Id
+		// case 1: user-specified transaction ID
 		if (args.length == 3) {
 			return (args[1] + " " + args[2]);
 		}
@@ -486,7 +486,6 @@ public class Client implements ClientInterface {
 	 * Naive implementation - waits for outstanding collection to be empty
 	 * @return balance
 	 */
-
 	 /*
 	 @Override
 	 public void getSyncedBalance(){
@@ -556,7 +555,6 @@ public class Client implements ClientInterface {
 		}
 		System.out.println("\n======================================");
 	}
-
 
 	/**
 	 * Given an ID, check its current status
@@ -698,9 +696,13 @@ public class Client implements ClientInterface {
 		order_counter++;
 	}
 
+	/**
+	 * Creates and sends a multicast request for the latest balance
+	 */
 	public void requestLatest() {
 
-		Collection<Transaction> askReq= new ArrayList<>();
+		// creates Transaction to send request
+		Collection<Transaction> askReq = new ArrayList<>();
 		Transaction tx = new Transaction();
 		tx.timestamp = getTimestamp();;
 		tx.command = ("askLatest" + " " + 0.0);
@@ -709,10 +711,14 @@ public class Client implements ClientInterface {
 		askReq.add(tx);
 
 		broadcastSyncOutstanding(askReq);
-		//addCommandToCollection("askLatest", 0.0, true);
 	}
+
+	/**
+	 * Creates and sends the latest balance
+	 */
 	public void sendLatest() {
 
+		// creates transaction to send latest
 		Collection<Transaction> sendLatest= new ArrayList<>();
 		Transaction tx = new Transaction();
 		tx.timestamp = getTimestamp();
@@ -723,21 +729,32 @@ public class Client implements ClientInterface {
 
 		broadcastSyncOutstanding(sendLatest);
 		setSyncModeFalse();
-		//addCommandToCollection("sendLatest", this.balance, true);
 	}
 
+	/**
+	 * Sets synchronization mode of this Client to true
+	 */
 	synchronized void  setSyncModeTrue(){
 		this.syncing = true;
 
 		System.out.printf("\nRep %d entering syncing mode\n" , clientnr);
 	}
+
+	/**
+	 * Sets synchronization mode of this Client to false
+	 */
 	synchronized void  setSyncModeFalse(){
 		this.syncing = false;
 		System.out.printf("\nRep %d exiting syncing mode\n" , clientnr);
 	}
-	
+
+	/**
+	 * Given a balance, set current balance to the latest given
+	 *
+	 * @param tx Transaction-object containing latest balance
+	 */
 	public void setBalance(Transaction tx) {
 		this.balance = Double.parseDouble(tx.command.split(" ")[1]);
-		this.getQuickBalance(true, false);
+		System.out.printf("%n== Rep%d is synchronized ==%n%n", clientnr);
 	}
 }

@@ -122,7 +122,9 @@ public class Listener implements AdvancedMessageListener {
             if (groupMembers.length > reps) {
             
                 client.setSyncModeTrue();
-                if(getIdFromMemberShipInfo(newMember) == id )client.requestLatest();
+
+                if (getIdFromMemberShipInfo(newMember) == id )
+                    client.requestLatest();
             }
         }
 
