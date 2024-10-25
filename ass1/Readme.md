@@ -1,5 +1,5 @@
-
-# Assignment 1
+# International Statistics Service using java-RMI
+## Assignment 1
 
 ## How to run #1
 either:
