@@ -1,6 +1,3 @@
-
-
-
 package ass3.protocol;
 
 
