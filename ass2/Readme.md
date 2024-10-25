@@ -1,7 +1,7 @@
 
 # Replicated Bank Account using Spread toolkit
 
-# Assignment 2
+## Assignment 2
 
 ## How to run 
 
