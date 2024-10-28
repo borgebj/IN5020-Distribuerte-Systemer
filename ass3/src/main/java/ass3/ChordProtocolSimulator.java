@@ -2,6 +2,7 @@
 package ass3;
 import ass3.p2p.Network;
 import ass3.p2p.NetworkInterface;
+import ass3.p2p.Node;
 import ass3.p2p.NodeInterface;
 import ass3.crypto.ConsistentHashing;
 import ass3.protocol.ChordProtocol;
@@ -205,7 +206,7 @@ public class ChordProtocolSimulator {
         // gets the network from the protocol
         NetworkInterface network = protocol.getNetwork();
 
-        // prints the top0logy
+        // prints the topology
         network.printTopology();
     }
 
@@ -249,6 +250,12 @@ public class ChordProtocolSimulator {
      * index (check response) is used for the comparison.
      */
     public void testLookUp(){
+
+        //TODO: remove
+        System.out.println("KEY INDEXES:");
+        System.out.println(keyIndexes);
+        System.out.println("TOPOLOGY:");
+        System.out.println(network.getTopology());
 
         for(Map.Entry<String, Integer> entry: keyIndexes.entrySet())
         {
@@ -326,7 +333,7 @@ public class ChordProtocolSimulator {
         printNetwork();
 
         // tests the lookup operation
-        //testLookUp();
+        testLookUp();
 
         /*
         implement this logic

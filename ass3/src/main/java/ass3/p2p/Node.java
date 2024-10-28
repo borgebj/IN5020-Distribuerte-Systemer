@@ -38,7 +38,10 @@ public class Node implements NodeInterface{
         this.neighbors= new HashMap<String, NodeInterface>();
     }
 
-
+    @Override
+    public String toString() {
+        return String.format("[(%d): d=%s, n=%s]", id, data, neighbors);
+    }
 
     public String getName() {
         return this.name;
