@@ -55,7 +55,7 @@ public class ChordProtocolSimulator {
 
     @param protocol - it is the object of the protocol (eg:- chord protocol)
     @param network - it is the object of the network of nodes
-    @return - retuns the object of the chord protocol simulator class
+    @return - returns the object of the chord protocol simulator class
      */
 
     /**
@@ -136,7 +136,7 @@ public class ChordProtocolSimulator {
         List<Integer> sortedIndexes = new ArrayList<Integer>();
         int peerIndex = -1;
 
-        // calculate the indexes of all the nodes using consistent hasing
+        // calculate the indexes of all the nodes using consistent hashing
         for(Map.Entry<String, NodeInterface> node: this.network.getTopology().entrySet()) {
             String nodeName = node.getValue().getName();
             int nodeIndex = consistentHash.hash(nodeName);
@@ -147,7 +147,7 @@ public class ChordProtocolSimulator {
         Collections.sort(sortedIndexes);
 
         // check if the key index is larger than the biggest node index
-        // if it is larger then the key should be placed before the lowest node index (at the start of the ring)
+        // if it is larger than the key should be placed before the lowest node index (at the start of the ring)
         if(key_index> sortedIndexes.get(sortedIndexes.size()-1)){
             peerIndex = sortedIndexes.get(0);
         }
@@ -248,8 +248,9 @@ public class ChordProtocolSimulator {
      * This method tests the functioning of the lookup. This is a simple evaluation. For each key index it calls the
      * lookup from the chord protocol and returns the node index. It then compares the node index with the correct node
      * index (check response) is used for the comparison.
+     * @param startNode start node
      */
-    public void testLookUp(){
+    public void testLookUp(String startNode){
 
         //TODO: remove
         System.out.println("KEY INDEXES:");
@@ -261,7 +262,7 @@ public class ChordProtocolSimulator {
         {
 
             // lookup the key index
-            LookUpResponse response = protocol.lookUp(entry.getValue());
+            LookUpResponse response = protocol.lookUp(entry.getValue(), startNode);
 
             if(response == null)
             {
@@ -322,7 +323,7 @@ public class ChordProtocolSimulator {
      * This method starts the simulation.
      *     1) builds the chord protocol
      *     2) generate keys and assign it to nodes
-     *     3) tests the look up operation (only if necessary)
+     *     3) tests the lookup operation (only if necessary)
      */
     public void start(){
 
@@ -332,13 +333,34 @@ public class ChordProtocolSimulator {
         printRing();
         printNetwork();
 
+        // picks a random starting node, used for all lookups
+        LinkedHashMap<String, NodeInterface> allNodes = network.getTopology();
+        String startNode = allNodes.keySet().stream()
+                .skip(new Random().nextInt(allNodes.size()))
+                .findFirst()
+                .orElse(null);
+
         // tests the lookup operation
-        testLookUp();
+        testLookUp(startNode);
 
         /*
         implement this logic
          */
-        // Look up all the key, print out as required in the Assignment Description
-    }
+        // Look up all the keys, print out as required in the Assignment Description
 
+
+        System.out.printf("\nStart %s\n", startNode);
+
+        // lookup for all keys
+        for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
+            String key = entry.getKey();
+            Integer value = entry.getValue();
+
+//            System.out.printf("\nLookup for %s:\n", key);
+//            LookUpResponse res = protocol.lookUp(value, startNode);
+
+//            System.out.printf("%s - %d\n", key, value);
+//            System.out.printf("Response: %s\n", res);
+        }
+    }
 }

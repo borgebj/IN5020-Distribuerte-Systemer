@@ -40,7 +40,7 @@ public class Node implements NodeInterface{
 
     @Override
     public String toString() {
-        return String.format("[(%d): d=%s, n=%s]", id, data, neighbors);
+        return String.format("(%s:%d)", name, id);
     }
 
     public String getName() {

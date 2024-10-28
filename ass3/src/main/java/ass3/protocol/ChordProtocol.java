@@ -3,6 +3,7 @@ package ass3.protocol;
 
 import ass3.crypto.ConsistentHashing;
 import ass3.p2p.NetworkInterface;
+import ass3.p2p.NodeInterface;
 
 
 import java.util.*;
@@ -72,8 +73,6 @@ public class ChordProtocol implements Protocol{
 
 
 
-
-
     /**
      * This method builds the overlay network.  It assumes the network object has already been set. It generates indexes
      *     for all the nodes in the network. Based on the indexes it constructs the ring and places nodes on the ring.
@@ -84,10 +83,50 @@ public class ChordProtocol implements Protocol{
      */
     public void buildOverlayNetwork(){
 
-        /*
-        implement this logic
-         */
+        // Step 1: Create a list to hold the node indices
+        List<Integer> sortedIndexes = new ArrayList<>();
+        Map<Integer, NodeInterface> indexedNodes = new HashMap<>(); // Map to store nodes by index
 
+        System.out.println("=========== CREATING NodeIndexes: =================================");
+
+        // Step 2: Assign each node an index based on consistent hashing
+        for (Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()) {
+            String key = nodeInfo.getKey();
+            NodeInterface node = nodeInfo.getValue();
+            String nodeName = node.getName();
+
+            // calculate hash, sed ID
+            int nodeIndex = ch.hash(nodeName);
+            node.setId(nodeIndex);
+            sortedIndexes.add(nodeIndex);
+            indexedNodes.put(nodeIndex, node);
+
+            System.out.printf("%s - %s - %d\n", key, nodeName, nodeIndex);
+        }
+
+        // Step 3: Sort the indices to determine the ring order
+        Collections.sort(sortedIndexes);
+        System.out.println("Sorted Node Indexes: " + sortedIndexes);
+        System.out.println("=====================================================================");
+
+        // Step 4: Link each node to its successor in the sorted list to form the ring
+        for (int i = 0; i < sortedIndexes.size(); i++) {
+            int currentIdx = sortedIndexes.get(i);
+            int nextIdx = sortedIndexes.get((i + 1) % sortedIndexes.size());
+            int prevIdx = sortedIndexes.get((i - 1 + sortedIndexes.size()) % sortedIndexes.size());
+
+            // finds current, previous, and next node
+            NodeInterface currentNode = indexedNodes.get(currentIdx);
+            NodeInterface prevNode = indexedNodes.get(prevIdx);
+            NodeInterface nextNode = indexedNodes.get(nextIdx);
+
+            // adds neighbors
+            currentNode.addNeighbor(prevNode.getName(), prevNode);
+            currentNode.addNeighbor(nextNode.getName(), nextNode);
+
+            System.out.printf("%s (idx %d) \t -> \t Neighbor: %s\n", currentNode.getName(), currentIdx, currentNode.getNeighbors());
+        }
+        System.exit(-1);
     }
 
 
@@ -117,17 +156,22 @@ public class ChordProtocol implements Protocol{
 
     /**
      * This method performs the lookup operation.
-     *  Given the key index, it starts with one of the node in the network and follows through the finger table.
+     *  Given the key index, it starts with one of the nodes in the network and follows through the finger table.
      *  The correct successors would be identified and the request would be checked in their finger tables successively.
-     *   Finally the request will reach the node that contains the data item.
+     *   Finally, the request will reach the node that contains the data item.
      *
      * @param keyIndex index of the key
+     * @param startNode start node
      * @return names of nodes that have been searched and the final node that contains the key
      */
-    public LookUpResponse lookUp(int keyIndex){
+    @Override
+    public LookUpResponse lookUp(int keyIndex, String startNode){
         /*
         implement this logic
          */
+
+        System.out.println(network.getTopology());
+
         return null;
     }
 

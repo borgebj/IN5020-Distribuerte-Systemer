@@ -56,7 +56,8 @@ public interface Protocol {
      *   Finally the request will reach the node that contains the data item.
      *
      * @param keyIndex index of the key
+     * @param startNode start node
      * @return names of nodes that have been searched and the final node that contains the key
      */
-    public LookUpResponse lookUp(int keyIndex);
+    public LookUpResponse lookUp(int keyIndex, String startNode);
 }
