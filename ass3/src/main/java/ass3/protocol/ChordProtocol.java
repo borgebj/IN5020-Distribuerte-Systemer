@@ -2,7 +2,9 @@ package ass3.protocol;
 
 
 import ass3.crypto.ConsistentHashing;
+import ass3.p2p.Finger;
 import ass3.p2p.NetworkInterface;
+import ass3.p2p.Node;
 import ass3.p2p.NodeInterface;
 
 
@@ -13,6 +15,7 @@ import java.util.*;
  */
 public class ChordProtocol implements Protocol{
 
+    
     // length of the identifier that is used for consistent hashing
     public int m;
 
@@ -126,7 +129,7 @@ public class ChordProtocol implements Protocol{
 
             System.out.printf("%s (idx %d) \t -> \t Neighbor: %s\n", currentNode.getName(), currentIdx, currentNode.getNeighbors());
         }
-        System.exit(-1);
+    
     }
 
 
@@ -145,11 +148,28 @@ public class ChordProtocol implements Protocol{
      *     2) interval - [finger[i].start, finger[i+1].start)
      *     3) node - first node in the ring that is responsible for indexes in the interval
      */
+    @Override
     public void buildFingerTable() {
-        /*
-        implement this logic
-         */
 
+        int maxId = (int) Math.pow(2, m);
+        //int startValue = n + Math.pow(2, (i-1)) % Math.pow(2, m);
+        
+        for(Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()){
+
+            Finger[] fingers = new Finger[this.m];
+            NodeInterface currentNode= nodeInfo.getValue() ;
+            int currentNodeId = currentNode.getId();
+
+            
+            for (int i = 1; i < m; i++) {
+                fingers[i] = new Finger();
+                fingers[i].node  =  currentNode;
+                fingers[i].start =  (int) (currentNodeId + Math.pow(2, (i-1)) % maxId);
+                fingers[i].intervalEnd = (int) (currentNodeId + Math.pow(2, (i)) % maxId)-1;
+            }
+            currentNode.setRoutingTable(fingers);   
+        }
+          
     }
 
 
