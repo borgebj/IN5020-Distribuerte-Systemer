@@ -95,13 +95,13 @@ public class ChordProtocol implements Protocol{
             NodeInterface node = nodeInfo.getValue();
             String nodeName = node.getName();
 
-            // calculate hash, sed ID
+            // calculate hash, set ID
             int nodeIndex = ch.hash(nodeName);
             node.setId(nodeIndex);
             sortedIndexes.add(nodeIndex);
             indexedNodes.put(nodeIndex, node);
 
-            System.out.printf("%s - %s - %d\n", key, nodeName, nodeIndex);
+            System.out.printf("%s - %d\n", nodeName, nodeIndex);
         }
 
         // Step 3: Sort the indices to determine the ring order
