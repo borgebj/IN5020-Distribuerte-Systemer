@@ -185,7 +185,7 @@ public class ChordProtocol implements Protocol{
 
                 fingers[i-1] = finger;
 
-                System.out.printf("start: %d   [%d, %d]  Successor: ?\n", finger.start, finger.start, finger.end);
+                System.out.printf("[%d, %d]  Successor: ?\n", finger.start, finger.start, finger.end);
             }
 
             node.setRoutingTable(fingers);
