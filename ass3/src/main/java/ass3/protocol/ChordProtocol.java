@@ -90,7 +90,7 @@ public class ChordProtocol implements Protocol{
         List<Integer> sortedIndexes = new ArrayList<>();
         Map<Integer, NodeInterface> indexedNodes = new HashMap<>(); // Map to store nodes by index
 
-        System.out.println("=========== CREATING NodeIndexes: =================================");
+        System.out.println("=========== Creating Node-indices =================================");
 
         // Step 2: Assign each node an index based on consistent hashing
         for (Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()) {
@@ -104,7 +104,7 @@ public class ChordProtocol implements Protocol{
             sortedIndexes.add(nodeIndex);
             indexedNodes.put(nodeIndex, node);
 
-            System.out.printf("%s - %d\n", nodeName, nodeIndex);
+            System.out.printf("%s - (idx %d)\n", nodeName, nodeIndex);
         }
 
         // Step 3: Sort the indices to determine the ring order
@@ -129,7 +129,9 @@ public class ChordProtocol implements Protocol{
 
             System.out.printf("%s (idx %d) \t -> \t Neighbor: %s\n", currentNode.getName(), currentIdx, currentNode.getNeighbors());
         }
-    
+        System.out.println("\n=========================== ALL KEYS ================================");
+        System.out.println(keyIndexes);
+        System.out.println("=====================================================================");
     }
 
 
@@ -150,26 +152,45 @@ public class ChordProtocol implements Protocol{
      */
     @Override
     public void buildFingerTable() {
-
-        int maxId = (int) Math.pow(2, m);
-        //int startValue = n + Math.pow(2, (i-1)) % Math.pow(2, m);
         
         for(Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()){
 
+            // one FingerTable for each Node
             Finger[] fingers = new Finger[this.m];
-            NodeInterface currentNode= nodeInfo.getValue() ;
-            int currentNodeId = currentNode.getId();
+            NodeInterface node = nodeInfo.getValue() ;
+            int nodeId = node.getId();
 
-            
-            for (int i = 1; i < m; i++) {
-                fingers[i] = new Finger();
-                fingers[i].node  =  currentNode;
-                fingers[i].start =  (int) (currentNodeId + Math.pow(2, (i-1)) % maxId);
-                fingers[i].intervalEnd = (int) (currentNodeId + Math.pow(2, (i)) % maxId)-1;
+            // each table consists of 'm' entries, meaning m possible nodes in total
+            int totalEntries = (int) Math.pow(2, m);
+
+            System.out.printf("\n%s (%d)\n", node.getName(), nodeId);
+
+            for (int i = 1; i <= m; i++) {
+                Finger finger = new Finger();
+
+                // start of interval
+                finger.start = (int) (nodeId + Math.pow(2, i - 1)) % totalEntries;
+
+                // end of interval - takes account the ring topology
+                finger.end = (i < m) ?
+                        (int) ((nodeId + Math.pow(2, i)) % totalEntries) - 1
+                        : fingers[0].start - 1;
+
+                if (finger.end < 0) finger.end += totalEntries;
+
+                // successor node for the interval
+
+
+                // end of interval
+
+                fingers[i-1] = finger;
+
+                System.out.printf("start: %d   [%d, %d]  Successor: ?\n", finger.start, finger.start, finger.end);
             }
-            currentNode.setRoutingTable(fingers);   
+
+            node.setRoutingTable(fingers);
         }
-          
+        System.exit(-1); //TODO <--- FJERN!!!
     }
 
 
