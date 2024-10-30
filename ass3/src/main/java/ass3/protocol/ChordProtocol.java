@@ -28,6 +28,9 @@ public class ChordProtocol implements Protocol{
     // key indexes. tuples of (<key name>, <key index>)
     public HashMap<String, Integer> keyIndexes;
 
+    // node indexes. tuples of (<ring index>, <node object>) - marking which index in ring each node is
+    Map<Integer, NodeInterface> indexedNodes;
+
 
     public ChordProtocol(int m){
         this.m = m;
@@ -88,9 +91,9 @@ public class ChordProtocol implements Protocol{
 
         // Step 1: Create a list to hold the node indices
         List<Integer> sortedIndexes = new ArrayList<>();
-        Map<Integer, NodeInterface> indexedNodes = new HashMap<>(); // Map to store nodes by index
+        indexedNodes = new HashMap<>();
 
-        System.out.println("=========== Creating Node-indices =================================");
+        System.out.println("=========== BUILD OVERLAY (Node-indices) =================================");
 
         // Step 2: Assign each node an index based on consistent hashing
         for (Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()) {
@@ -110,7 +113,7 @@ public class ChordProtocol implements Protocol{
         // Step 3: Sort the indices to determine the ring order
         Collections.sort(sortedIndexes);
         System.out.println("Sorted Node Indexes: " + sortedIndexes);
-        System.out.println("=====================================================================");
+        System.out.println("==========================================================================");
 
         // Step 4: Link each node to its successor in the sorted list to form the ring
         for (int i = 0; i < sortedIndexes.size(); i++) {
@@ -124,18 +127,62 @@ public class ChordProtocol implements Protocol{
             NodeInterface nextNode = indexedNodes.get(nextIdx);
 
             // adds neighbors
-            currentNode.addNeighbor(prevNode.getName(), prevNode);
-            currentNode.addNeighbor(nextNode.getName(), nextNode);
+            currentNode.addNeighbor(prevNode.getName(), prevNode); // previous
+            currentNode.addNeighbor(nextNode.getName(), nextNode); // next
 
             System.out.printf("%s (idx %d) \t -> \t Neighbor: %s\n", currentNode.getName(), currentIdx, currentNode.getNeighbors());
         }
         System.out.println("\n=========================== ALL KEYS ================================");
         System.out.println(keyIndexes);
-        System.out.println("=====================================================================");
     }
 
 
 
+    public NodeInterface getNextNeighbor(NodeInterface node) {
+        Collection<NodeInterface> neighbors = node.getNeighbors();
+
+
+        int currentId = node.getId();
+        NodeInterface nextNeighbor = null;
+
+        // Step 1: Extract and sort the IDs from the NodeInterface collection
+        List<NodeInterface> sortedNeighbors = new ArrayList<>(neighbors);
+        sortedNeighbors.sort(Comparator.comparingInt(NodeInterface::getId));
+
+        // Step 2: Identify the next neighbor with the smallest ID larger than currentId
+        for (NodeInterface neighborNode : sortedNeighbors) {
+            if (neighborNode.getId() > currentId) {
+                nextNeighbor = neighborNode;
+                break;
+            }
+        }
+
+        // Step 3: Wrap around if no larger ID was found
+        if (nextNeighbor == null && !sortedNeighbors.isEmpty()) {
+            nextNeighbor = sortedNeighbors.get(0);  // Smallest ID node
+        }
+
+//        System.out.println(neighbors);
+
+        return nextNeighbor;
+    }
+
+
+    private NodeInterface findSuccessor(NodeInterface node, int start, int end) {
+        NodeInterface successor = null;
+        int totalEntries = (int) Math.pow(2, m);
+
+        for (int i = start; i != (end + 1) % totalEntries; i = (i + 1) % totalEntries) {
+            successor = indexedNodes.get(i);
+
+            if (successor != null) {
+                return successor;
+            }
+        }
+
+        // Fall back to next neighbor if none found
+        return getNextNeighbor(node);
+    }
 
 
 
@@ -152,6 +199,7 @@ public class ChordProtocol implements Protocol{
      */
     @Override
     public void buildFingerTable() {
+        System.out.println("\n========================== BUILD FINGERTABLE ==========================");
         
         for(Map.Entry<String, NodeInterface> nodeInfo : this.network.getTopology().entrySet()){
 
@@ -179,13 +227,14 @@ public class ChordProtocol implements Protocol{
                 if (finger.end < 0) finger.end += totalEntries;
 
                 // successor node for the interval
+                finger.successor = findSuccessor(node, finger.start, finger.end);
 
 
                 // end of interval
 
                 fingers[i-1] = finger;
 
-                System.out.printf("[%d, %d]  Successor: ?\n", finger.start, finger.start, finger.end);
+                System.out.printf("[%d, %d]  Successor: %s\n", finger.start, finger.end, finger.successor.getName());
             }
 
             node.setRoutingTable(fingers);

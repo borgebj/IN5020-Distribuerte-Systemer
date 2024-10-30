@@ -1,9 +1,6 @@
 package ass3.p2p;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.*;
 
 /*
 
@@ -74,7 +71,6 @@ public class Node implements NodeInterface{
     public Collection<NodeInterface> getNeighbors(){
         return  this.neighbors.values();
     }
-
 
     public NodeInterface getNeighbor(String name){
         return this.neighbors.get(name);
