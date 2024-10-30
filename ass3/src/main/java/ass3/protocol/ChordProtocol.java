@@ -7,8 +7,8 @@ import ass3.p2p.NetworkInterface;
 import ass3.p2p.Node;
 import ass3.p2p.NodeInterface;
 
-
 import java.util.*;
+
 
 /**
  * This class implements the chord protocol. The protocol is tested using the custom built simulator.
@@ -129,47 +129,20 @@ public class ChordProtocol implements Protocol{
 
 
 
-    public NodeInterface getNextNeighbor(NodeInterface node) {
-        Collection<NodeInterface> neighbors = node.getNeighbors();
-
-        int currentId = node.getId();
-        NodeInterface nextNeighbor = null;
-
-        // Step 1: extract and sort the ids from the NodeInterface collection
-        List<NodeInterface> sortedNeighbors = new ArrayList<>(neighbors);
-        sortedNeighbors.sort(Comparator.comparingInt(NodeInterface::getId));
-
-        // Step 2: identify the next neighbor with the smallest id larger than currentId
-        for (NodeInterface neighborNode : sortedNeighbors) {
-            if (neighborNode.getId() > currentId) {
-                nextNeighbor = neighborNode;
-                break;
-            }
-        }
-
-        // Step 3: wrap around if no larger id was found
-        if (nextNeighbor == null && !sortedNeighbors.isEmpty()) {
-            nextNeighbor = sortedNeighbors.get(0);
-        }
-
-        return nextNeighbor;
-    }
-
-
     private NodeInterface findSuccessor(NodeInterface node, int start, int end) {
-        NodeInterface successor = null;
-        int totalEntries = (int) Math.pow(2, m);
+        NodeInterface successor;
 
-        for (int i = start; i != (end + 1) % totalEntries; i = (i + 1) % totalEntries) {
-            successor = indexedNodes.get(i);
+        // go through interval [start, end] and check for nodes
+        for (int i = start; i < end; i++) {
 
-            if (successor != null) {
-                return successor;
-            }
+            successor = indexedNodes.getOrDefault(i, null);
+
+            // returns if node within interval found
+            if (successor != null) return successor;
         }
 
         // Fall back to next neighbor if none found
-        return getNextNeighbor(node);
+        return node.getSuccessor();
     }
 
 
@@ -198,6 +171,8 @@ public class ChordProtocol implements Protocol{
             NodeInterface node = nodeInfo.getValue();
             int nodeId = node.getId();
 
+            System.out.printf("%n%s%n", node.getName());
+
             // m entries in each fingertable
             for (int i = 1; i <= m; i++) {
                 Finger finger = new Finger();
@@ -209,7 +184,7 @@ public class ChordProtocol implements Protocol{
                 if (i < m) {
                     finger.end = (int) (nodeId + Math.pow(2, i) % (int) Math.pow(2, m));
                 } else {
-                    finger.end = fingers[0].start - 1;
+                    finger.end = fingers[0].start - 1; // assuming closed interval [x, y]
                 }
 
                 // successor node for the interval
@@ -218,7 +193,8 @@ public class ChordProtocol implements Protocol{
                 // set the finger in table
                 fingers[i-1] = finger;
 
-                System.out.printf("[%d, %d]  Successor: %s\n", finger.start, finger.end, finger.successor.getName());
+//                System.out.printf("[%d, %d]  Successor: %s\n", finger.start, finger.end, finger.successor.getName());
+                System.out.println("\t\t\tAdded entry " + i + ":\t[" + finger.start + ", " + finger.end + "]\tSuccessor '" + finger.successor.getName() + "' with index " + finger.successor.getId());
             }
 
             // set routingtable for node
