@@ -133,7 +133,7 @@ public class ChordProtocol implements Protocol{
         NodeInterface successor;
 
         // go through interval [start, end] and check for nodes
-        for (int i = start; i < end; i++) {
+        for (int i = start; i <= end; i++) {
 
             successor = indexedNodes.getOrDefault(i, null);
 
@@ -169,23 +169,22 @@ public class ChordProtocol implements Protocol{
             // one FingerTable for each Node
             Finger[] fingers = new Finger[this.m];
             NodeInterface node = nodeInfo.getValue();
-            int nodeId = node.getId();
+            int nodeIdx = node.getId();
 
-            System.out.printf("%n%s%n", node.getName());
+            //TODO remove
+            System.out.printf("%n%s (idx %d)%n", node.getName(), nodeIdx);
 
             // m entries in each fingertable
             for (int i = 1; i <= m; i++) {
                 Finger finger = new Finger();
 
                 // start of interval
-                finger.start = (int) (nodeId + Math.pow(2, i - 1)) % (int) Math.pow(2, m);
+                finger.start = (int) (nodeIdx + Math.pow(2, (i - 1))) % (int) Math.pow(2, m);
 
-                // end of interval - takes account the ring topology
-                if (i < m) {
-                    finger.end = (int) (nodeId + Math.pow(2, i) % (int) Math.pow(2, m));
-                } else {
-                    finger.end = fingers[0].start - 1; // assuming closed interval [x, y]
-                }
+                // end of interval   (takes account the wrapping around ring)
+                finger.end = (int) (nodeIdx + Math.pow(2, i)) % (int) Math.pow(2, m) - 1;
+                if (i == m) finger.end = fingers[0].start - 1;
+
 
                 // successor node for the interval
                 finger.successor = findSuccessor(node, finger.start, finger.end);
@@ -193,7 +192,7 @@ public class ChordProtocol implements Protocol{
                 // set the finger in table
                 fingers[i-1] = finger;
 
-//                System.out.printf("[%d, %d]  Successor: %s\n", finger.start, finger.end, finger.successor.getName());
+                //TODO remvoe
                 System.out.println("\t\t\tAdded entry " + i + ":\t[" + finger.start + ", " + finger.end + "]\tSuccessor '" + finger.successor.getName() + "' with index " + finger.successor.getId());
             }
 
