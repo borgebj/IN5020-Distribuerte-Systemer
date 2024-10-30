@@ -341,7 +341,7 @@ public class ChordProtocolSimulator {
                 .orElse(null);
 
         // tests the lookup operation
-        testLookUp(startNode);
+//        testLookUp(startNode);
 
         /*
         implement this logic
@@ -353,8 +353,8 @@ public class ChordProtocolSimulator {
 
         // lookup for all keys
         for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
-            String key = entry.getKey();
-            Integer value = entry.getValue();
+//            String key = entry.getKey();
+//            Integer value = entry.getValue();
 
 //            System.out.printf("\nLookup for %s:\n", key);
 //            LookUpResponse res = protocol.lookUp(value, startNode);
