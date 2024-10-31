@@ -217,9 +217,51 @@ public class ChordProtocol implements Protocol{
     public LookUpResponse lookUp(int keyIndex, String startNode){
         /*
         implement this logic
+        
          */
+        HashMap<String, NodeInterface> topology = this.network.getTopology();
+        
+        NodeInterface startingNode =this.network.getNode(startNode);
 
-        return null;
+        //create a hashet of the set of nodes travaled 
+        LinkedHashSet<String> peersLookedUp  = new LinkedHashSet<>();
+
+
+        //if node index is equal to keyIndex, return node information
+
+        NodeInterface currentNode = startingNode;
+        
+        
+        do {
+            //add peer to visited peers
+            peersLookedUp.add(currentNode.getName());
+
+            //check if current node is responsible for key
+            LinkedHashSet<Integer> nodeData = (LinkedHashSet<Integer>) currentNode.getData();
+            if(nodeData.contains(keyIndex)){
+                return new LookUpResponse(peersLookedUp , keyIndex, currentNode.getName());
+            }
+
+            //if current isnt responsible, look for a successor with interval that overlaps with key index
+            Finger [] fingers = (Finger[]) currentNode.getRoutingTable();
+            
+            for (int i = 1; i < m; i++) {
+                if(keyIndex>= fingers[i-1].start &&  keyIndex <= fingers[i-1].end ){
+                    currentNode = fingers[i-1].successor;
+                    break;
+                }
+                
+            }
+
+            //Break incase we wrap around to starting node
+            if(currentNode.equals(startingNode)) break;
+            
+        } while (true);
+        
+
+        //outer case for syntax reasons, dont really know when this would be reached or needed???????
+    
+        return new LookUpResponse(peersLookedUp , keyIndex, startingNode.getName());
     }
 
 

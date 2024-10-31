@@ -341,7 +341,7 @@ public class ChordProtocolSimulator {
                 .orElse(null);
 
         // tests the lookup operation
-//        testLookUp(startNode);
+        testLookUp(startNode);
 
         /*
         implement this logic
