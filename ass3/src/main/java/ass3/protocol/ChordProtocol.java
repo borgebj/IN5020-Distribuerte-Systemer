@@ -245,7 +245,7 @@ public class ChordProtocol implements Protocol{
             //if current isnt responsible, look for a successor with interval that overlaps with key index
             Finger [] fingers = (Finger[]) currentNode.getRoutingTable();
             
-            for (int i = 1; i < m; i++) {
+            for (int i = 1; i <= m; i++) {
                 if(keyIndex>= fingers[i-1].start &&  keyIndex <= fingers[i-1].end ){
                     currentNode = fingers[i-1].successor;
                     break;
@@ -254,7 +254,7 @@ public class ChordProtocol implements Protocol{
             }
 
             //Break incase we wrap around to starting node
-            if(currentNode.equals(startingNode)) break;
+            if(currentNode.getName().equals(startingNode.getName())) break;
             
         } while (true);
         
