@@ -220,17 +220,15 @@ public class ChordProtocol implements Protocol{
         
          */
         HashMap<String, NodeInterface> topology = this.network.getTopology();
-        
-        NodeInterface startingNode =this.network.getNode(startNode);
+        NodeInterface startingNode = this.network.getNode(startNode);
 
-        //create a hashet of the set of nodes travaled 
+        // Set of nodes travaled 
         LinkedHashSet<String> peersLookedUp  = new LinkedHashSet<>();
 
 
-        //if node index is equal to keyIndex, return node information
+        // if node index is equal to keyIndex, return node information
 
         NodeInterface currentNode = startingNode;
-        
         
         do {
             //add peer to visited peers
@@ -238,15 +236,15 @@ public class ChordProtocol implements Protocol{
 
             //check if current node is responsible for key
             LinkedHashSet<Integer> nodeData = (LinkedHashSet<Integer>) currentNode.getData();
-            if(nodeData.contains(keyIndex)){
-                return new LookUpResponse(peersLookedUp , keyIndex, currentNode.getName());
+            if (nodeData.contains(keyIndex)) {
+                return new LookUpResponse(peersLookedUp, keyIndex, currentNode.getName());
             }
 
             //if current isnt responsible, look for a successor with interval that overlaps with key index
             Finger [] fingers = (Finger[]) currentNode.getRoutingTable();
             
             for (int i = 1; i <= m; i++) {
-                if(keyIndex>= fingers[i-1].start &&  keyIndex <= fingers[i-1].end ){
+                if (keyIndex >= fingers[i-1].start && keyIndex <= fingers[i-1].end) { // within interval [start, end]
                     currentNode = fingers[i-1].successor;
                     break;
                 }
@@ -254,14 +252,14 @@ public class ChordProtocol implements Protocol{
             }
 
             //Break incase we wrap around to starting node
-            if(currentNode.getName().equals(startingNode.getName())) break;
+            if (currentNode.getName().equals(startingNode.getName())) break;
             
         } while (true);
         
 
         //outer case for syntax reasons, dont really know when this would be reached or needed???????
     
-        return new LookUpResponse(peersLookedUp , keyIndex, startingNode.getName());
+        return new LookUpResponse(peersLookedUp, keyIndex, startingNode.getName());
     }
 
 
