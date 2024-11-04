@@ -23,7 +23,7 @@ public class LookUpResponse {
         result = result.concat("\t hop count: "+peers_looked_up.size());
         result = result.concat("\t route: ");
         for(String peer: peers_looked_up){
-            result = result.concat(peer+"\t");
+            result = result.concat(peer+" ");
         }
         return  result;
     }
