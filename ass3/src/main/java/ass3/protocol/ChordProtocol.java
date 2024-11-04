@@ -230,7 +230,6 @@ public class ChordProtocol implements Protocol{
             if (nodeData.contains(keyIndex)) {
                 return new LookUpResponse(peersLookedUp, keyIndex, currentNode.getName());
             }
-
             Finger[] fingers = (Finger[]) currentNode.getRoutingTable();
             NodeInterface nextNode = null;
 
@@ -241,7 +240,6 @@ public class ChordProtocol implements Protocol{
                     break;
                 }
             }
-
             // if none is found, first successor is chosen
             if (nextNode == null) {
                 nextNode = fingers[0].successor;
@@ -254,6 +252,4 @@ public class ChordProtocol implements Protocol{
 
         return new LookUpResponse(peersLookedUp, keyIndex, currentNode.getName());
     }
-
-
 }
