@@ -9,6 +9,8 @@ import ass3.protocol.ChordProtocol;
 import ass3.protocol.LookUpResponse;
 import ass3.protocol.Protocol;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.util.*;
 
 /**
@@ -310,7 +312,6 @@ public class ChordProtocolSimulator {
     2) builds the overlay network
     3) builds the finger table
      */
-
     public void buildProtocol(){
         protocol.setNetwork(network);
         assignKeys();
@@ -318,6 +319,7 @@ public class ChordProtocolSimulator {
         protocol.buildOverlayNetwork();
         protocol.buildFingerTable();
     }
+
 
     /**
      * This is the starting point of this protocol.
@@ -341,24 +343,37 @@ public class ChordProtocolSimulator {
                 .findFirst()
                 .orElse(null);
 
+//        String startNode = "Node 1"; // for manual
+
         // tests the lookup operation
-        testLookUp(startNode);
+//        testLookUp(startNode);
 
-        /*
-        implement this logic
-         */
-        // Look up all the keys, print out as required in the Assignment Description
+        int total_hops = 0;
 
-        System.out.printf("\nStart %s\n", startNode);
+        String filename = String.format("nodes=%d_m=%d.txt", nodeCount, m);
+        try (FileWriter fw = new FileWriter(filename)) {
+            fw.write("Start: " + startNode + "\n");
 
-        // lookup for all keys
-        for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
-            String key = entry.getKey();
-            Integer value = entry.getValue();
+            // lookup for all keys, prints response to file
+            for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
+                String key = entry.getKey();
+                Integer value = entry.getValue();
 
-//            LookUpResponse res = protocol.lookUp(value, startNode);
-//
-//            System.out.printf("%s:\t%s\n\n\n", key, res);
+                // response containing path, hop count, nodes etc
+                LookUpResponse res = protocol.lookUp(value, startNode);
+                total_hops += res.peers_looked_up.size();
+
+                // formatted line that goes to file
+                String fileLine = String.format("%s:%d\t%s\n", key, value, res);
+                fw.write(fileLine);
+            }
+
+            fw.write("average hop count = " + (total_hops / keyIndexes.size()));
         }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
     }
 }

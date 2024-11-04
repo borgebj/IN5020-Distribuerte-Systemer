@@ -3,7 +3,7 @@ package ass3.protocol;
 import java.util.LinkedHashSet;
 
 /**
- * This class prints the the response of the lookup. This is class prints the names of the nodes whose finger table
+ * This class prints the response of the lookup. This is class prints the names of the nodes whose finger table
  * has been checked, the destination node index, it's name and hop count.
  */
 public class LookUpResponse {
@@ -19,13 +19,12 @@ public class LookUpResponse {
 
     public String toString(){
         String result = "";
-        result = result.concat("peers : ");
+        result = result.concat(node_name+":"+node_index);
+        result = result.concat("\t hop count: "+peers_looked_up.size());
+        result = result.concat("\t route: ");
         for(String peer: peers_looked_up){
             result = result.concat(peer+"\t");
         }
-        result=result.concat("\t hop count : "+peers_looked_up.size());
-        result = result.concat("\t node index : "+node_index);
-        result = result.concat("\t node name : "+node_name);
         return  result;
     }
 }
