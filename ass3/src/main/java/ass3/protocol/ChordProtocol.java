@@ -129,25 +129,6 @@ public class ChordProtocol implements Protocol{
     }
 
 
-
-    private NodeInterface findSuccessor(NodeInterface node, int start, int end) {
-        NodeInterface successor;
-
-        // go through interval [start, end] and check for nodes
-        for (int i = start; i <= end; i++) {
-
-            successor = indexedNodes.getOrDefault(i, null);
-
-            // returns if node within interval found
-            if (successor != null) return successor;
-        }
-
-        // Fall back to next neighbor if none found
-        return node.getSuccessor();
-    }
-
-
-
     /**
      * This method builds the finger table. The finger table is the routing table used in the chord protocol to perform
      * lookup operations. The finger table stores m-entries. Each ith entry points to the ith finger of the node.
@@ -172,9 +153,6 @@ public class ChordProtocol implements Protocol{
             NodeInterface node = nodeInfo.getValue();
             int nodeIdx = node.getId();
 
-            //TODO remove
-//            System.out.printf("%n%s (idx %d)%n", node.getName(), nodeIdx);
-
             // m entries in each fingertable
             for (int i = 1; i <= m; i++) {
                 Finger finger = new Finger();
@@ -186,15 +164,11 @@ public class ChordProtocol implements Protocol{
                 finger.end = (int) (nodeIdx + Math.pow(2, i)) % (int) Math.pow(2, m) - 1;
                 if (i == m) finger.end = fingers[0].start - 1;
 
-
                 // successor node for the interval
-                finger.successor = findSuccessor(node, finger.start, finger.end);
+                finger.successor = node.getSuccessor();
 
                 // set the finger in table
                 fingers[i-1] = finger;
-
-                //TODO remove
-//                System.out.println("\t\t\tAdded entry " + i + ":\t[" + finger.start + ", " + finger.end + "]\tSuccessor '" + finger.successor.getName() + "' with index " + finger.successor.getId());
             }
 
             // set routingtable for node

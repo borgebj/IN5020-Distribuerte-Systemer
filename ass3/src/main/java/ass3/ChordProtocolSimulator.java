@@ -10,6 +10,7 @@ import ass3.protocol.LookUpResponse;
 import ass3.protocol.Protocol;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
 
@@ -254,13 +255,6 @@ public class ChordProtocolSimulator {
      */
     public void testLookUp(String startNode){
 
-        //TODO: remove
-        System.out.println("KEY INDEXES:");
-        System.out.println(keyIndexes);
-        System.out.println("TOPOLOGY:");
-        System.out.println(network.getTopology());
-        System.out.printf("\n");
-
         for(Map.Entry<String, Integer> entry: keyIndexes.entrySet())
         {
 
@@ -346,33 +340,42 @@ public class ChordProtocolSimulator {
 //        String startNode = "Node 1"; // for manual
 
         // tests the lookup operation
-//        testLookUp(startNode);
+        testLookUp(startNode);
+
+        File outputFolder = new File("output");
+
+        // Ensure the 'output' folder exists
+        if (!outputFolder.exists()) {
+            outputFolder.mkdir();
+        }
 
         int total_hops = 0;
 
-        String filename = String.format("nodes=%d_m=%d.txt", nodeCount, m);
+        // Include the 'output' folder in the filename path
+        String filename = String.format("output/nodes=%d_m=%d.txt", nodeCount, m);
         try (FileWriter fw = new FileWriter(filename)) {
             fw.write("Start: " + startNode + "\n");
 
-            // lookup for all keys, prints response to file
+            // Lookup for all keys, prints response to file
             for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
                 String key = entry.getKey();
                 Integer value = entry.getValue();
 
-                // response containing path, hop count, nodes etc
+                // Response containing path, hop count, nodes etc
                 LookUpResponse res = protocol.lookUp(value, startNode);
                 total_hops += res.peers_looked_up.size();
 
-                // formatted line that goes to file
+                // Formatted line that goes to file
                 String fileLine = String.format("%s:%d\t%s\n", key, value, res);
                 fw.write(fileLine);
             }
 
+            // calculate average hops, write to file
             fw.write("average hop count = " + (total_hops / keyIndexes.size()));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
 
 
     }
