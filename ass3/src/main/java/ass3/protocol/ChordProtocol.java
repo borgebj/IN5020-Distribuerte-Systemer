@@ -7,6 +7,7 @@ import ass3.p2p.NetworkInterface;
 import ass3.p2p.Node;
 import ass3.p2p.NodeInterface;
 
+import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.util.*;
 
 
@@ -172,7 +173,7 @@ public class ChordProtocol implements Protocol{
             int nodeIdx = node.getId();
 
             //TODO remove
-            System.out.printf("%n%s (idx %d)%n", node.getName(), nodeIdx);
+//            System.out.printf("%n%s (idx %d)%n", node.getName(), nodeIdx);
 
             // m entries in each fingertable
             for (int i = 1; i <= m; i++) {
@@ -192,8 +193,8 @@ public class ChordProtocol implements Protocol{
                 // set the finger in table
                 fingers[i-1] = finger;
 
-                //TODO remvoe
-                System.out.println("\t\t\tAdded entry " + i + ":\t[" + finger.start + ", " + finger.end + "]\tSuccessor '" + finger.successor.getName() + "' with index " + finger.successor.getId());
+                //TODO remove
+//                System.out.println("\t\t\tAdded entry " + i + ":\t[" + finger.start + ", " + finger.end + "]\tSuccessor '" + finger.successor.getName() + "' with index " + finger.successor.getId());
             }
 
             // set routingtable for node
@@ -214,56 +215,45 @@ public class ChordProtocol implements Protocol{
      * @return names of nodes that have been searched and the final node that contains the key
      */
     @Override
-    public LookUpResponse lookUp(int keyIndex, String startNode){
-        /*
-        implement this logic
-        
-         */
-        HashMap<String, NodeInterface> topology = this.network.getTopology();
-        
-        NodeInterface startingNode =this.network.getNode(startNode);
+    public LookUpResponse lookUp(int keyIndex, String startNode) {
 
-        //create a hashet of the set of nodes travaled 
-        LinkedHashSet<String> peersLookedUp  = new LinkedHashSet<>();
+        NodeInterface currentNode = this.network.getNode(startNode);
+        LinkedHashSet<String> peersLookedUp = new LinkedHashSet<>();
 
-
-        //if node index is equal to keyIndex, return node information
-
-        NodeInterface currentNode = startingNode;
-        
-        
         do {
-            //add peer to visited peers
+            // add peer to visited list
             peersLookedUp.add(currentNode.getName());
 
-            //check if current node is responsible for key
+            // check if current node holds data
+            // stops if we are on node with data we are looking for
             LinkedHashSet<Integer> nodeData = (LinkedHashSet<Integer>) currentNode.getData();
-            if(nodeData.contains(keyIndex)){
-                return new LookUpResponse(peersLookedUp , keyIndex, currentNode.getName());
+            if (nodeData.contains(keyIndex)) {
+                return new LookUpResponse(peersLookedUp, keyIndex, currentNode.getName());
             }
 
-            //if current isnt responsible, look for a successor with interval that overlaps with key index
-            Finger [] fingers = (Finger[]) currentNode.getRoutingTable();
-            
-            for (int i = 1; i <= m; i++) {
-                if(keyIndex>= fingers[i-1].start &&  keyIndex <= fingers[i-1].end ){
-                    currentNode = fingers[i-1].successor;
+            Finger[] fingers = (Finger[]) currentNode.getRoutingTable();
+            NodeInterface nextNode = null;
+
+            // go through all fingers and search through interval
+            for (Finger finger : fingers) {
+                if (keyIndex >= finger.start && keyIndex <= finger.end) {
+                    nextNode = finger.successor;
                     break;
                 }
-                
             }
 
-            //Break incase we wrap around to starting node
-            if(currentNode.getName().equals(startingNode.getName())) break;
-            
-        } while (true);
-        
+            // if none is found, first successor is chosen
+            if (nextNode == null) {
+                nextNode = fingers[0].successor;
+            }
 
-        //outer case for syntax reasons, dont really know when this would be reached or needed???????
-    
-        return new LookUpResponse(peersLookedUp , keyIndex, startingNode.getName());
+            currentNode = nextNode;
+
+            // if we are on node we started, we have looped and not found data
+        } while (!currentNode.getName().equals(startNode));
+
+        return new LookUpResponse(peersLookedUp, keyIndex, currentNode.getName());
     }
-
 
 
 }

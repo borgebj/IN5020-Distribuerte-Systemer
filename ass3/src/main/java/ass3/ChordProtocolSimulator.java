@@ -257,6 +257,7 @@ public class ChordProtocolSimulator {
         System.out.println(keyIndexes);
         System.out.println("TOPOLOGY:");
         System.out.println(network.getTopology());
+        System.out.printf("\n");
 
         for(Map.Entry<String, Integer> entry: keyIndexes.entrySet())
         {
@@ -348,19 +349,16 @@ public class ChordProtocolSimulator {
          */
         // Look up all the keys, print out as required in the Assignment Description
 
-
         System.out.printf("\nStart %s\n", startNode);
 
         // lookup for all keys
         for (Map.Entry<String, Integer> entry : keyIndexes.entrySet()) {
-//            String key = entry.getKey();
-//            Integer value = entry.getValue();
+            String key = entry.getKey();
+            Integer value = entry.getValue();
 
-//            System.out.printf("\nLookup for %s:\n", key);
 //            LookUpResponse res = protocol.lookUp(value, startNode);
-
-//            System.out.printf("%s - %d\n", key, value);
-//            System.out.printf("Response: %s\n", res);
+//
+//            System.out.printf("%s:\t%s\n\n\n", key, res);
         }
     }
 }

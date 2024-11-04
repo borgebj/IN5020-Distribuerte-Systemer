@@ -37,7 +37,7 @@ public class Node implements NodeInterface{
 
     @Override
     public String toString() {
-        return String.format("(%s:%d)", name, id);
+        return String.format("(idx:%d [%s])", id, data);
     }
 
     public String getName() {
