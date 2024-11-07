@@ -18,18 +18,20 @@ Example:
 - `java -cp target/solution.jar ass3.Simulator 100 20`
 - `java -cp target/solution.jar ass3.Simulator 1000 20`
 
-# Contribution
+## Project Contributions
 
-As with previous assignments, the overall project consisted of contribution from every member in multiple areas, specifically fixing of incorrect code, refactoring, and additional code as well as comments.
+The project implementation was a collaborative effort, with each member contributing to multiple areas, including bug fixes, code refactoring, and documentation. Key contributions were as follows:
 
-As for our main contributions, we thought it fitting to assign each member one function each. This was fitting as there was mainly 3 functions that needed the most implementation. The contribution is as follows:
+### Main Function Implementations
+- **`buildOverlayNetwork`**: *vegarhje* – Designed and implemented network overlay setup.
+- **`buildFingerTable`**: *sellebahn* – Developed the finger table structure for efficient node routing.
+- **`lookUp`**: *borgebj* – Implemented the lookup logic to search for specific keys in the overlay network.
 
-* `buildOverlayNetwork` : vegarhje
-* `buildFingerTable` : sellebahn
-* `lookUp` : borgebj
-* Readme : borgebj
-* Implementation description : sellebahn
-* Printing to file : vegarhje
+### Documentation and Supporting Tasks
+- **README Documentation**: *borgebj* – Authored the README with instructions, setup, and usage details.
+- **Implementation Description**: *sellebahn* – Wrote an overview of the project’s functionality and architecture.
+- **Output to File**: *vegarhje* – Implemented functionality to log results to an output file for analysis.
+
 
 
 
