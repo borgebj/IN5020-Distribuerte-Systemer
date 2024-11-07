@@ -24,7 +24,7 @@ The project implementation was a collaborative effort, with each member contribu
 
 ### Main Function Implementations
 - **`buildOverlayNetwork`**: *vegarhje* – Designed and implemented network overlay setup in chord.
-- **`buildFingerTable`**: *sellebahn* – Developed the finger table structure for the node routing.
+- **`buildFingerTable`**: *sellebaf* – Developed the finger table structure for the node routing.
 - **`lookUp`**: *borgebj* – Implemented the lookup logic to search for specific keys in the overlay network.
 
 ### Documentation and Supporting Tasks
