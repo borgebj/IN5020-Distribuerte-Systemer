@@ -18,6 +18,20 @@ Example:
 - `java -cp target/solution.jar ass3.Simulator 100 20`
 - `java -cp target/solution.jar ass3.Simulator 1000 20`
 
+# Contribution
+
+As with previous assignments, the overall project consisted of contribution from every member in multiple areas, specifically fixing of incorrect code, refactoring, and additional code as well as comments.
+
+As for our main contributions, we thought it fitting to assign each member one function each. This was fitting as there was mainly 3 functions that needed the most implementation. The contribution is as follows:
+
+`buildOverlayNetwork` : vegarhje
+`buildFingerTable` : sellebahn
+`lookUp` : borgebj
+Readme : borgebj
+Implementation description : sellebahn
+Printing to file : vegarhje
+
+
 
 ## Data flow / How it works
 
