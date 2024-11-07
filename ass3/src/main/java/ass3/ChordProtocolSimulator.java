@@ -375,8 +375,5 @@ public class ChordProtocolSimulator {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-
     }
 }

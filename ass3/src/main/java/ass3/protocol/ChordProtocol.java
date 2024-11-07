@@ -31,6 +31,8 @@ public class ChordProtocol implements Protocol{
 
     // node indexes. tuples of (<ring index>, <node object>) - marking which index in ring each node is
     Map<Integer, NodeInterface> indexedNodes;
+    // sorted node-indexes, used for finding successors
+    List<Integer> sortedIndexes = new ArrayList<>();
 
 
     public ChordProtocol(int m){
@@ -92,7 +94,7 @@ public class ChordProtocol implements Protocol{
 
         // Step 1: Create lists to hold the node indices
         // lists holding nodes
-        List<Integer> sortedIndexes = new ArrayList<>();                        // list will hold sorted Index-values
+        sortedIndexes = new ArrayList<>();                        // list will hold sorted Index-values
         indexedNodes = new HashMap<>();                                         // holds (<index>, <Node>)
         HashMap<String, NodeInterface> topology = this.network.getTopology();   // holds topology : list of nodes
 
@@ -148,24 +150,31 @@ public class ChordProtocol implements Protocol{
 
         for(Map.Entry<String, NodeInterface> nodeInfo : topology.entrySet()){
 
-            // one FingerTable for each Node
+            // one FingerTable for each Node, each having 'm' entries
             Finger[] fingers = new Finger[this.m];
             NodeInterface node = nodeInfo.getValue();
             int nodeIdx = node.getId();
 
-            // m entries in each fingertable
             for (int i = 1; i <= m; i++) {
                 Finger finger = new Finger();
 
-                // start of interval
+                // start and end of interval
                 finger.start = (int) (nodeIdx + Math.pow(2, (i - 1))) % (int) Math.pow(2, m);
-
-                // end of interval   (takes account the wrapping around ring)
                 finger.end = (int) (nodeIdx + Math.pow(2, i)) % (int) Math.pow(2, m) - 1;
                 if (i == m) finger.end = fingers[0].start - 1;
 
-                // successor node for the interval
-                finger.successor = node.getSuccessor();
+                // finds the successor for current interval [start, end]
+                for (int idx : sortedIndexes) {
+                    if (idx >= finger.start) {
+                        finger.successor = indexedNodes.get(idx);
+                        break;
+                    }
+                }
+
+                // no successor, meaning wrap around to first
+                if (finger.successor == null) {
+                    finger.successor = indexedNodes.get(sortedIndexes.get(0));
+                }
 
                 // set the finger in table
                 fingers[i-1] = finger;
