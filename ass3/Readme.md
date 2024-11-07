@@ -24,12 +24,12 @@ As with previous assignments, the overall project consisted of contribution from
 
 As for our main contributions, we thought it fitting to assign each member one function each. This was fitting as there was mainly 3 functions that needed the most implementation. The contribution is as follows:
 
-`buildOverlayNetwork` : vegarhje
-`buildFingerTable` : sellebahn
-`lookUp` : borgebj
-Readme : borgebj
-Implementation description : sellebahn
-Printing to file : vegarhje
+* `buildOverlayNetwork` : vegarhje
+* `buildFingerTable` : sellebahn
+* `lookUp` : borgebj
+* Readme : borgebj
+* Implementation description : sellebahn
+* Printing to file : vegarhje
 
 
 
