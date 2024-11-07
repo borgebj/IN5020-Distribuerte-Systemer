@@ -23,14 +23,14 @@ Example:
 The project implementation was a collaborative effort, with each member contributing to multiple areas, including bug fixes, code refactoring, and documentation. Key contributions were as follows:
 
 ### Main Function Implementations
-- **`buildOverlayNetwork`**: *vegarhje* – Designed and implemented network overlay setup.
-- **`buildFingerTable`**: *sellebahn* – Developed the finger table structure for efficient node routing.
+- **`buildOverlayNetwork`**: *vegarhje* – Designed and implemented network overlay setup in chord.
+- **`buildFingerTable`**: *sellebahn* – Developed the finger table structure for the node routing.
 - **`lookUp`**: *borgebj* – Implemented the lookup logic to search for specific keys in the overlay network.
 
 ### Documentation and Supporting Tasks
-- **README Documentation**: *borgebj* – Authored the README with instructions, setup, and usage details.
-- **Implementation Description**: *sellebahn* – Wrote an overview of the project’s functionality and architecture.
-- **Output to File**: *vegarhje* – Implemented functionality to log results to an output file for analysis.
+- **README Documentation**: *borgebj* – Wrote the README with instructions, setup, and usage details.
+- **Implementation Description**: *sellebahn* – Wrote an overview of the required functionality for chord.
+- **Output to File**: *vegarhje* – Implemented the logic to log results to an output file.
 
 
 
