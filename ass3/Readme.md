@@ -4,9 +4,9 @@
 ## How to run 
 
 __1. Build maven__
-- Run `mvn clean packag` in terminal
+- run `mvn clean packag` in terminal
 
-__2. Run__
+__2. Run the protocol__
 - run `java -cp target/solution.jar ass3.Simulator <n> <m>` in terminal
 - Where n = node count, and m = bit-length of identifiers used in the protocol.
 
