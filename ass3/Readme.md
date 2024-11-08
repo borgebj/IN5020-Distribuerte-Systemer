@@ -11,7 +11,7 @@ __2. Run the protocol__
 - Where n = node count, and m = bit-length of identifiers used in the protocol.
 
 ### Examples
-- Following 3 examples show the 3 required running configurations for assignment 4.
+- Following 3 examples show the 3 required running configurations for assignment 3.
 
 Example:
 - `java -cp target/solution.jar ass3.Simulator 10 10`
