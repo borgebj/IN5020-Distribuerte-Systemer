@@ -73,9 +73,9 @@ For each node in the `topology`:
        \text{finger.start} = (\text{nodeIdx} + 2^{i-1}) \mod 2^m
        `$
      - Set the **end** of the interval as:
-       $$ 
+       $`\ 
        \text{finger.end} = (\text{nodeIdx} + 2^i) \mod 2^m - 1
-       $$
+       `$
      - For the last entry, wrap around so `finger.end` is set just before the start of the first finger.
 
 3. **Determine Successors**:
