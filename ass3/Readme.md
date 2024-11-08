@@ -120,7 +120,7 @@ The project implementation was a collaborative effort, with each member contribu
 
 ### Documentation and Supporting Tasks
 - **README Documentation**: *borgebj* – Wrote the README with instructions, setup, and usage details.
-- **Implementation Description**: *sellebahn* – Wrote an overview of the required functionality for chord.
+- **Implementation Description**: *sellebaf* – Wrote an overview of the required functionality for chord.
 - **Output to File**: *vegarhje* – Implemented the logic to log results to an output file.
 
 
