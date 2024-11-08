@@ -6,7 +6,7 @@
 __1. Build maven__
 - run `mvn clean packag` in terminal
 
-__2. Run the protocol__
+__2. Run the simulator__
 - run `java -cp target/solution.jar ass3.Simulator <n> <m>` in terminal
 - Where n = node count, and m = bit-length of identifiers used in the protocol.
 
@@ -136,4 +136,4 @@ The project implementation was a collaborative effort, with each member contribu
 6.  The overlay is built by retrieveing nodes from the network and assigning indexes based on consistent hashing for each. Then successor nodes are assigned, and a local list is made.
 7.  The fingertable is built for each node by creating m intervals in the table. These intervals are used for efficient routing to a few other nodes.
 8.  Iteration through every key, and call on `lookup` which goes through intervals in fingertable to find node responsible.
-9.  Results are written to a file indicated with nodecount and bit-length, as well as averages of each hop. 
+9.  Results are written to a file indicated with nodecount and bit-length, as well as including the average of all hops. 
