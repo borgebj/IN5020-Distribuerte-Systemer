@@ -164,6 +164,7 @@ public class ChordProtocol implements Protocol{
                 if (i == m) finger.end = fingers[0].start - 1;
 
                 // finds the successor for current interval [start, end]
+                // finds next node idx after start
                 for (int idx : sortedIndexes) {
                     if (idx >= finger.start) {
                         finger.successor = indexedNodes.get(idx);
