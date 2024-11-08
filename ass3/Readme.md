@@ -69,9 +69,9 @@ For each node in the `topology`:
 2. **Calculate Intervals**:
    - For each entry \(i\) in the finger table:
      - Set the interval’s **start** as:
-       $$
+       $`\
        \text{finger.start} = (\text{nodeIdx} + 2^{i-1}) \mod 2^m
-       $$
+       `$
      - Set the **end** of the interval as:
        $$ 
        \text{finger.end} = (\text{nodeIdx} + 2^i) \mod 2^m - 1
