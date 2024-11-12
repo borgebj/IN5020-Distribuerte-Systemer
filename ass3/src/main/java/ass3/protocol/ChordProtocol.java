@@ -219,14 +219,12 @@ public class ChordProtocol implements Protocol{
 
             // go through all fingers and search through interval
             for (Finger finger : fingers) {
-                if (keyIndex >= finger.start && keyIndex <= finger.end) {
+                //Checks if finger has interval between start and end, while handling cases where intervals wrap around
+                if ((finger.start <= finger.end && keyIndex >= finger.start && keyIndex <= finger.end) || 
+                    (finger.start > finger.end && (keyIndex >= finger.start || keyIndex <= finger.end))) {
                     nextNode = finger.successor;
                     break;
                 }
-            }
-            // if none is found, first successor is chosen
-            if (nextNode == null) {
-                nextNode = fingers[0].successor;
             }
 
             currentNode = nextNode;
